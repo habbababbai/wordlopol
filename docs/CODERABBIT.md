@@ -37,7 +37,7 @@ Or keep it enabled and ensure CodeRabbit app has repository access (re-save app 
 
 Our `.coderabbit.yaml` sets `request_changes_workflow: false` and `review_status: false` so CodeRabbit posts **regular inline comments** instead of formal approve/request-changes reviews.
 
-**PR description:** `high_level_summary_in_walkthrough: true` keeps your template (Summary, Test plan) untouched — CodeRabbit’s summary lives in its comment only, not appended to the description.
+**PR description:** `high_level_summary: false` — CodeRabbit never edits your description. You fill the PR template; reviews still run automatically (inline comments + walkthrough comment).
 
 ### 4. Verify on a PR
 
