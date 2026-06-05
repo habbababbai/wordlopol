@@ -7,14 +7,21 @@ on:
     branches: [main]
     types: [opened, synchronize, reopened, ready_for_review]
 
+permissions:
+  contents: read
+
 jobs:
   changes:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       docs_only: ${{ steps.filter.outputs.docs_only }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
+      - uses: actions/checkout@11bd71901bbe5b1635ceea93d857bda4ca1e5c26 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@6852f92c20ea7fd3b0c25de3b5112db3a98da050 # v3.0.2
         id: filter
         with:
           filters: |
@@ -26,16 +33,25 @@ jobs:
   branch-name:
     if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please--')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1635ceea93d857bda4ca1e5c26 # v4.2.2
+        with:
+          persist-credentials: false
       - name: Validate branch name
-        run: bash scripts/validate-branch-name.sh "${{ github.head_ref }}"
+        env:
+          BRANCH_NAME: ${{ github.head_ref }}
+        run: bash scripts/validate-branch-name.sh "$BRANCH_NAME"
 
   pr-title:
     if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please--')
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      statuses: write
     steps:
-      - uses: amannn/action-semantic-pull-request@v5
+      - uses: amannn/action-semantic-pull-request@0990f6eaf41ec4e70c871fdd40e9c0c8c52e0db9 # v5.5.3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -69,12 +85,18 @@ jobs:
   validate-release-files:
     if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please--')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1635ceea93d857bda4ca1e5c26 # v4.2.2
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Block manual release file edits
-        run: bash scripts/validate-release-files.sh "${{ github.base_ref }}" "${{ github.head_ref }}"
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: bash scripts/validate-release-files.sh
 
   ci:
     needs: changes
@@ -84,12 +106,16 @@ jobs:
        !startsWith(github.head_ref, 'release-please--') &&
        needs.changes.outputs.docs_only != 'true')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1635ceea93d857bda4ca1e5c26 # v4.2.2
+        with:
+          persist-credentials: false
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@37a28957b07793342741ef062a759084323419cf # v4.1.0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd09fef463257 # v4.4.0
         with:
           node-version: 22
           cache: pnpm
@@ -112,12 +138,16 @@ jobs:
     needs: changes
     if: github.event_name == 'pull_request' && needs.changes.outputs.docs_only == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1635ceea93d857bda4ca1e5c26 # v4.2.2
+        with:
+          persist-credentials: false
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@37a28957b07793342741ef062a759084323419cf # v4.1.0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd09fef463257 # v4.4.0
         with:
           node-version: 22
           cache: pnpm
@@ -130,12 +160,16 @@ jobs:
   ci-release-pr:
     if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-please--')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1635ceea93d857bda4ca1e5c26 # v4.2.2
+        with:
+          persist-credentials: false
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@37a28957b07793342741ef062a759084323419cf # v4.1.0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd09fef463257 # v4.4.0
         with:
           node-version: 22
           cache: pnpm

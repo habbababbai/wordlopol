@@ -1,8 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE="${1:-main}"
-HEAD="${2:-HEAD}"
+validate_ref() {
+  local ref="$1"
+  if [[ ! "${ref}" =~ ^[a-zA-Z0-9/._-]+$ ]]; then
+    echo "Invalid git ref: ${ref}"
+    exit 1
+  fi
+}
+
+BASE="${BASE_REF:-${1:-main}}"
+HEAD="${HEAD_REF:-${2:-HEAD}}"
+
+validate_ref "${BASE}"
+validate_ref "${HEAD}"
 
 if git rev-parse --verify "origin/${BASE}" >/dev/null 2>&1; then
   RANGE="origin/${BASE}...${HEAD}"

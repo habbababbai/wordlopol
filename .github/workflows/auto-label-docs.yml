@@ -6,15 +6,21 @@ on:
     branches: [main]
 
 permissions:
+  contents: read
   pull-requests: write
 
 jobs:
   label:
     if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please--')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
+      - uses: actions/checkout@11bd71901bbe5b1635ceea93d857bda4ca1e5c26 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@6852f92c20ea7fd3b0c25de3b5112db3a98da050 # v3.0.2
         id: filter
         with:
           filters: |
@@ -33,7 +39,7 @@ jobs:
               - '!**/*.md'
       - name: Apply skip-review label
         if: steps.filter.outputs.docs_only == 'true' && steps.filter.outputs.code != 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.0.1
         with:
           script: |
             github.rest.issues.addLabels({
