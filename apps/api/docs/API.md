@@ -305,7 +305,7 @@ Copy JWT from log → **POST** `/auth/verify-email` with that token.
 - Forgot-password / resend-verification do not reveal whether email exists
 - Previous password-reset tokens invalidated on new forgot-password request
 - `POST /auth/resend-verification` for stuck unverified accounts
-- 34+ automated tests (health, tokens, middleware, auth flows)
+- 36 automated tests — 34 integration + 2 e2e (health, tokens, middleware, auth flows)
 
 ### Remaining gaps
 
@@ -358,15 +358,50 @@ Test in this order. Base URL: `http://localhost:3001`. Enable cookie jar.
 
 ## Test coverage summary
 
-| Suite                         | Tests                                          |
-| ----------------------------- | ---------------------------------------------- |
-| `health.test.ts`              | DB connected / empty / degraded                |
-| `tokens.test.ts`              | JWT + refresh create/rotate/revoke             |
-| `middleware.test.ts`          | authenticate, optionalAuth, requireVerified    |
-| `email.test.ts`               | URL builders + send behavior                   |
-| `auth-register.test.ts`       | register → verify → login, resend-verification |
-| `auth-session.test.ts`        | refresh, logout, logout-all                    |
-| `auth-account.test.ts`        | reset, change-password, change-email, delete   |
-| `tokens-email-change.test.ts` | email-change JWT                               |
+### Prerequisites
 
-Run: `pnpm test` (from repo root) or `pnpm --filter @wordlopol/api test`.
+- Postgres running on port **5433** (`docker compose up -d` from repo root)
+- Test database `wordlopol_test` on that instance — created and migrated automatically by Vitest global setup (`src/test/global-setup.ts`)
+- Resend is **not** called during tests; email helpers are mocked in auth suites
+
+### Suites
+
+| Suite                         | Location         | Tests                                          |
+| ----------------------------- | ---------------- | ---------------------------------------------- |
+| `health.test.ts`              | `src/__tests__/` | DB connected / empty / degraded                |
+| `tokens.test.ts`              | `src/__tests__/` | JWT + refresh create/rotate/revoke             |
+| `middleware.test.ts`          | `src/__tests__/` | authenticate, optionalAuth, requireVerified    |
+| `email.test.ts`               | `src/__tests__/` | URL builders + send behavior                   |
+| `auth-register.test.ts`       | `src/__tests__/` | register → verify → login, resend-verification |
+| `auth-session.test.ts`        | `src/__tests__/` | refresh, logout, logout-all                    |
+| `auth-account.test.ts`        | `src/__tests__/` | reset, change-password, change-email, delete   |
+| `tokens-email-change.test.ts` | `src/__tests__/` | email-change JWT                               |
+| `health.e2e.ts`               | `src/__e2e__/`   | health over real HTTP                          |
+| `auth.e2e.ts`                 | `src/__e2e__/`   | register → verify → login → refresh over HTTP  |
+
+**Integration** — Supertest against an in-process Express app (`vitest.config.ts`).
+
+```bash
+pnpm test                    # from repo root (turbo)
+pnpm --filter @wordlopol/api test
+```
+
+**Coverage** — v8 provider; text summary in terminal, HTML + lcov in `apps/api/coverage/` (gitignored). Current baseline ~87% statements on `src/` (excludes tests, e2e helpers, generated code).
+
+```bash
+pnpm test:coverage
+pnpm --filter @wordlopol/api test:coverage
+```
+
+**E2E** — real HTTP server on `127.0.0.1:<random port>` (`vitest.e2e.config.ts`). The app is loaded via dynamic import so Vitest email mocks apply before routes bind.
+
+```bash
+pnpm test:e2e
+pnpm --filter @wordlopol/api test:e2e
+```
+
+**All tests** — integration then e2e; this is what CI runs after `prisma migrate deploy` against the test DB.
+
+```bash
+pnpm test:all
+```

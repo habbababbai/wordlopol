@@ -13,18 +13,35 @@ Express REST API for Wordlopol — auth, daily/infinite game modes, Polish word 
 
 Run from repo root with `pnpm --filter @wordlopol/api <script>` or from this directory with `pnpm <script>`.
 
-| Script            | Description                             |
-| ----------------- | --------------------------------------- |
-| `dev`             | Start dev server (port 3001)            |
-| `build`           | Compile TypeScript                      |
-| `db:migrate`      | Run Prisma migrations                   |
-| `db:import-words` | Import `data/words.txt` into PostgreSQL |
+| Script            | Description                                              |
+| ----------------- | -------------------------------------------------------- |
+| `dev`             | Start dev server (port 3001)                             |
+| `build`           | Compile TypeScript                                       |
+| `db:migrate`      | Run Prisma migrations                                    |
+| `db:import-words` | Import `data/words.txt` into PostgreSQL                  |
+| `test`            | Integration tests (Vitest + Supertest, in-process)       |
+| `test:coverage`   | Integration tests with v8 coverage report                |
+| `test:e2e`        | E2E tests over a real HTTP server on a random local port |
+| `test:all`        | Integration + e2e (used in CI)                           |
 
-From monorepo root: `pnpm db:migrate`, `pnpm db:import-words`.
+From monorepo root: `pnpm db:migrate`, `pnpm db:import-words`, `pnpm test:all`.
+
+## Testing
+
+Requires Postgres on port **5433** (`docker compose up -d` from repo root). Tests use database `wordlopol_test` (created automatically on first run).
+
+```bash
+pnpm test              # integration only
+pnpm test:coverage     # HTML + lcov in apps/api/coverage/
+pnpm test:e2e          # real HTTP (health + auth flow)
+pnpm test:all          # both suites — same as CI
+```
+
+Suite layout: `src/__tests__/` (integration), `src/__e2e__/` (e2e). See [docs/API.md](./docs/API.md#test-coverage-summary) for the full list and Postman checklist.
 
 ## API reference
 
-See [docs/API.md](./docs/API.md) for endpoint details, auth flow, Postman setup, and security notes.
+See [docs/API.md](./docs/API.md) for endpoint details, auth flow, Postman setup, security notes, and test commands.
 
 ## Health check
 

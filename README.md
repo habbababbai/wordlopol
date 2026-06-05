@@ -85,18 +85,22 @@ Auth flows (verify email, password reset, change email) use [Resend](https://res
 
 ## Scripts
 
-| Command                | Description                             |
-| ---------------------- | --------------------------------------- |
-| `pnpm dev`             | Start API + web in dev mode             |
-| `pnpm build`           | Build all packages                      |
-| `pnpm lint`            | ESLint across monorepo                  |
-| `pnpm typecheck`       | TypeScript check                        |
-| `pnpm format`          | Prettier format (write)                 |
-| `pnpm format:check`    | Prettier check (CI / pre-push)          |
-| `pnpm validate`        | Branch name + format + lint + typecheck |
-| `pnpm validate:branch` | Check current branch name               |
-| `pnpm db:migrate`      | Run Prisma migrations                   |
-| `pnpm db:import-words` | Import words from `data/words.txt`      |
+| Command                | Description                                |
+| ---------------------- | ------------------------------------------ |
+| `pnpm dev`             | Start API + web in dev mode                |
+| `pnpm build`           | Build all packages                         |
+| `pnpm lint`            | ESLint across monorepo                     |
+| `pnpm typecheck`       | TypeScript check                           |
+| `pnpm format`          | Prettier format (write)                    |
+| `pnpm format:check`    | Prettier check (CI / pre-push)             |
+| `pnpm validate`        | Branch name + format + lint + typecheck    |
+| `pnpm validate:branch` | Check current branch name                  |
+| `pnpm test`            | API integration tests (Vitest + Supertest) |
+| `pnpm test:coverage`   | API tests with coverage report             |
+| `pnpm test:e2e`        | API e2e tests over real HTTP               |
+| `pnpm test:all`        | Integration + e2e (same as CI)             |
+| `pnpm db:migrate`      | Run Prisma migrations                      |
+| `pnpm db:import-words` | Import words from `data/words.txt`         |
 
 ## Docs
 
@@ -107,6 +111,7 @@ Auth flows (verify email, password reset, change email) use [Resend](https://res
 | [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md) | App releases, version bumps, release-please         |
 | [docs/CODERABBIT.md](./docs/CODERABBIT.md)                     | CodeRabbit setup and skip rules                     |
 | [apps/api/README.md](./apps/api/README.md)                     | API app overview                                    |
+| [apps/api/docs/API.md](./apps/api/docs/API.md)                 | API endpoints, Postman checklist, testing           |
 | [plans/](./plans/)                                             | Step-by-step implementation guides                  |
 
 ### Implementation plans

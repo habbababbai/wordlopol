@@ -163,7 +163,7 @@ jobs:
         run: pnpm --filter @wordlopol/api exec prisma migrate deploy
 
       - name: Test
-        run: pnpm test
+        run: pnpm test:all
 
   ci-docs:
     needs: changes

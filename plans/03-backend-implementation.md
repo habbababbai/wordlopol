@@ -108,9 +108,11 @@ Cookie options (production):
 
 ### 10. Tests
 
-- supertest for auth flows
-- Guess evaluation integration tests
-- Test DB via Docker or ephemeral Postgres in CI
+- Vitest + Supertest integration tests for auth flows (`apps/api/src/__tests__/`)
+- E2E over real HTTP (`apps/api/src/__e2e__/`)
+- Coverage via `@vitest/coverage-v8` (`pnpm test:coverage`)
+- Test DB `wordlopol_test` on Postgres port 5433; CI runs `pnpm test:all`
+- Guess evaluation integration tests (not yet)
 
 ## Verification
 
@@ -122,7 +124,7 @@ Cookie options (production):
 - [ ] Daily challenge returns same word for all users per day
 - [ ] Infinite requires auth
 - [ ] Stats update after completed game
-- [ ] `pnpm test` passes in CI
+- [x] `pnpm test:all` passes in CI
 
 ## Next
 
