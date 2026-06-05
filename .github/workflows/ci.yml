@@ -113,6 +113,23 @@ jobs:
        !startsWith(github.head_ref, 'release-please--') &&
        !(needs.changes.outputs.docs_only == 'true' && needs.changes.outputs.code != 'true'))
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: wordlopol
+          POSTGRES_PASSWORD: wordlopol
+          POSTGRES_DB: wordlopol_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U wordlopol -d wordlopol_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://wordlopol:wordlopol@localhost:5433/wordlopol_test
+      NODE_ENV: test
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
@@ -141,6 +158,12 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Migrate test database
+        run: pnpm --filter @wordlopol/api exec prisma migrate deploy
+
+      - name: Test
+        run: pnpm test:all
 
   ci-docs:
     needs: changes

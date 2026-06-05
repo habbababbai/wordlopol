@@ -1,4 +1,7 @@
 node_modules
+.pnpm-store/
+.pnpm-debug.log*
+
 dist
 **/generated
 .turbo
@@ -11,3 +14,4 @@ coverage
 # IDE
 .idea
 .vscode
+.obsidian

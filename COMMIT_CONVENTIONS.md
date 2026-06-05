@@ -122,6 +122,8 @@ feat(api): add password reset flow
 
 GitHub pre-fills from [`.github/pull_request_template.md`](./.github/pull_request_template.md). Fill every section — **CodeRabbit does not edit the description**.
 
+Planned: local `pnpm pr:draft` to pre-fill the template — see [docs/PR_DESCRIPTION_AUTOMATION.md](./docs/PR_DESCRIPTION_AUTOMATION.md).
+
 Include:
 
 - **Summary** — what changed and why
