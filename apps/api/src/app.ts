@@ -4,6 +4,7 @@ import express, { type Express } from 'express';
 import helmet from 'helmet';
 import { env } from './config/env.js';
 import { prisma } from './lib/prisma.js';
+import { authRouter } from './routes/auth.js';
 
 export function createApp(): Express {
   const app = express();
@@ -17,6 +18,7 @@ export function createApp(): Express {
   );
   app.use(express.json());
   app.use(cookieParser());
+  app.use('/auth', authRouter);
 
   app.get('/health', async (_req, res) => {
     try {
