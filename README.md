@@ -48,13 +48,10 @@ pnpm install
 cp .env.example .env
 # Edit .env with JWT secrets and Resend key when ready
 
-# 3. Word list — copy your Polish words file
-cp /path/to/your/words.txt data/words.txt
-
-# 4. Start Postgres
+# 3. Start Postgres (port 5433 — avoids conflict with local Postgres on 5432)
 docker compose up -d
 
-# 5. Database (after migrations in Phase 2)
+# 4. Database
 pnpm db:migrate
 pnpm db:import-words
 
@@ -62,7 +59,7 @@ pnpm db:import-words
 pnpm dev
 ```
 
-- API: http://localhost:3001/health
+- API: http://localhost:3001/health → `{ "status": "ok", "database": "connected", "wordCount": 4062 }`
 - Web: http://localhost:5173
 
 ## Word list format

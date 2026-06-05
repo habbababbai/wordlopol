@@ -23,14 +23,11 @@ cp .env.example .env
 # Edit .env with your secrets (JWT secrets, Resend API key when ready)
 ```
 
-Copy your Polish word list:
-
-```bash
-# Place your word list here (one word per line)
-cp /path/to/your/words.txt data/words.txt
-```
+Word list lives in `data/words.txt` (one word per line, 5-letter Polish words).
 
 ## Step 3 — Start Postgres
+
+> Postgres runs on **port 5433** in Docker (5432 is often taken by a local install).
 
 ```bash
 docker compose up -d
@@ -59,7 +56,7 @@ pnpm dev
 
 Expected:
 
-- API: http://localhost:3001/health → `{ "status": "ok" }`
+- API: http://localhost:3001/health → `{ "status": "ok", "database": "connected", "wordCount": 4062 }`
 - Web: http://localhost:5173 → placeholder home page
 
 ## Step 6 — Quality checks

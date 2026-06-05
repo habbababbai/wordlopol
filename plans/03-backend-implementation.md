@@ -4,15 +4,15 @@ Implement after Phase 1 checklist passes.
 
 ## Order of work
 
-### 1. Database migration
+### 1. Database migration — done on `feat/api-database-foundation`
 
 ```bash
-cd apps/api
-pnpm prisma migrate dev --name init
-pnpm db:import-words
+docker compose up -d          # Postgres on localhost:5433
+pnpm db:migrate               # applies prisma/migrations/
+pnpm db:import-words          # batch import from data/words.txt
 ```
 
-Verify `Word` table has 5-letter Polish words from `data/words.txt`.
+Verify: `GET /health` returns `wordCount: 4062`.
 
 ### 2. Auth module
 

@@ -3,6 +3,7 @@ import cors from 'cors';
 import express, { type Express } from 'express';
 import helmet from 'helmet';
 import { env } from './config/env.js';
+import { prisma } from './lib/prisma.js';
 
 export function createApp(): Express {
   const app = express();
@@ -17,8 +18,14 @@ export function createApp(): Express {
   app.use(express.json());
   app.use(cookieParser());
 
-  app.get('/health', (_req, res) => {
-    res.json({ status: 'ok' });
+  app.get('/health', async (_req, res) => {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      const wordCount = await prisma.word.count();
+      res.json({ status: 'ok', database: 'connected', wordCount });
+    } catch {
+      res.status(503).json({ status: 'degraded', database: 'disconnected' });
+    }
   });
 
   return app;

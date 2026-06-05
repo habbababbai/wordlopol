@@ -9,10 +9,11 @@ config({ path: resolve(process.cwd(), '../../.env') });
 config({ path: resolve(process.cwd(), '.env') });
 
 const WORDS_PATH = resolve(process.cwd(), '../../data/words.txt');
+const BATCH_SIZE = 500;
 
 const adapter = new PrismaPg({
   connectionString:
-    process.env.DATABASE_URL ?? 'postgresql://wordlopol:wordlopol@localhost:5432/wordlopol',
+    process.env.DATABASE_URL ?? 'postgresql://wordlopol:wordlopol@localhost:5433/wordlopol',
 });
 
 const prisma = new PrismaClient({ adapter });
@@ -47,15 +48,22 @@ async function main() {
 
   console.log(`Importing ${words.length} words...`);
 
-  for (const text of words) {
-    await prisma.word.upsert({
-      where: { text },
-      create: { text, length: WORD_LENGTH },
-      update: { length: WORD_LENGTH },
+  for (let i = 0; i < words.length; i += BATCH_SIZE) {
+    const batch = words.slice(i, i + BATCH_SIZE).map((text) => ({
+      text,
+      length: WORD_LENGTH,
+    }));
+
+    await prisma.word.createMany({
+      data: batch,
+      skipDuplicates: true,
     });
+
+    console.log(`  ${Math.min(i + BATCH_SIZE, words.length)} / ${words.length}`);
   }
 
-  console.log('Done.');
+  const total = await prisma.word.count();
+  console.log(`Done. ${total} words in database.`);
 }
 
 main()
