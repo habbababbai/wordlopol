@@ -11,6 +11,18 @@ export async function createTestAgent() {
   return request(app);
 }
 
+export async function createTestUser(options?: { emailVerified?: boolean; email?: string }) {
+  const { prisma } = await import('../lib/prisma.js');
+
+  return prisma.user.create({
+    data: {
+      email: options?.email ?? `user-${crypto.randomUUID()}@example.com`,
+      passwordHash: 'test-password-hash',
+      emailVerifiedAt: options?.emailVerified ? new Date() : null,
+    },
+  });
+}
+
 export async function resetDatabase(): Promise<void> {
   const { prisma } = await import('../lib/prisma.js');
 
