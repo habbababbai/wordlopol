@@ -154,10 +154,34 @@ export async function logoutAll(userId: string): Promise<void> {
   await revokeAllRefreshTokens(userId);
 }
 
+export async function resendVerification(email: string): Promise<{ message: string }> {
+  const user = await prisma.user.findUnique({ where: { email } });
+
+  if (user && !user.emailVerifiedAt) {
+    await prisma.emailVerificationToken.deleteMany({ where: { userId: user.id } });
+
+    const token = randomBytes(32).toString('hex');
+
+    await prisma.emailVerificationToken.create({
+      data: {
+        userId: user.id,
+        tokenHash: hashToken(token),
+        expiresAt: new Date(Date.now() + EMAIL_VERIFY_TTL_MS),
+      },
+    });
+
+    await sendVerificationEmail(user.email, token);
+  }
+
+  return { message: 'If the email exists and is unverified, a verification link was sent' };
+}
+
 export async function forgotPassword(email: string): Promise<{ message: string }> {
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (user) {
+    await prisma.passwordResetToken.deleteMany({ where: { userId: user.id } });
+
     const token = randomBytes(32).toString('hex');
 
     await prisma.passwordResetToken.create({

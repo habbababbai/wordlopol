@@ -11,11 +11,18 @@ import {
   refreshSession,
   register,
   requestEmailChange,
+  resendVerification,
   resetPassword,
   verifyEmail,
 } from '../services/auth.js';
 import { clearRefreshCookie, REFRESH_COOKIE_NAME, setRefreshCookie } from '../lib/tokens.js';
 import { authenticate } from '../middleware/authenticate.js';
+import {
+  forgotPasswordRateLimit,
+  loginRateLimit,
+  registerRateLimit,
+  resendVerificationRateLimit,
+} from '../middleware/auth-rate-limit.js';
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -32,7 +39,7 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
-const forgotPasswordSchema = z.object({
+const emailOnlySchema = z.object({
   email: z.string().email(),
 });
 
@@ -80,6 +87,7 @@ export const authRouter: Router = Router();
 
 authRouter.post(
   '/register',
+  registerRateLimit,
   handleAuthRoute(async (req, res) => {
     const body = registerSchema.parse(req.body);
     const result = await register(body);
@@ -98,6 +106,7 @@ authRouter.post(
 
 authRouter.post(
   '/login',
+  loginRateLimit,
   handleAuthRoute(async (req, res) => {
     const body = loginSchema.parse(req.body);
     const { accessToken, refreshToken } = await login(body);
@@ -143,9 +152,20 @@ authRouter.post(
 
 authRouter.post(
   '/forgot-password',
+  forgotPasswordRateLimit,
   handleAuthRoute(async (req, res) => {
-    const { email } = forgotPasswordSchema.parse(req.body);
+    const { email } = emailOnlySchema.parse(req.body);
     const result = await forgotPassword(email);
+    res.json(result);
+  }),
+);
+
+authRouter.post(
+  '/resend-verification',
+  resendVerificationRateLimit,
+  handleAuthRoute(async (req, res) => {
+    const { email } = emailOnlySchema.parse(req.body);
+    const result = await resendVerification(email);
     res.json(result);
   }),
 );

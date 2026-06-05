@@ -76,6 +76,28 @@ describe('auth register verify login', () => {
     expect(res.body).toEqual({ error: 'Email not verified' });
   });
 
+  it('resends verification email for unverified users', async () => {
+    const agent = await createTestAgent();
+    const email = 'resend@example.com';
+
+    await agent.post('/auth/register').send({ email, password: 'secure-password' });
+    const firstToken = verificationToken.value;
+
+    await agent
+      .post('/auth/resend-verification')
+      .send({ email })
+      .expect(200)
+      .expect({ message: 'If the email exists and is unverified, a verification link was sent' });
+
+    expect(verificationToken.value).not.toBe(firstToken);
+
+    await agent
+      .post('/auth/verify-email')
+      .send({ token: verificationToken.value })
+      .expect(200)
+      .expect({ message: 'Email verified' });
+  });
+
   it('rejects duplicate registration', async () => {
     const agent = await createTestAgent();
 

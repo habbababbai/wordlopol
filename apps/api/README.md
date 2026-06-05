@@ -22,6 +22,10 @@ Run from repo root with `pnpm --filter @wordlopol/api <script>` or from this dir
 
 From monorepo root: `pnpm db:migrate`, `pnpm db:import-words`.
 
+## API reference
+
+See [docs/API.md](./docs/API.md) for endpoint details, auth flow, Postman setup, and security notes.
+
 ## Health check
 
 ```bash
