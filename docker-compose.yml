@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: wordlopol-postgres
+    restart: unless-stopped
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: wordlopol
+      POSTGRES_PASSWORD: wordlopol
+      POSTGRES_DB: wordlopol
+    volumes:
+      - wordlopol_pgdata:/var/lib/postgresql/data
+
+volumes:
+  wordlopol_pgdata:

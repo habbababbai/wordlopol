@@ -1,0 +1,6 @@
+# Place your Polish word list here — one word per line.
+# Lines starting with # are ignored.
+# Example (replace with your full list):
+# żółć
+# głowa
+# król
