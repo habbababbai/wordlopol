@@ -1,6 +1,6 @@
 # Changelog automation
 
-Per-app changelogs are maintained by [release-please](https://github.com/googleapis/release-please) via separate GitHub Actions workflows.
+Per-app changelogs via [release-please](https://github.com/googleapis/release-please).
 
 ## Changelog files
 
@@ -11,70 +11,72 @@ Per-app changelogs are maintained by [release-please](https://github.com/googlea
 
 ## When does it run?
 
-**Only when a PR is merged into `main`** — not on:
+| Trigger                | Runs?                                           |
+| ---------------------- | ----------------------------------------------- |
+| PR merged to `main`    | **Yes** (merge creates a `push` to `main`)      |
+| Push to feature branch | No                                              |
+| PR opened / updated    | No                                              |
+| Manual                 | **Yes** — Actions → workflow → **Run workflow** |
 
-- feature branch pushes
-- PR open or sync (new commits on PR)
-- closed-but-not-merged PRs
+> **Why not `pull_request: closed`?** Workflows must already exist on `main` before the PR closes. The first PR that added changelog workflows could never trigger itself. `push` to `main` is the official release-please pattern and is more reliable.
 
-Workflow trigger: `pull_request: closed` + `merged == true`.
+## Required GitHub settings
 
-Direct pushes to `main` (without a PR) do **not** trigger changelog workflows.
+**Settings → Actions → General**
+
+1. **Workflow permissions**: Read and write permissions
+2. **Allow GitHub Actions to create and approve pull requests**: enabled
+
+Without this, release-please cannot open Release PRs.
 
 ## How it works
 
-1. You open a PR → **no changelog update yet**.
-2. You **merge** the PR to `main` with conventional commits (`feat(api): ...`, `fix(web): ...`).
-3. The matching workflow runs (based on changed paths in that PR).
-4. **release-please** opens or updates a **Release PR** for that app, e.g.:
-   - `release-please--branches--main--components--api`
-   - `release-please--branches--main--components--web`
-5. That Release PR contains:
-   - Updated `CHANGELOG.md`
-   - Version bump in `package.json`
-   - Updated `.github/release-please/*-manifest.json`
-6. When you **merge the Release PR**, release-please creates a git tag:
-   - `api-v0.2.0`
-   - `web-v0.2.0`
+1. Merge a PR to `main` with conventional commits (`feat(api): ...`).
+2. `push` to `main` triggers the matching workflow (by changed paths).
+3. release-please opens or updates a **Release PR**, e.g. `release-please--branches--main--components--api`.
+4. Release PR contains: `CHANGELOG.md`, version bump, manifest update.
+5. Merge the Release PR → git tag created (`api-v0.2.0`).
+
+## Bootstrap (first time / missed run)
+
+If the first merge happened before workflows existed on `main`:
+
+1. GitHub → **Actions** → **Changelog — API** → **Run workflow** → branch `main`
+2. Same for **Changelog — Web** if needed
+3. Check for new Release PR(s) and merge them
 
 ## Which workflow runs?
 
-| Changed paths        | Workflow                                   |
-| -------------------- | ------------------------------------------ |
-| `apps/api/**`        | Changelog — API                            |
-| `apps/web/**`        | Changelog — Web                            |
-| `packages/shared/**` | **Both** (shared code affects api and web) |
-
-Keep commits scoped and files in the right app directory so the correct changelog picks up changes.
+| Changed paths            | Workflow        |
+| ------------------------ | --------------- |
+| `apps/api/**`, `data/**` | Changelog — API |
+| `apps/web/**`            | Changelog — Web |
+| `packages/shared/**`     | **Both**        |
 
 ## Commit types → changelog sections
 
-| Commit type | Changelog section   |
-| ----------- | ------------------- |
-| `feat`      | Features            |
-| `fix`       | Bug Fixes           |
-| `perf`      | Performance         |
-| `refactor`  | Refactoring         |
-| `docs`      | Documentation       |
-| `test`      | Tests               |
-| `build`     | Build System        |
-| `ci`        | CI                  |
-| `chore`     | Hidden (not listed) |
+| Type       | Section       |
+| ---------- | ------------- |
+| `feat`     | Features      |
+| `fix`      | Bug Fixes     |
+| `perf`     | Performance   |
+| `refactor` | Refactoring   |
+| `docs`     | Documentation |
+| `test`     | Tests         |
+| `build`    | Build System  |
+| `ci`       | CI            |
+| `chore`    | Hidden        |
 
 ## Versioning
 
-- Starts at **0.1.0** per app (independent versions).
-- `feat` → minor bump (pre-1.0: treated as minor)
-- `fix` → patch bump
-- `feat!` / `BREAKING CHANGE` → major bump
+- Starts at **0.1.0** per app (independent).
+- `feat` → minor | `fix` → patch | `feat!` → major
 
-## Adding a new app (e.g. mobile)
+## Troubleshooting
 
-1. Copy `.github/release-please/api-config.json` → `mobile-config.json`
-2. Copy `api-manifest.json` → `mobile-manifest.json`
-3. Add `.github/workflows/changelog-mobile.yml`
-4. Add `apps/mobile/CHANGELOG.md`
-
-## Manual release (if needed)
-
-Normally you only merge the Release PR. No manual tagging required.
+| Problem                   | Fix                                                                  |
+| ------------------------- | -------------------------------------------------------------------- |
+| No Release PR after merge | Check Actions tab for failed workflow; verify repo permissions above |
+| Workflow skipped          | Paths filter — ensure changes touch `apps/api/**` or `apps/web/**`   |
+| First merge missed        | Run `workflow_dispatch` manually                                     |
+| Release PR has no CI      | Normal with `GITHUB_TOKEN` — merge manually after review             |

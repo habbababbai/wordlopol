@@ -1,28 +1,45 @@
 name: Changelog — API
 
-# Runs only when a PR is merged into main (not on feature branches or PR open/sync)
+# Runs when commits land on main (includes PR merges). Does NOT run on feature-branch pushes.
 on:
-  pull_request:
-    types: [closed]
+  push:
     branches: [main]
     paths:
       - 'apps/api/**'
+      - 'data/**'
       - 'packages/shared/**'
       - '.github/workflows/changelog-api.yml'
       - '.github/release-please/api-*.json'
+  workflow_dispatch:
 
 permissions:
   contents: write
+  issues: write
   pull-requests: write
+
+concurrency:
+  group: release-please-api
+  cancel-in-progress: false
 
 jobs:
   release-please:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Release Please — API
+        id: release
         uses: googleapis/release-please-action@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: .github/release-please/api-config.json
           manifest-file: .github/release-please/api-manifest.json
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "release_created=${{ steps.release.outputs.release_created }}"
+          echo "pr=${{ steps.release.outputs.pr }}"
+          echo "pr_number=${{ steps.release.outputs.pr_number }}"
