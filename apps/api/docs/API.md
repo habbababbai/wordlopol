@@ -169,12 +169,13 @@ Send header: `Authorization: Bearer <accessToken>`
 
 Files in `apps/api/postman/`:
 
-| File                                       | Import as   |
-| ------------------------------------------ | ----------- |
-| `Wordlopol-Local.postman_environment.json` | Environment |
-| `Wordlopol-Auth.postman_collection.json`   | Collection  |
+| File                                              | Import as               |
+| ------------------------------------------------- | ----------------------- |
+| `Wordlopol-Local.postman_environment.json`        | Environment             |
+| `Wordlopol-Auth.postman_collection.json`          | Collection (happy path) |
+| `Wordlopol-Auth-Negative.postman_collection.json` | Collection (edge cases) |
 
-1. Postman → **Import** → select both files
+1. Postman → **Import** → select all three files
 2. Select environment **Wordlopol Local** (top-right dropdown)
 3. Ensure API is running: `pnpm --filter @wordlopol/api dev`
 4. Open collection **Wordlopol Auth (automated)** → **Run**
