@@ -7,6 +7,8 @@ reviews:
   # Do not submit formal review status — use inline comments only (more reliable for bots)
   review_status: false
   high_level_summary: true
+  # Keep summary in bot comment — do not append to your PR description / template
+  high_level_summary_in_walkthrough: true
   poem: false
   auto_review:
     enabled: true
