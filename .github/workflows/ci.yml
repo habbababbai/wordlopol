@@ -192,6 +192,9 @@ jobs:
   ci-release-pr:
     if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-please--')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
@@ -211,6 +214,7 @@ jobs:
       # before the bot's format commit lands.
       - name: Prettier check
         run: |
+          trap 'rm -f .prettierignore.ci-release-pr' EXIT
           {
             cat .prettierignore
             echo apps/api/CHANGELOG.md
@@ -218,4 +222,3 @@ jobs:
           } > .prettierignore.ci-release-pr
           pnpm exec prettier --check "**/*.{ts,tsx,js,json,md,yml,yaml}" \
             --ignore-path .prettierignore.ci-release-pr
-          rm .prettierignore.ci-release-pr
