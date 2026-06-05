@@ -1,0 +1,28 @@
+name: Changelog — API
+
+# Runs only when a PR is merged into main (not on feature branches or PR open/sync)
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+    paths:
+      - 'apps/api/**'
+      - 'packages/shared/**'
+      - '.github/workflows/changelog-api.yml'
+      - '.github/release-please/api-*.json'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release Please — API
+        uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: .github/release-please/api-config.json
+          manifest-file: .github/release-please/api-manifest.json

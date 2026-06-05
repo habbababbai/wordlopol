@@ -11,6 +11,7 @@ Polish Wordle-style word game. Guess 5-letter Polish words — diacritics matter
   - `commit-msg` — commit message format (Commitlint)
   - `pre-push` — branch name, Prettier check, lint, typecheck
 - **PR checks** (GitHub Actions): branch name, PR title, Prettier, ESLint, typecheck, build
+- **Changelogs**: per-app auto-update via release-please — see [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md)
 - **Manual**: `pnpm validate` runs branch + format + lint + typecheck
 - **Plans**: implementation steps live in [`plans/`](./plans/)
 
@@ -97,10 +98,11 @@ Auth flows (verify email, password reset, change email) use [Resend](https://res
 
 ## Docs
 
-| Document                                         | Description                                         |
-| ------------------------------------------------ | --------------------------------------------------- |
-| [COMMIT_CONVENTIONS.md](./COMMIT_CONVENTIONS.md) | Commit scopes, PR structure, Husky/Commitlint setup |
-| [plans/](./plans/)                               | Step-by-step implementation guides                  |
+| Document                                                       | Description                                         |
+| -------------------------------------------------------------- | --------------------------------------------------- |
+| [COMMIT_CONVENTIONS.md](./COMMIT_CONVENTIONS.md)               | Commit scopes, PR structure, Husky/Commitlint setup |
+| [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md) | Per-app changelog workflows (API, Web)              |
+| [plans/](./plans/)                                             | Step-by-step implementation guides                  |
 
 ### Implementation plans
 

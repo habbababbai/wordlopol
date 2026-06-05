@@ -181,6 +181,19 @@ On every pull request to `main`:
 
 PR title must match commit rules, e.g. `feat(api): add jwt refresh rotation`
 
+## Changelog automation
+
+Per-app changelogs in `apps/api/CHANGELOG.md` and `apps/web/CHANGELOG.md` are updated by [release-please](https://github.com/googleapis/release-please).
+
+| Workflow            | Triggers on                         | Release PR / tag |
+| ------------------- | ----------------------------------- | ---------------- |
+| `changelog-api.yml` | `apps/api/**`, `packages/shared/**` | `api-v0.x.x`     |
+| `changelog-web.yml` | `apps/web/**`, `packages/shared/**` | `web-v0.x.x`     |
+
+Changelog workflows run **only when a PR is merged to `main`** (not on every push). After merge, check for an open **Release PR** from release-please. Merge that second PR to write `CHANGELOG.md` and create the git tag.
+
+Full details: [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md).
+
 ### Allowed branches without naming rule
 
 - `main`
