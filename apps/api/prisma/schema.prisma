@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum GameMode {
+  DAILY
+  INFINITE
+  TIMED
+}
+
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  passwordHash    String
+  displayName     String?
+  emailVerifiedAt DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  refreshTokens           RefreshToken[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+  gameResults             GameResult[]
+  stats                   UserStats?
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Word {
+  id     Int    @id @default(autoincrement())
+  text   String @unique
+  length Int
+
+  dailyChallenges DailyChallenge[]
+  dailyWordPools  DailyWordPool[]
+}
+
+model DailyChallenge {
+  id     Int      @id @default(autoincrement())
+  date   DateTime @unique @db.Date
+  wordId Int
+
+  word Word @relation(fields: [wordId], references: [id])
+
+  gameResults GameResult[]
+}
+
+model DailyWordPool {
+  id     Int      @id @default(autoincrement())
+  date   DateTime @db.Date
+  wordId Int
+  order  Int
+
+  word Word @relation(fields: [wordId], references: [id])
+
+  @@unique([date, order])
+  @@index([date])
+}
+
+model GameResult {
+  id               String    @id @default(uuid())
+  userId           String
+  mode             GameMode
+  won              Boolean
+  guesses          Int
+  durationMs       Int?
+  playedAt         DateTime  @default(now())
+  dailyChallengeId Int?
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyChallenge DailyChallenge? @relation(fields: [dailyChallengeId], references: [id])
+
+  @@index([userId])
+  @@index([userId, mode])
+}
+
+model UserStats {
+  userId           String  @id
+  dailyPlayed      Int     @default(0)
+  dailyWon         Int     @default(0)
+  infinitePlayed   Int     @default(0)
+  infiniteWon      Int     @default(0)
+  bestTimedWords   Int?
+  bestTimedMs      Int?
+  bestTimedWord    String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
