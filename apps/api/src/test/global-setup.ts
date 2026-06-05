@@ -12,17 +12,29 @@ function getAdminConnectionString(): string {
   return url.toString();
 }
 
+function getTestDatabaseName(): string {
+  const name = new URL(TEST_DATABASE_URL).pathname.replace(/^\//, '');
+
+  if (!name || !/^[a-zA-Z0-9_]+$/.test(name)) {
+    throw new Error('TEST_DATABASE_URL must include a valid database name');
+  }
+
+  return name;
+}
+
 async function ensureTestDatabase(): Promise<void> {
+  const testDbName = getTestDatabaseName();
   const client = new pg.Client({ connectionString: getAdminConnectionString() });
 
   try {
     await client.connect();
     const result = await client.query<{ exists: boolean }>(
-      `SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = 'wordlopol_test') AS exists`,
+      `SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = $1) AS exists`,
+      [testDbName],
     );
 
     if (!result.rows[0]?.exists) {
-      await client.query('CREATE DATABASE wordlopol_test');
+      await client.query(`CREATE DATABASE "${testDbName.replace(/"/g, '""')}"`);
     }
   } finally {
     await client.end();

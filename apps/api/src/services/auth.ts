@@ -24,6 +24,15 @@ const BCRYPT_ROUNDS = 12;
 const EMAIL_VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
 const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
 
+function isUniqueConstraintError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code: unknown }).code === 'P2002'
+  );
+}
+
 export class AuthError extends Error {
   readonly statusCode: number;
 
@@ -46,13 +55,23 @@ export async function register(data: {
 
   const passwordHash = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
 
-  const user = await prisma.user.create({
-    data: {
-      email: data.email,
-      passwordHash,
-      displayName: data.displayName,
-    },
-  });
+  let user;
+
+  try {
+    user = await prisma.user.create({
+      data: {
+        email: data.email,
+        passwordHash,
+        displayName: data.displayName,
+      },
+    });
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      throw new AuthError(409, 'Email already registered');
+    }
+
+    throw error;
+  }
 
   const token = randomBytes(32).toString('hex');
 
@@ -101,10 +120,19 @@ export async function verifyEmail(token: string): Promise<{ message: string }> {
       throw new AuthError(409, 'Email already registered');
     }
 
-    await prisma.user.update({
-      where: { id: userId },
-      data: { email: newEmail, emailVerifiedAt: new Date() },
-    });
+    try {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { email: newEmail, emailVerifiedAt: new Date() },
+      });
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        throw new AuthError(409, 'Email already registered');
+      }
+
+      throw error;
+    }
+
     await revokeAllRefreshTokens(userId);
 
     return { message: 'Email changed' };
@@ -180,7 +208,12 @@ export async function resendVerification(
       },
     });
 
-    await sendVerificationEmail(user.email, token);
+    try {
+      await sendVerificationEmail(user.email, token);
+    } catch (error) {
+      console.error('[auth] Failed to send verification email:', error);
+      return { message: 'If the email exists and is unverified, a verification link was sent' };
+    }
 
     return withDevToken(
       { message: 'If the email exists and is unverified, a verification link was sent' },
@@ -209,7 +242,12 @@ export async function forgotPassword(
       },
     });
 
-    await sendPasswordResetEmail(user.email, token);
+    try {
+      await sendPasswordResetEmail(user.email, token);
+    } catch (error) {
+      console.error('[auth] Failed to send password reset email:', error);
+      return { message: 'If the email exists, a reset link was sent' };
+    }
 
     return withDevToken({ message: 'If the email exists, a reset link was sent' }, token);
   }

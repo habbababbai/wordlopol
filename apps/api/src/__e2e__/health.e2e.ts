@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
 import { prisma } from '../lib/prisma.js';
 import { resetDatabase } from '../test/helpers.js';
@@ -9,13 +9,9 @@ describe('e2e: GET /health', () => {
     await resetDatabase();
   });
 
-  afterEach(async () => {
-    await resetDatabase();
-  });
-
   it('returns health status over real http', async () => {
     await prisma.word.create({
-      data: { text: 'e2e-test', length: 7 },
+      data: { text: 'e2e-test', length: 8 },
     });
 
     const res = await request(baseUrl).get('/health').expect(200);

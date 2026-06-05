@@ -124,7 +124,11 @@ export async function rotateRefreshToken(oldToken: string): Promise<RotateRefres
     return null;
   }
 
-  await prisma.refreshToken.delete({ where: { id: existing.id } });
+  const { count } = await prisma.refreshToken.deleteMany({ where: { id: existing.id } });
+
+  if (count === 0) {
+    return null;
+  }
 
   const { token: refreshToken } = await createRefreshToken(existing.userId);
 

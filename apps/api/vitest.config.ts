@@ -9,7 +9,7 @@ export default defineConfig({
     include: ['src/**/*.test.ts'],
     exclude: ['src/__e2e__/**'],
     fileParallelism: false,
-    passWithNoTests: true,
+    passWithNoTests: false,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],

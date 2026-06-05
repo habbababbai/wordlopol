@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
 import { verifyAccessToken } from '../lib/tokens.js';
 import { resetDatabase } from '../test/helpers.js';
@@ -20,10 +20,6 @@ vi.mock('../lib/email.js', () => ({
 describe('e2e: auth flow', () => {
   beforeEach(async () => {
     verificationToken.value = '';
-    await resetDatabase();
-  });
-
-  afterEach(async () => {
     await resetDatabase();
   });
 

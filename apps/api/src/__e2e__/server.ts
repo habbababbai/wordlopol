@@ -6,10 +6,14 @@ let server: Server | undefined;
 export let baseUrl = '';
 
 export async function startE2eServer(): Promise<void> {
+  if (server) {
+    throw new Error('E2E server already running');
+  }
+
   const { createApp } = await import('../app.js');
   const app: Express = createApp();
 
-  await new Promise<void>((resolve) => {
+  await new Promise<void>((resolve, reject) => {
     server = app.listen(0, '127.0.0.1', () => {
       const address = server?.address();
 
@@ -18,6 +22,12 @@ export async function startE2eServer(): Promise<void> {
       }
 
       resolve();
+    });
+
+    server.on('error', (error) => {
+      server = undefined;
+      baseUrl = '';
+      reject(error);
     });
   });
 }
