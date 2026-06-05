@@ -38,6 +38,33 @@ export function signAccessToken(userId: string): string {
   });
 }
 
+export interface EmailChangeTokenPayload {
+  userId: string;
+  newEmail: string;
+}
+
+export function signEmailChangeToken(userId: string, newEmail: string): string {
+  return jwt.sign({ newEmail, purpose: 'email-change' }, env.JWT_REFRESH_SECRET, {
+    subject: userId,
+    expiresIn: '24h',
+  });
+}
+
+export function verifyEmailChangeToken(token: string): EmailChangeTokenPayload {
+  const payload = jwt.verify(token, env.JWT_REFRESH_SECRET);
+
+  if (
+    typeof payload === 'string' ||
+    payload.purpose !== 'email-change' ||
+    typeof payload.sub !== 'string' ||
+    typeof payload.newEmail !== 'string'
+  ) {
+    throw new Error('Invalid email change token');
+  }
+
+  return { userId: payload.sub, newEmail: payload.newEmail };
+}
+
 export function verifyAccessToken(token: string): AccessTokenPayload {
   const payload = jwt.verify(token, env.JWT_ACCESS_SECRET);
 

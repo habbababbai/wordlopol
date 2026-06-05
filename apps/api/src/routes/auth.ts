@@ -2,11 +2,16 @@ import { Router } from 'express';
 import { z } from 'zod';
 import {
   AuthError,
+  changePassword,
+  deleteAccount,
+  forgotPassword,
   login,
   logout,
   logoutAll,
   refreshSession,
   register,
+  requestEmailChange,
+  resetPassword,
   verifyEmail,
 } from '../services/auth.js';
 import { clearRefreshCookie, REFRESH_COOKIE_NAME, setRefreshCookie } from '../lib/tokens.js';
@@ -24,6 +29,28 @@ const verifyEmailSchema = z.object({
 
 const loginSchema = z.object({
   email: z.string().email(),
+  password: z.string().min(1),
+});
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email(),
+});
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  password: z.string().min(8),
+});
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8),
+});
+
+const changeEmailSchema = z.object({
+  newEmail: z.string().email(),
+});
+
+const deleteAccountSchema = z.object({
   password: z.string().min(1),
 });
 
@@ -111,5 +138,55 @@ authRouter.post(
     await logoutAll(req.userId!);
     clearRefreshCookie(res);
     res.json({ message: 'Logged out from all devices' });
+  }),
+);
+
+authRouter.post(
+  '/forgot-password',
+  handleAuthRoute(async (req, res) => {
+    const { email } = forgotPasswordSchema.parse(req.body);
+    const result = await forgotPassword(email);
+    res.json(result);
+  }),
+);
+
+authRouter.post(
+  '/reset-password',
+  handleAuthRoute(async (req, res) => {
+    const body = resetPasswordSchema.parse(req.body);
+    const result = await resetPassword(body.token, body.password);
+    res.json(result);
+  }),
+);
+
+authRouter.patch(
+  '/change-password',
+  authenticate,
+  handleAuthRoute(async (req, res) => {
+    const body = changePasswordSchema.parse(req.body);
+    const result = await changePassword(req.userId!, body.currentPassword, body.newPassword);
+    clearRefreshCookie(res);
+    res.json(result);
+  }),
+);
+
+authRouter.patch(
+  '/change-email',
+  authenticate,
+  handleAuthRoute(async (req, res) => {
+    const { newEmail } = changeEmailSchema.parse(req.body);
+    const result = await requestEmailChange(req.userId!, newEmail);
+    res.json(result);
+  }),
+);
+
+authRouter.delete(
+  '/account',
+  authenticate,
+  handleAuthRoute(async (req, res) => {
+    const { password } = deleteAccountSchema.parse(req.body);
+    const result = await deleteAccount(req.userId!, password);
+    clearRefreshCookie(res);
+    res.json(result);
   }),
 );

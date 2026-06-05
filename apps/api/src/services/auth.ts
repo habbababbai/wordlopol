@@ -1,6 +1,10 @@
 import { randomBytes } from 'node:crypto';
 import bcrypt from 'bcrypt';
-import { sendVerificationEmail } from '../lib/email.js';
+import {
+  sendEmailChangeEmail,
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+} from '../lib/email.js';
 import { prisma } from '../lib/prisma.js';
 import {
   createRefreshToken,
@@ -9,10 +13,13 @@ import {
   revokeRefreshToken,
   rotateRefreshToken,
   signAccessToken,
+  signEmailChangeToken,
+  verifyEmailChangeToken,
 } from '../lib/tokens.js';
 
 const BCRYPT_ROUNDS = 12;
 const EMAIL_VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
+const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
 
 export class AuthError extends Error {
   readonly statusCode: number;
@@ -64,21 +71,42 @@ export async function verifyEmail(token: string): Promise<{ message: string }> {
     where: { tokenHash: hashToken(token) },
   });
 
-  if (!record || record.expiresAt <= new Date()) {
-    throw new AuthError(400, 'Invalid or expired verification token');
+  if (record && record.expiresAt > new Date()) {
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: record.userId },
+        data: { emailVerifiedAt: new Date() },
+      }),
+      prisma.emailVerificationToken.deleteMany({
+        where: { userId: record.userId },
+      }),
+    ]);
+
+    return { message: 'Email verified' };
   }
 
-  await prisma.$transaction([
-    prisma.user.update({
-      where: { id: record.userId },
-      data: { emailVerifiedAt: new Date() },
-    }),
-    prisma.emailVerificationToken.deleteMany({
-      where: { userId: record.userId },
-    }),
-  ]);
+  try {
+    const { userId, newEmail } = verifyEmailChangeToken(token);
+    const taken = await prisma.user.findUnique({ where: { email: newEmail } });
 
-  return { message: 'Email verified' };
+    if (taken) {
+      throw new AuthError(409, 'Email already registered');
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { email: newEmail, emailVerifiedAt: new Date() },
+    });
+    await revokeAllRefreshTokens(userId);
+
+    return { message: 'Email changed' };
+  } catch (error) {
+    if (error instanceof AuthError) {
+      throw error;
+    }
+  }
+
+  throw new AuthError(400, 'Invalid or expired verification token');
 }
 
 export async function login(data: {
@@ -124,4 +152,111 @@ export async function logout(refreshToken: string | undefined): Promise<void> {
 
 export async function logoutAll(userId: string): Promise<void> {
   await revokeAllRefreshTokens(userId);
+}
+
+export async function forgotPassword(email: string): Promise<{ message: string }> {
+  const user = await prisma.user.findUnique({ where: { email } });
+
+  if (user) {
+    const token = randomBytes(32).toString('hex');
+
+    await prisma.passwordResetToken.create({
+      data: {
+        userId: user.id,
+        tokenHash: hashToken(token),
+        expiresAt: new Date(Date.now() + PASSWORD_RESET_TTL_MS),
+      },
+    });
+
+    await sendPasswordResetEmail(user.email, token);
+  }
+
+  return { message: 'If the email exists, a reset link was sent' };
+}
+
+export async function resetPassword(
+  token: string,
+  newPassword: string,
+): Promise<{ message: string }> {
+  const record = await prisma.passwordResetToken.findUnique({
+    where: { tokenHash: hashToken(token) },
+  });
+
+  if (!record || record.expiresAt <= new Date()) {
+    throw new AuthError(400, 'Invalid or expired reset token');
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+
+  await prisma.user.update({
+    where: { id: record.userId },
+    data: { passwordHash },
+  });
+  await prisma.passwordResetToken.deleteMany({ where: { userId: record.userId } });
+  await revokeAllRefreshTokens(record.userId);
+
+  return { message: 'Password reset' };
+}
+
+export async function changePassword(
+  userId: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<{ message: string }> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+
+  if (!user || !(await bcrypt.compare(currentPassword, user.passwordHash))) {
+    throw new AuthError(401, 'Invalid password');
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { passwordHash },
+  });
+  await revokeAllRefreshTokens(userId);
+
+  return { message: 'Password changed' };
+}
+
+export async function requestEmailChange(
+  userId: string,
+  newEmail: string,
+): Promise<{ message: string }> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+
+  if (!user) {
+    throw new AuthError(404, 'User not found');
+  }
+
+  if (user.email === newEmail) {
+    throw new AuthError(400, 'Email unchanged');
+  }
+
+  const taken = await prisma.user.findUnique({ where: { email: newEmail } });
+
+  if (taken) {
+    throw new AuthError(409, 'Email already registered');
+  }
+
+  const token = signEmailChangeToken(userId, newEmail);
+  await sendEmailChangeEmail(newEmail, token);
+
+  return { message: 'Verification email sent' };
+}
+
+export async function deleteAccount(
+  userId: string,
+  password: string,
+): Promise<{ message: string }> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+
+  if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+    throw new AuthError(401, 'Invalid password');
+  }
+
+  await prisma.user.delete({ where: { id: userId } });
+
+  return { message: 'Account deleted' };
 }
