@@ -2,7 +2,14 @@ import { randomBytes } from 'node:crypto';
 import bcrypt from 'bcrypt';
 import { sendVerificationEmail } from '../lib/email.js';
 import { prisma } from '../lib/prisma.js';
-import { createRefreshToken, hashToken, signAccessToken } from '../lib/tokens.js';
+import {
+  createRefreshToken,
+  hashToken,
+  revokeAllRefreshTokens,
+  revokeRefreshToken,
+  rotateRefreshToken,
+  signAccessToken,
+} from '../lib/tokens.js';
 
 const BCRYPT_ROUNDS = 12;
 const EMAIL_VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
@@ -92,4 +99,29 @@ export async function login(data: {
   const { token: refreshToken } = await createRefreshToken(user.id);
 
   return { accessToken, refreshToken };
+}
+
+export async function refreshSession(
+  refreshToken: string,
+): Promise<{ accessToken: string; refreshToken: string }> {
+  const result = await rotateRefreshToken(refreshToken);
+
+  if (!result) {
+    throw new AuthError(401, 'Invalid or expired refresh token');
+  }
+
+  return {
+    accessToken: result.accessToken,
+    refreshToken: result.refreshToken,
+  };
+}
+
+export async function logout(refreshToken: string | undefined): Promise<void> {
+  if (refreshToken) {
+    await revokeRefreshToken(refreshToken);
+  }
+}
+
+export async function logoutAll(userId: string): Promise<void> {
+  await revokeAllRefreshTokens(userId);
 }

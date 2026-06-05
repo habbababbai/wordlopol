@@ -1,7 +1,16 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { AuthError, login, register, verifyEmail } from '../services/auth.js';
-import { setRefreshCookie } from '../lib/tokens.js';
+import {
+  AuthError,
+  login,
+  logout,
+  logoutAll,
+  refreshSession,
+  register,
+  verifyEmail,
+} from '../services/auth.js';
+import { clearRefreshCookie, REFRESH_COOKIE_NAME, setRefreshCookie } from '../lib/tokens.js';
+import { authenticate } from '../middleware/authenticate.js';
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -67,5 +76,40 @@ authRouter.post(
     const { accessToken, refreshToken } = await login(body);
     setRefreshCookie(res, refreshToken);
     res.json({ accessToken });
+  }),
+);
+
+authRouter.post(
+  '/refresh',
+  handleAuthRoute(async (req, res) => {
+    const refreshToken = req.cookies[REFRESH_COOKIE_NAME] as string | undefined;
+
+    if (!refreshToken) {
+      throw new AuthError(401, 'Missing refresh token');
+    }
+
+    const { accessToken, refreshToken: newRefreshToken } = await refreshSession(refreshToken);
+    setRefreshCookie(res, newRefreshToken);
+    res.json({ accessToken });
+  }),
+);
+
+authRouter.post(
+  '/logout',
+  handleAuthRoute(async (req, res) => {
+    const refreshToken = req.cookies[REFRESH_COOKIE_NAME] as string | undefined;
+    await logout(refreshToken);
+    clearRefreshCookie(res);
+    res.json({ message: 'Logged out' });
+  }),
+);
+
+authRouter.post(
+  '/logout-all',
+  authenticate,
+  handleAuthRoute(async (req, res) => {
+    await logoutAll(req.userId!);
+    clearRefreshCookie(res);
+    res.json({ message: 'Logged out from all devices' });
   }),
 );

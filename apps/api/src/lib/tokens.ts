@@ -53,7 +53,7 @@ export function getRefreshCookieOptions(): CookieOptions {
     httpOnly: true,
     secure: env.NODE_ENV === 'production',
     sameSite: 'lax',
-    path: '/auth/refresh',
+    path: '/auth',
     maxAge: REFRESH_TOKEN_TTL_MS,
   };
 }
@@ -64,7 +64,7 @@ export function setRefreshCookie(res: Response, token: string): void {
 
 export function clearRefreshCookie(res: Response): void {
   res.clearCookie(REFRESH_COOKIE_NAME, {
-    path: '/auth/refresh',
+    path: '/auth',
     httpOnly: true,
     sameSite: 'lax',
     secure: env.NODE_ENV === 'production',

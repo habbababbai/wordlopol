@@ -8,7 +8,22 @@ export async function createTestApp(): Promise<Express> {
 
 export async function createTestAgent() {
   const app = await createTestApp();
-  return request(app);
+  return request.agent(app);
+}
+
+export async function createVerifiedUserWithPassword(password = 'secure-password') {
+  const bcrypt = await import('bcrypt');
+  const { prisma } = await import('../lib/prisma.js');
+
+  const user = await prisma.user.create({
+    data: {
+      email: `user-${crypto.randomUUID()}@example.com`,
+      passwordHash: await bcrypt.hash(password, 12),
+      emailVerifiedAt: new Date(),
+    },
+  });
+
+  return { user, password };
 }
 
 export async function createTestUser(options?: { emailVerified?: boolean; email?: string }) {
