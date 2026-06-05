@@ -65,6 +65,7 @@ describe('auth register verify login', () => {
     await agent.post('/auth/register').send({
       email: 'unverified@example.com',
       password: 'secure-password',
+      displayName: 'Unverified Player',
     });
 
     const res = await agent.post('/auth/login').send({
@@ -80,7 +81,9 @@ describe('auth register verify login', () => {
     const agent = await createTestAgent();
     const email = 'resend@example.com';
 
-    await agent.post('/auth/register').send({ email, password: 'secure-password' });
+    await agent
+      .post('/auth/register')
+      .send({ email, password: 'secure-password', displayName: 'Resend Player' });
     const firstToken = verificationToken.value;
 
     await agent
@@ -104,14 +107,41 @@ describe('auth register verify login', () => {
     await agent.post('/auth/register').send({
       email: 'duplicate@example.com',
       password: 'secure-password',
+      displayName: 'First Player',
     });
 
     const res = await agent.post('/auth/register').send({
       email: 'duplicate@example.com',
       password: 'another-password',
+      displayName: 'Second Player',
     });
 
     expect(res.status).toBe(409);
     expect(res.body).toEqual({ error: 'Email already registered' });
+  });
+
+  it('rejects registration without displayName', async () => {
+    const agent = await createTestAgent();
+
+    const res = await agent.post('/auth/register').send({
+      email: 'noname@example.com',
+      password: 'secure-password',
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ error: 'Invalid request' });
+  });
+
+  it('rejects registration with blank displayName', async () => {
+    const agent = await createTestAgent();
+
+    const res = await agent.post('/auth/register').send({
+      email: 'blankname@example.com',
+      password: 'secure-password',
+      displayName: '   ',
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ error: 'Invalid request' });
   });
 });

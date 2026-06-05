@@ -33,7 +33,7 @@ export class AuthError extends Error {
 export async function register(data: {
   email: string;
   password: string;
-  displayName?: string;
+  displayName: string;
 }): Promise<{ message: string }> {
   const existing = await prisma.user.findUnique({ where: { email: data.email } });
 

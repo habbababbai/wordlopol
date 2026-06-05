@@ -19,6 +19,7 @@ export async function createVerifiedUserWithPassword(password = 'secure-password
     data: {
       email: `user-${crypto.randomUUID()}@example.com`,
       passwordHash: await bcrypt.hash(password, 12),
+      displayName: 'Test Player',
       emailVerifiedAt: new Date(),
     },
   });
@@ -33,6 +34,7 @@ export async function createTestUser(options?: { emailVerified?: boolean; email?
     data: {
       email: options?.email ?? `user-${crypto.randomUUID()}@example.com`,
       passwordHash: 'test-password-hash',
+      displayName: 'Test Player',
       emailVerifiedAt: options?.emailVerified ? new Date() : null,
     },
   });

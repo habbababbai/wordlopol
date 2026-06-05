@@ -27,7 +27,7 @@ import {
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
-  displayName: z.string().trim().min(1).max(50).optional(),
+  displayName: z.string().trim().min(1).max(50),
 });
 
 const verifyEmailSchema = z.object({

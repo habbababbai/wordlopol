@@ -35,6 +35,7 @@ describe('e2e: auth flow', () => {
       .send({
         email: 'e2e-player@example.com',
         password: 'secure-password',
+        displayName: 'E2E Player',
       })
       .expect(201);
 
