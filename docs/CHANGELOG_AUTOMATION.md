@@ -22,12 +22,24 @@ Per-app changelogs via [release-please](https://github.com/googleapis/release-pl
 
 ## Required GitHub settings
 
+### Actions permissions
+
 **Settings → Actions → General**
 
 1. **Workflow permissions**: Read and write permissions
 2. **Allow GitHub Actions to create and approve pull requests**: enabled
 
-Without this, release-please cannot open Release PRs.
+Without #2, release-please cannot open Release PRs.
+
+### `RELEASE_PLEASE_TOKEN` secret
+
+**Settings → Secrets and variables → Actions → `RELEASE_PLEASE_TOKEN`**
+
+Fine-grained PAT for repo `wordlopol` with **Contents** and **Pull requests** read/write.
+
+Changelog workflows use this instead of `GITHUB_TOKEN` so Release PRs trigger CI (GitHub blocks workflows triggered by `GITHUB_TOKEN` events).
+
+Without this secret, changelog workflows fail at the release-please step.
 
 ## How it works
 
@@ -74,9 +86,12 @@ If the first merge happened before workflows existed on `main`:
 
 ## Troubleshooting
 
-| Problem                   | Fix                                                                  |
-| ------------------------- | -------------------------------------------------------------------- |
-| No Release PR after merge | Check Actions tab for failed workflow; verify repo permissions above |
-| Workflow skipped          | Paths filter — ensure changes touch `apps/api/**` or `apps/web/**`   |
-| First merge missed        | Run `workflow_dispatch` manually                                     |
-| Release PR has no CI      | Normal with `GITHUB_TOKEN` — merge manually after review             |
+| Problem                                            | Fix                                                                                          |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| No Release PR after merge                          | Check Actions tab; verify Actions permissions + `RELEASE_PLEASE_TOKEN` secret                |
+| `not permitted to create or approve pull requests` | Settings → Actions → allow Actions to create PRs                                             |
+| Release PR: checks stuck "Waiting"                 | Old PR used `GITHUB_TOKEN` — close it, merge PAT fix, re-run changelog workflow              |
+| Release PR: `branch-name` / `pr-title` fail        | Bot branch/title — ensure `release-please--*` exemption and `main` scope in CI are on `main` |
+| Workflow skipped                                   | Paths filter — ensure changes touch `apps/api/**`, `data/**`, or `apps/web/**`               |
+| First merge missed                                 | Actions → **Run workflow** on Changelog — API / Web                                          |
+| Stale `release-please--*` PR                       | Close it before re-running changelog workflow                                                |

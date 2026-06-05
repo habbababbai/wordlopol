@@ -198,6 +198,9 @@ Full details: [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md).
 
 - `main`
 - `release/x.y.z` (e.g. `release/1.0.0`)
+- `release-please--*` (changelog bot, e.g. `release-please--branches--main--components--api`)
+
+Release-please PR titles use scope `main` (e.g. `chore(main): release api 0.2.0`). Allowed in CI for bot PRs only — not for human commits.
 
 ## Quick reference
 
