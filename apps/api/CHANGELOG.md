@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/habbababbai/wordlopol/compare/api-v0.3.0...api-v0.4.0) (2026-06-05)
+
+
+### Features
+
+* **api:** add auth endpoints, test harness, and Postman collections ([#16](https://github.com/habbababbai/wordlopol/issues/16)) ([b6e8c04](https://github.com/habbababbai/wordlopol/commit/b6e8c04bc6e44797cf3b0ddf20d2db4c0aa0139f))
+
 ## [0.3.0](https://github.com/habbababbai/wordlopol/compare/api-v0.2.0...api-v0.3.0) (2026-06-05)
 
 ### Features
