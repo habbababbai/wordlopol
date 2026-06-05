@@ -1,4 +1,2 @@
 pnpm validate:branch
 pnpm format:check
-pnpm lint
-pnpm typecheck

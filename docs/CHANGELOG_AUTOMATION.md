@@ -1,24 +1,48 @@
 # Changelog automation
 
-Per-app changelogs via [release-please](https://github.com/googleapis/release-please).
+Per-app releases via [release-please](https://github.com/googleapis/release-please). Repo-level changes use the root [CHANGELOG.md](../CHANGELOG.md) (manual, no bot PR).
 
 ## Changelog files
 
-| App | Changelog                                         | Workflow                                                    |
-| --- | ------------------------------------------------- | ----------------------------------------------------------- |
-| API | [apps/api/CHANGELOG.md](../apps/api/CHANGELOG.md) | [changelog-api.yml](../.github/workflows/changelog-api.yml) |
-| Web | [apps/web/CHANGELOG.md](../apps/web/CHANGELOG.md) | [changelog-web.yml](../.github/workflows/changelog-web.yml) |
+| File                                              | Contents                  | Updated by                                                 |
+| ------------------------------------------------- | ------------------------- | ---------------------------------------------------------- |
+| [CHANGELOG.md](../CHANGELOG.md)                   | CI, Husky, tooling, docs  | **You** in the same PR                                     |
+| [apps/api/CHANGELOG.md](../apps/api/CHANGELOG.md) | API features, fixes, perf | **release-please** (Release PR)                            |
+| [apps/web/CHANGELOG.md](../apps/web/CHANGELOG.md) | Web features, fixes, perf | **release-please** (manual workflow until web work starts) |
 
-## When does it run?
+**Never edit** `apps/*/CHANGELOG.md` or `.github/release-please/*-manifest.json` in feature PRs — CI blocks this.
 
-| Trigger                | Runs?                                           |
-| ---------------------- | ----------------------------------------------- |
-| PR merged to `main`    | **Yes** (merge creates a `push` to `main`)      |
-| Push to feature branch | No                                              |
-| PR opened / updated    | No                                              |
-| Manual                 | **Yes** — Actions → workflow → **Run workflow** |
+## Version bumps (patch / minor / major)
 
-> **Why not `pull_request: closed`?** Workflows must already exist on `main` before the PR closes. The first PR that added changelog workflows could never trigger itself. `push` to `main` is the official release-please pattern and is more reliable.
+Controlled by **PR title** (squash-merge commit message):
+
+| Bump               | PR title                                       | Example `0.2.3` → |
+| ------------------ | ---------------------------------------------- | ----------------- |
+| Patch (3rd number) | `fix(api): ...`                                | `0.2.4`           |
+| Minor (2nd number) | `feat(api): ...`                               | `0.3.0`           |
+| Major (1st number) | `feat(api)!: ...` or `BREAKING CHANGE:` footer | `1.0.0`           |
+| No app release     | `chore(repo):`, `ci(repo):`, `docs(repo):`     | —                 |
+
+Override: add `Release-As: x.y.z` in the squash commit body.
+
+Only **feat**, **fix**, and **perf** appear in app changelogs. Other types are hidden and do not bump version on their own.
+
+## Workflows
+
+| Workflow                                                    | Trigger                                            | Tag          |
+| ----------------------------------------------------------- | -------------------------------------------------- | ------------ |
+| [changelog-api.yml](../.github/workflows/changelog-api.yml) | Push to `main` touching `apps/api/**` or `data/**` | `api-vX.Y.Z` |
+| [changelog-web.yml](../.github/workflows/changelog-web.yml) | **Manual only** (Actions → Run workflow)           | `web-vX.Y.Z` |
+
+`packages/shared/**` does not trigger either workflow. Run **Changelog — API** manually if a release only touches shared code.
+
+## Two-step release flow (API)
+
+1. Merge feature PR to `main` (e.g. `feat(api): add auth`).
+2. **Changelog — API** runs → release-please opens/updates a **Release PR** (`release-please--branches--main--components--api`).
+3. Merge the Release PR → `apps/api/CHANGELOG.md` updated, git tag `api-vX.Y.Z` created.
+
+Release PRs get **light CI** (Prettier only) and **no CodeRabbit** review.
 
 ## Required GitHub settings
 
@@ -29,75 +53,27 @@ Per-app changelogs via [release-please](https://github.com/googleapis/release-pl
 1. **Workflow permissions**: Read and write permissions
 2. **Allow GitHub Actions to create and approve pull requests**: enabled
 
-Without #2, release-please cannot open Release PRs.
-
 ### `RELEASE_PLEASE_TOKEN` secret
 
-**Settings → Secrets and variables → Actions → `RELEASE_PLEASE_TOKEN`**
+Fine-grained PAT with **Contents** and **Pull requests** read/write. Used instead of `GITHUB_TOKEN` so Release PRs trigger CI.
 
-Fine-grained PAT for repo `wordlopol` with **Contents** and **Pull requests** read/write.
+### Label: `skip-review`
 
-Changelog workflows use this instead of `GITHUB_TOKEN` so Release PRs trigger CI (GitHub blocks workflows triggered by `GITHUB_TOKEN` events).
+Create once: **Issues → Labels → New label** → name `skip-review`, any color.
 
-Without this secret, changelog workflows fail at the release-please step.
+Used for docs-only PRs (auto-applied when only markdown changes) and optional manual opt-out from CodeRabbit.
 
-## How it works
+## Docs-only PRs
 
-1. Merge a PR to `main` with conventional commits (`feat(api): ...`).
-2. `push` to `main` triggers the matching workflow (by changed paths).
-3. release-please opens or updates a **Release PR**, e.g. `release-please--branches--main--components--api`.
-4. Release PR contains: `CHANGELOG.md`, version bump, manifest update.
-5. Merge the Release PR → git tag created (`api-v0.2.0`).
-
-## Bootstrap (first time / missed run)
-
-If the first merge happened before workflows existed on `main`:
-
-1. GitHub → **Actions** → **Changelog — API** → **Run workflow** → branch `main`
-2. Same for **Changelog — Web** if needed
-3. Check for new Release PR(s) and merge them
-
-## Which workflow runs?
-
-| Changed paths            | Workflow        |
-| ------------------------ | --------------- |
-| `apps/api/**`, `data/**` | Changelog — API |
-| `apps/web/**`            | Changelog — Web |
-
-`packages/shared/**` does **not** trigger either workflow. Use **Run workflow** manually if a release only touches shared.
-
-Release PR changelogs are formatted with Prettier in two places so `pnpm format:check` passes:
-
-1. [changelog-api.yml](../.github/workflows/changelog-api.yml) / [changelog-web.yml](../.github/workflows/changelog-web.yml) — right after release-please updates the release branch
-2. [changelog-format.yml](../.github/workflows/changelog-format.yml) — backup on Release PR open/sync
-
-## Commit types → changelog sections
-
-| Type       | Section       |
-| ---------- | ------------- |
-| `feat`     | Features      |
-| `fix`      | Bug Fixes     |
-| `perf`     | Performance   |
-| `refactor` | Refactoring   |
-| `docs`     | Documentation |
-| `test`     | Tests         |
-| `build`    | Build System  |
-| `ci`       | CI            |
-| `chore`    | Hidden        |
-
-## Versioning
-
-- Starts at **0.1.0** per app (independent).
-- `feat` → minor | `fix` → patch | `feat!` → major
+- Title: `docs(repo): ...`
+- CI: Prettier check only (no lint/typecheck/build)
+- CodeRabbit: skipped via `skip-review` label or `[skip review]` in title
 
 ## Troubleshooting
 
-| Problem                                            | Fix                                                                                          |
-| -------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| No Release PR after merge                          | Check Actions tab; verify Actions permissions + `RELEASE_PLEASE_TOKEN` secret                |
-| `not permitted to create or approve pull requests` | Settings → Actions → allow Actions to create PRs                                             |
-| Release PR: checks stuck "Waiting"                 | Old PR used `GITHUB_TOKEN` — close it, merge PAT fix, re-run changelog workflow              |
-| Release PR: `branch-name` / `pr-title` fail        | Bot branch/title — ensure `release-please--*` exemption and `main` scope in CI are on `main` |
-| Workflow skipped                                   | Paths filter — ensure changes touch `apps/api/**`, `data/**`, or `apps/web/**`               |
-| First merge missed                                 | Actions → **Run workflow** on Changelog — API / Web                                          |
-| Stale `release-please--*` PR                       | Close it before re-running changelog workflow                                                |
+| Problem                     | Fix                                                                        |
+| --------------------------- | -------------------------------------------------------------------------- |
+| No Release PR after merge   | Check Actions; verify `RELEASE_PLEASE_TOKEN` and Actions permissions       |
+| Duplicate changelog entries | Never hand-edit app changelogs; close stale Release PR and re-run workflow |
+| CodeRabbit on Release PR    | Should be skipped via `autorelease: pending` label                         |
+| Web release too early       | Web workflow is manual-only until you run it from Actions                  |

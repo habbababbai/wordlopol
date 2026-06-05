@@ -2,74 +2,77 @@
 
 AI code review on pull requests. Config: [`.coderabbit.yaml`](../.coderabbit.yaml).
 
-## Setup checklist (all required)
+## Setup checklist
 
 ### 1. GitHub App
 
 1. [github.com/apps/coderabbitai](https://github.com/apps/coderabbitai) → **Install** / **Configure**
-2. Account: **habbababbai**
-3. **Only select repositories** → **`wordlopol`**
-4. Permissions must include **Pull requests: Read and write**
-5. **Save**
+2. **Only select repositories** → **`wordlopol`**
+3. Permissions must include **Pull requests: Read and write**
 
-### 2. CodeRabbit dashboard (easy to miss)
+### 2. CodeRabbit dashboard
 
-1. [coderabbit.ai](https://coderabbit.ai) → Sign in with **GitHub** (same account)
-2. **Repositories** → ensure **`wordlopol`** is **enabled / toggled on**
-3. Without this, reviews may summarize but fail to post inline comments
+1. [coderabbit.ai](https://coderabbit.ai) → Sign in with GitHub
+2. **Repositories** → ensure **`wordlopol`** is enabled
 
-### 3. GitHub Code review limits (fixes "Failed to post review comments")
+### 3. GitHub code review limits
 
-GitHub can block bots from submitting **formal** PR reviews. CodeRabbit then fails with:
+Repo → **Settings → Moderation → Code review limits** → disable **"Limit to users explicitly granted read or higher access"** (recommended for personal repos).
 
-```
-Failed to post review comments
-```
+Or: [github.com/habbababbai/wordlopol/settings/moderation](https://github.com/habbababbai/wordlopol/settings/moderation)
 
-**Fix:**
+### 4. Label `skip-review`
 
-1. Repo → **Settings** → **Moderation** (under Access) → **Code review limits**
-   - Direct: [github.com/habbababbai/wordlopol/settings/moderation](https://github.com/habbababbai/wordlopol/settings/moderation)
-2. Find **"Limit to users explicitly granted read or higher access"**
-3. **Disable** it (recommended for personal repos)
+Create once under **Issues → Labels** (any color). Used for docs-only PRs and manual opt-out.
 
-Or keep it enabled and ensure CodeRabbit app has repository access (re-save app install).
+---
 
-Our `.coderabbit.yaml` sets `request_changes_workflow: false` and `review_status: false` so CodeRabbit posts **regular inline comments** instead of formal approve/request-changes reviews.
+## What CodeRabbit does (and does not do)
 
-**PR description:** `high_level_summary: false` — CodeRabbit never edits your description. You fill the PR template; reviews still run automatically (inline comments + walkthrough comment).
+| Behavior                                     | Setting                                                                                                |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| **Does not edit PR description**             | `high_level_summary: false` — you fill [pull_request_template.md](../.github/pull_request_template.md) |
+| **No formal approve/request-changes review** | `review_status: false` — inline comments only                                                          |
+| **Skips release-please PRs**                 | `!autorelease: pending` label                                                                          |
+| **Skips docs / quiet PRs**                   | `!skip-review` label or `[skip review]` in title                                                       |
+| **Ignores markdown in reviews**              | `path_filters` exclude `*.md`, `docs/**`, `plans/**`, changelogs                                       |
 
-### 4. Verify on a PR
+Reviews still run on feature PRs with code changes. Comments are on the **Files changed** tab — not buried in Conversation walkthroughs for skipped PRs.
 
-1. Open a PR to `main` (not draft)
-2. Wait 2–10 minutes
-3. Check **Conversation** (summary) and **Files changed** (inline comments)
-4. If nothing: comment `@coderabbitai review`
-5. Full review also at [app.coderabbit.ai](https://app.coderabbit.ai) → your repo → PR
+---
 
-## What CodeRabbit reviews
+## Finding comments
 
-| Path                 | Focus                              |
-| -------------------- | ---------------------------------- |
-| `apps/api/**`        | Security, Prisma, auth, validation |
-| `apps/web/**`        | React, a11y, Polish keyboard       |
-| `packages/shared/**` | Pure game logic                    |
-| `.github/**`         | CI workflows                       |
+| Location          | What appears there                                              |
+| ----------------- | --------------------------------------------------------------- |
+| **Files changed** | Actionable inline review comments — check here first            |
+| **Conversation**  | CodeRabbit walkthrough (skipped on `skip-review` / release PRs) |
+
+Manual review: comment `@coderabbitai review` or `@coderabbitai full review`.
+
+Dashboard: [app.coderabbit.ai](https://app.coderabbit.ai)
+
+---
+
+## When reviews are skipped
+
+| PR type                   | How                                                            |
+| ------------------------- | -------------------------------------------------------------- |
+| release-please Release PR | Label `autorelease: pending` (automatic)                       |
+| Docs-only markdown        | Label `skip-review` (auto-applied) or `[skip review]` in title |
+| Any quiet PR              | Add label `skip-review` manually                               |
+
+Full CI and CodeRabbit still run on normal `feat` / `fix` PRs with code changes.
+
+---
 
 ## Troubleshooting
 
-| Problem                             | Fix                                                                                                         |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Summary posts, inline comments fail | Code review limits (step 3 above) + enable repo on coderabbit.ai                                            |
-| No review at all                    | Install app on `wordlopol`; enable repo on coderabbit.ai dashboard                                          |
-| Draft PR skipped                    | Mark **Ready for review**, or set `drafts: true` in config                                                  |
-| Stale PR                            | Comment `@coderabbitai full review`                                                                         |
-| Still broken                        | Reinstall app: [settings/installations](https://github.com/settings/installations) → CodeRabbit → Configure |
+| Problem                         | Fix                                                              |
+| ------------------------------- | ---------------------------------------------------------------- |
+| Inline comments fail to post    | Code review limits (step 3) + enable repo on coderabbit.ai       |
+| CodeRabbit edits PR description | Should not happen — verify `high_level_summary: false` on `main` |
+| No review on feature PR         | Install app; enable repo; comment `@coderabbitai review`         |
+| Draft PR skipped                | Mark ready for review                                            |
 
-## Public repo
-
-Free tier covers public repositories.
-
-## Customize config
-
-Edit `.coderabbit.yaml` in a PR. CodeRabbit uses the config from the **PR branch**.
+Edit `.coderabbit.yaml` in a PR — CodeRabbit uses config from the **PR branch**.
