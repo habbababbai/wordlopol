@@ -9,10 +9,10 @@ Polish Wordle-style word game. Guess 5-letter Polish words — diacritics matter
 - **Local hooks** (Husky):
   - `pre-commit` — Prettier + ESLint on staged files
   - `commit-msg` — commit message format (Commitlint)
-  - `pre-push` — branch name, Prettier check, lint, typecheck
-- **PR checks** (GitHub Actions): branch name, PR title, Prettier, ESLint, typecheck, build
-- **Changelogs**: per-app auto-update via release-please — [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md)
-- **CodeRabbit**: AI PR reviews — [docs/CODERABBIT.md](./docs/CODERABBIT.md) (requires [coderabbit.ai](https://coderabbit.ai) repo toggle + [code review limits](https://github.com/habbababbai/wordlopol/settings/moderation) off)
+  - `pre-push` — branch name + Prettier check
+- **PR checks** (GitHub Actions): branch name, PR title, then full CI or light docs-only CI — see [pull_request_template.md](./.github/pull_request_template.md)
+- **Changelogs**: root [CHANGELOG.md](./CHANGELOG.md) (manual) + per-app via release-please — [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md)
+- **CodeRabbit**: inline code review only; **never edits PR description** — [docs/CODERABBIT.md](./docs/CODERABBIT.md)
 - **Manual**: `pnpm validate` runs branch + format + lint + typecheck
 - **Plans**: implementation steps live in [`plans/`](./plans/)
 
@@ -101,9 +101,11 @@ Auth flows (verify email, password reset, change email) use [Resend](https://res
 
 | Document                                                       | Description                                         |
 | -------------------------------------------------------------- | --------------------------------------------------- |
+| [CHANGELOG.md](./CHANGELOG.md)                                 | Repo-level changelog (CI, tooling, docs)            |
 | [COMMIT_CONVENTIONS.md](./COMMIT_CONVENTIONS.md)               | Commit scopes, PR structure, Husky/Commitlint setup |
-| [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md) | Per-app changelog workflows (API, Web)              |
-| [docs/CODERABBIT.md](./docs/CODERABBIT.md)                     | CodeRabbit AI PR review setup                       |
+| [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md) | App releases, version bumps, release-please         |
+| [docs/CODERABBIT.md](./docs/CODERABBIT.md)                     | CodeRabbit setup and skip rules                     |
+| [apps/api/README.md](./apps/api/README.md)                     | API app overview                                    |
 | [plans/](./plans/)                                             | Step-by-step implementation guides                  |
 
 ### Implementation plans

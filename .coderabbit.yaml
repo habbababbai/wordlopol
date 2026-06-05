@@ -2,11 +2,9 @@
 language: en-US
 reviews:
   profile: chill
-  # Do not submit formal GitHub "Request changes" reviews — blocked by Code review limits
   request_changes_workflow: false
-  # Do not submit formal review status — use inline comments only (more reliable for bots)
   review_status: false
-  # Do not edit the PR description — you fill the template (Summary, Test plan)
+  # Never edit the PR description — author fills .github/pull_request_template.md
   high_level_summary: false
   poem: false
   auto_review:
@@ -14,6 +12,19 @@ reviews:
     drafts: false
     base_branches:
       - main
+    labels:
+      - '!autorelease: pending'
+      - '!skip-review'
+    ignore_title_keywords:
+      - '[skip review]'
+      - 'release api'
+      - 'release web'
+  path_filters:
+    - '!**/*.md'
+    - '!docs/**'
+    - '!plans/**'
+    - '!**/CHANGELOG.md'
+    - '!.github/release-please/**'
   path_instructions:
     - path: 'apps/api/**'
       instructions: |

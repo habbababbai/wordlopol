@@ -118,24 +118,31 @@ Use the **same format as commit messages**. Squash-merge PRs use the title as th
 feat(api): add password reset flow
 ```
 
-### PR description template
+### PR description
 
-```markdown
-## Summary
+GitHub pre-fills from [`.github/pull_request_template.md`](./.github/pull_request_template.md). Fill every section — **CodeRabbit does not edit the description**.
 
-- Bullet points of what changed
+Include:
 
-## Scope
+- **Summary** — what changed and why
+- **Version bump** — must match PR title (`fix` = patch, `feat` = minor, `feat!` = major, `chore`/`ci`/`docs` = none)
+- **Test plan** — what you ran
+- **Changelog** — root [CHANGELOG.md](./CHANGELOG.md) for repo/CI/docs; never edit `apps/*/CHANGELOG.md` in feature PRs
 
-api | web | shared | tooling | data | repo
+### Version bump quick reference
 
-## Test plan
+| PR title type                  | Version bump       | Example                    |
+| ------------------------------ | ------------------ | -------------------------- |
+| `fix(api):`                    | Patch (3rd number) | `0.2.3` → `0.2.4`          |
+| `feat(api):`                   | Minor (2nd number) | `0.2.3` → `0.3.0`          |
+| `feat(api)!:`                  | Major (1st number) | `0.2.3` → `1.0.0`          |
+| `chore` / `ci` / `docs` (repo) | None               | update root CHANGELOG only |
 
-- [ ] `pnpm lint`
-- [ ] `pnpm typecheck`
-- [ ] `pnpm build`
-- [ ] Manual steps (if any)
-```
+### Docs-only PRs
+
+- Title: `docs(repo): ...`
+- Add label **`skip-review`** (auto-applied for markdown-only) or `[skip review]` in title
+- Light CI: Prettier only; no CodeRabbit walkthrough
 
 ## Initial commit
 
@@ -150,11 +157,11 @@ Prisma 7, Husky, CI, and implementation plans.
 
 ## Husky hooks (local)
 
-| Hook         | Runs                                                      | Purpose                                                    |
-| ------------ | --------------------------------------------------------- | ---------------------------------------------------------- |
-| `pre-commit` | `lint-staged`                                             | Auto-fix Prettier + ESLint on **staged files only**        |
-| `commit-msg` | `commitlint`                                              | Enforce `type(scope): subject` format                      |
-| `pre-push`   | `validate:branch` → `format:check` → `lint` → `typecheck` | Block push if branch name, formatting, lint, or types fail |
+| Hook         | Runs                               | Purpose                                             |
+| ------------ | ---------------------------------- | --------------------------------------------------- |
+| `pre-commit` | `lint-staged`                      | Auto-fix Prettier + ESLint on **staged files only** |
+| `commit-msg` | `commitlint`                       | Enforce `type(scope): subject` format               |
+| `pre-push`   | `validate:branch` → `format:check` | Branch name + formatting before push                |
 
 Run all checks manually: `pnpm validate`
 
@@ -171,28 +178,27 @@ On commit, staged files are processed per package:
 
 ## GitHub Actions (PR checks)
 
-On every pull request to `main`:
+| PR type                   | Jobs                                                                  |
+| ------------------------- | --------------------------------------------------------------------- |
+| Feature / fix (code)      | `branch-name`, `pr-title`, full `ci` (format, lint, typecheck, build) |
+| Docs-only (markdown)      | `branch-name`, `pr-title`, `ci-docs` (format only)                    |
+| release-please Release PR | `ci-release-pr` (format only) — no branch-name, pr-title, CodeRabbit  |
 
-| Job           | Check                                                |
-| ------------- | ---------------------------------------------------- |
-| `branch-name` | Head branch matches `type/scope-description`         |
-| `pr-title`    | PR title matches commit format (semantic PR)         |
-| `ci`          | `pnpm format:check` → `lint` → `typecheck` → `build` |
+Also: `validate-release-files` blocks manual edits to app changelogs and release manifests.
 
 PR title must match commit rules, e.g. `feat(api): add jwt refresh rotation`
 
 ## Changelog automation
 
-Per-app changelogs in `apps/api/CHANGELOG.md` and `apps/web/CHANGELOG.md` are updated by [release-please](https://github.com/googleapis/release-please).
+- **Root** [CHANGELOG.md](./CHANGELOG.md) — repo CI, tooling, docs (you edit manually)
+- **Apps** [apps/api/CHANGELOG.md](./apps/api/CHANGELOG.md), [apps/web/CHANGELOG.md](./apps/web/CHANGELOG.md) — release-please only
 
 | Workflow            | Triggers on              | Release PR / tag |
 | ------------------- | ------------------------ | ---------------- |
 | `changelog-api.yml` | `apps/api/**`, `data/**` | `api-v0.x.x`     |
-| `changelog-web.yml` | `apps/web/**`            | `web-v0.x.x`     |
+| `changelog-web.yml` | **Manual** (Actions)     | `web-v0.x.x`     |
 
-Changelog workflows run on **`push` to `main`** (includes PR merges, not feature-branch pushes). After merge, check for an open **Release PR** from release-please. Merge that second PR to write `CHANGELOG.md` and create the git tag. If a run was missed, use **Actions → Run workflow** (bootstrap). See [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md).
-
-Full details: [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md).
+After merging a releasable api PR, merge the **Release PR** from release-please. See [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md).
 
 ### Allowed branches without naming rule
 
