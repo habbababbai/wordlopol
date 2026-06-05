@@ -185,10 +185,10 @@ PR title must match commit rules, e.g. `feat(api): add jwt refresh rotation`
 
 Per-app changelogs in `apps/api/CHANGELOG.md` and `apps/web/CHANGELOG.md` are updated by [release-please](https://github.com/googleapis/release-please).
 
-| Workflow            | Triggers on                                    | Release PR / tag |
-| ------------------- | ---------------------------------------------- | ---------------- |
-| `changelog-api.yml` | `apps/api/**`, `data/**`, `packages/shared/**` | `api-v0.x.x`     |
-| `changelog-web.yml` | `apps/web/**`, `packages/shared/**`            | `web-v0.x.x`     |
+| Workflow            | Triggers on              | Release PR / tag |
+| ------------------- | ------------------------ | ---------------- |
+| `changelog-api.yml` | `apps/api/**`, `data/**` | `api-v0.x.x`     |
+| `changelog-web.yml` | `apps/web/**`            | `web-v0.x.x`     |
 
 Changelog workflows run on **`push` to `main`** (includes PR merges, not feature-branch pushes). After merge, check for an open **Release PR** from release-please. Merge that second PR to write `CHANGELOG.md` and create the git tag. If a run was missed, use **Actions → Run workflow** (bootstrap). See [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md).
 

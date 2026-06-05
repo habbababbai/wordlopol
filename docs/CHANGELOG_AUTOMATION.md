@@ -63,7 +63,13 @@ If the first merge happened before workflows existed on `main`:
 | ------------------------ | --------------- |
 | `apps/api/**`, `data/**` | Changelog — API |
 | `apps/web/**`            | Changelog — Web |
-| `packages/shared/**`     | **Both**        |
+
+`packages/shared/**` does **not** trigger either workflow. Use **Run workflow** manually if a release only touches shared.
+
+Release PR changelogs are formatted with Prettier in two places so `pnpm format:check` passes:
+
+1. [changelog-api.yml](../.github/workflows/changelog-api.yml) / [changelog-web.yml](../.github/workflows/changelog-web.yml) — right after release-please updates the release branch
+2. [changelog-format.yml](../.github/workflows/changelog-format.yml) — backup on Release PR open/sync
 
 ## Commit types → changelog sections
 
