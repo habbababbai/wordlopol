@@ -178,11 +178,12 @@ On commit, staged files are processed per package:
 
 ## GitHub Actions (PR checks)
 
-| PR type                   | Jobs                                                                  |
-| ------------------------- | --------------------------------------------------------------------- |
-| Feature / fix (code)      | `branch-name`, `pr-title`, full `ci` (format, lint, typecheck, build) |
-| Docs-only (markdown)      | `branch-name`, `pr-title`, `ci-docs` (format only)                    |
-| release-please Release PR | `ci-release-pr` (format only) — no branch-name, pr-title, CodeRabbit  |
+| PR type                   | Jobs                                                                               |
+| ------------------------- | ---------------------------------------------------------------------------------- |
+| Feature / fix (code)      | `branch-name`, `pr-title`, full `ci` (format, lint, typecheck, build)              |
+| Docs-only (markdown)      | `branch-name`, `pr-title`, `ci-docs` (format only)                                 |
+| release-please Release PR | `ci-release-pr` (format only) — no branch-name, pr-title, CodeRabbit               |
+| Renovate dependency PR    | `branch-name`, `pr-title`, `validate-release-files` skipped — full `ci` still runs |
 
 Also: `validate-release-files` blocks manual edits to app changelogs and release manifests.
 
@@ -205,6 +206,7 @@ After merging a releasable api PR, merge the **Release PR** from release-please.
 - `main`
 - `release/x.y.z` (e.g. `release/1.0.0`)
 - `release-please--*` (changelog bot, e.g. `release-please--branches--main--components--api`)
+- `renovate/*` (dependency bot, e.g. `renovate/pnpm-11.x`)
 
 Release-please PR titles use scope `main` (e.g. `chore(main): release api 0.2.0`). Allowed in CI for bot PRs only — not for human commits.
 

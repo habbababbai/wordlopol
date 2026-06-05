@@ -6,7 +6,8 @@ BRANCH="${1:-$(git branch --show-current)}"
 # Protected / release / bot branches — no naming rule
 if [[ "$BRANCH" == "main" ]] \
   || [[ "$BRANCH" =~ ^release/[0-9]+\.[0-9]+\.[0-9]+$ ]] \
-  || [[ "$BRANCH" =~ ^release-please-- ]]; then
+  || [[ "$BRANCH" =~ ^release-please-- ]] \
+  || [[ "$BRANCH" =~ ^renovate/ ]]; then
   exit 0
 fi
 

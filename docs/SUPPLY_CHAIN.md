@@ -135,7 +135,7 @@ Config: [`renovate.json`](../renovate.json).
 
 `minimumReleaseAge` may delay installing brand-new versions Renovate proposes. For urgent security fixes, use `pnpm audit --fix` (adds patched versions to `minimumReleaseAgeExclude`) or add a manual exclusion.
 
-Renovate PRs use `renovate/*` branches and will fail `branch-name` / `pr-title` checks until CI exemptions are added (future improvement).
+Renovate PRs use `renovate/*` branches and are exempt from `branch-name` / `pr-title` / `validate-release-files` (same pattern as `release-please--*`).
 
 ---
 

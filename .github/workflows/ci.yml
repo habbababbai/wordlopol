@@ -36,7 +36,7 @@ jobs:
               - '!**/*.md'
 
   branch-name:
-    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please--')
+    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please--') && !startsWith(github.head_ref, 'renovate/')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -46,7 +46,7 @@ jobs:
         run: bash scripts/validate-branch-name.sh "${{ github.head_ref }}"
 
   pr-title:
-    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please--')
+    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please--') && !startsWith(github.head_ref, 'renovate/')
     runs-on: ubuntu-latest
     steps:
       - uses: amannn/action-semantic-pull-request@e32d7e603df1aa1ba07e981f2a23455dee596825 # v5
@@ -81,7 +81,7 @@ jobs:
             Example: feat(api): add jwt refresh rotation
 
   validate-release-files:
-    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please--')
+    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please--') && !startsWith(github.head_ref, 'renovate/')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
