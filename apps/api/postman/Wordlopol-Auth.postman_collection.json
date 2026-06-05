@@ -1,0 +1,442 @@
+{
+  "info": {
+    "name": "Wordlopol Auth (automated)",
+    "description": "Full auth flow for local development.\n\nSETUP:\n1. Import Wordlopol-Local.postman_environment.json\n2. Select **Wordlopol Local** in the environment dropdown (top-right) — required!\n3. Run collection from **00 Health** through **13 Delete account** in order\n\nRequires API at NODE_ENV=development (devToken in responses).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3001"
+    }
+  ],
+  "item": [
+    {
+      "name": "00 Health",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Initialize a fresh user for this collection run",
+              "const runId = Date.now();",
+              "pm.environment.set('email', `player-${runId}@example.com`);",
+              "pm.environment.set('new_email', `new-player-${runId}@example.com`);",
+              "pm.environment.set('password', 'secure-password');",
+              "pm.environment.set('display_name', 'Player');",
+              "pm.environment.set('access_token', '');",
+              "pm.environment.set('verify_token', '');",
+              "pm.environment.set('reset_token', '');",
+              "pm.environment.set('email_change_token', '');",
+              "console.log('[init] email =', pm.environment.get('email'));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Database connected', () => {",
+              "  pm.expect(pm.response.json().database).to.eql('connected');",
+              "});",
+              "pm.test('Environment active', () => {",
+              "  pm.expect(pm.environment.get('base_url'), 'Select Wordlopol Local environment (top-right)').to.eql('http://localhost:3001');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/health"
+      }
+    },
+    {
+      "name": "01 Register",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const email = pm.environment.get('email');",
+              "if (!email) {",
+              "  throw new Error('email is empty — select Wordlopol Local environment and run 00 Health first');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code !== 201) {",
+              "  console.log('Register body sent:', pm.request.body.raw);",
+              "  console.log('Register response:', pm.response.text());",
+              "}",
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.test('devToken present (is NODE_ENV=development?)', () => pm.expect(body.devToken).to.be.a('string').and.not.empty);",
+              "pm.environment.set('verify_token', body.devToken);",
+              "console.log('[saved] verify_token');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"displayName\": \"{{display_name}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{base_url}}/auth/register"
+      }
+    },
+    {
+      "name": "02 Verify email",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code !== 200) {",
+              "  console.log('verify_token =', pm.environment.get('verify_token'));",
+              "  console.log('response:', pm.response.text());",
+              "}",
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Email verified', () => {",
+              "  pm.expect(pm.response.json().message).to.eql('Email verified');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"token\": \"{{verify_token}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{base_url}}/auth/verify-email"
+      }
+    },
+    {
+      "name": "03 Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const { accessToken, user } = pm.response.json();",
+              "pm.environment.set('access_token', accessToken);",
+              "pm.test('access_token saved', () => pm.expect(accessToken).to.be.a('string').and.not.empty);",
+              "pm.test('user profile', () => {",
+              "  pm.expect(user.email).to.eql(pm.environment.get('email'));",
+              "  pm.expect(user.emailVerified).to.be.true;",
+              "});",
+              "pm.test('refresh cookie set', () => pm.expect(pm.cookies.has('refresh_token')).to.be.true);",
+              "console.log('[saved] access_token');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{base_url}}/auth/login"
+      }
+    },
+    {
+      "name": "04 Refresh",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const { accessToken } = pm.response.json();",
+              "pm.environment.set('access_token', accessToken);",
+              "pm.test('refresh cookie rotated', () => pm.expect(pm.cookies.has('refresh_token')).to.be.true);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{base_url}}/auth/refresh"
+      }
+    },
+    {
+      "name": "05 Logout",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Logged out', () => {",
+              "  pm.expect(pm.response.json().message).to.eql('Logged out');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{base_url}}/auth/logout"
+      }
+    },
+    {
+      "name": "06 Logout all",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "POST",
+        "header": [],
+        "url": "{{base_url}}/auth/logout-all"
+      }
+    },
+    {
+      "name": "07 Forgot password",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('devToken present', () => pm.expect(body.devToken).to.be.a('string').and.not.empty);",
+              "pm.environment.set('reset_token', body.devToken);",
+              "console.log('[saved] reset_token');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{base_url}}/auth/forgot-password"
+      }
+    },
+    {
+      "name": "08 Reset password",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Password reset', () => {",
+              "  pm.expect(pm.response.json().message).to.eql('Password reset');",
+              "});",
+              "pm.environment.set('password', 'new-password');",
+              "console.log('[saved] password = new-password');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"token\": \"{{reset_token}}\",\n  \"password\": \"new-password\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{base_url}}/auth/reset-password"
+      }
+    },
+    {
+      "name": "09 Change display name",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Display name updated', () => {",
+              "  pm.expect(pm.response.json().user.displayName).to.eql('Updated Player');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"displayName\": \"Updated Player\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{base_url}}/auth/change-display-name"
+      }
+    },
+    {
+      "name": "10 Change password",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.environment.set('password', 'changed-password');",
+              "console.log('[saved] password = changed-password');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"currentPassword\": \"{{password}}\",\n  \"newPassword\": \"changed-password\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{base_url}}/auth/change-password"
+      }
+    },
+    {
+      "name": "11 Change email",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('devToken present', () => pm.expect(body.devToken).to.be.a('string').and.not.empty);",
+              "pm.environment.set('email_change_token', body.devToken);",
+              "console.log('[saved] email_change_token');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"newEmail\": \"{{new_email}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{base_url}}/auth/change-email"
+      }
+    },
+    {
+      "name": "12 Verify email change",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Email changed', () => {",
+              "  pm.expect(pm.response.json().message).to.eql('Email changed');",
+              "});",
+              "pm.environment.set('email', pm.environment.get('new_email'));",
+              "console.log('[saved] email =', pm.environment.get('email'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"token\": \"{{email_change_token}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{base_url}}/auth/verify-email"
+      }
+    },
+    {
+      "name": "13 Delete account",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Account deleted', () => {",
+              "  pm.expect(pm.response.json().message).to.eql('Account deleted');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "DELETE",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"password\": \"{{password}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{base_url}}/auth/account"
+      }
+    }
+  ]
+}

@@ -165,6 +165,40 @@ Send header: `Authorization: Bearer <accessToken>`
 
 ## Postman setup guide
 
+### Quick start (import ready-made collection)
+
+Files in `apps/api/postman/`:
+
+| File                                       | Import as   |
+| ------------------------------------------ | ----------- |
+| `Wordlopol-Local.postman_environment.json` | Environment |
+| `Wordlopol-Auth.postman_collection.json`   | Collection  |
+
+1. Postman → **Import** → select both files
+2. Select environment **Wordlopol Local** (top-right dropdown)
+3. Ensure API is running: `pnpm --filter @wordlopol/api dev`
+4. Open collection **Wordlopol Auth (automated)** → **Run**
+5. Run all 14 requests in order — tokens and passwords are saved automatically via Tests scripts
+
+**What gets saved automatically:**
+
+| After request          | Environment variable | Source                    |
+| ---------------------- | -------------------- | ------------------------- |
+| 01 Register            | `verify_token`       | `response.devToken`       |
+| 03 Login               | `access_token`       | `response.accessToken`    |
+| 04 Refresh             | `access_token`       | updated access token      |
+| 07 Forgot password     | `reset_token`        | `response.devToken`       |
+| 08 Reset password      | `password`           | set to `new-password`     |
+| 10 Change password     | `password`           | set to `changed-password` |
+| 11 Change email        | `email_change_token` | `response.devToken`       |
+| 12 Verify email change | `email`              | updated to `new_email`    |
+
+Collection **Pre-request Script** (first request only) sets fresh `email`, `new_email`, `password`, `display_name` and clears stale tokens.
+
+To verify variables mid-run: **Environments → Wordlopol Local → eye icon**, or open Postman **Console** (View → Show Postman Console).
+
+### Manual setup (alternative)
+
 ### 1. Prerequisites
 
 ```bash
