@@ -71,9 +71,10 @@ Used for docs-only PRs (auto-applied when only markdown changes) and optional ma
 
 ## Troubleshooting
 
-| Problem                     | Fix                                                                        |
-| --------------------------- | -------------------------------------------------------------------------- |
-| No Release PR after merge   | Check Actions; verify `RELEASE_PLEASE_TOKEN` and Actions permissions       |
-| Duplicate changelog entries | Never hand-edit app changelogs; close stale Release PR and re-run workflow |
-| CodeRabbit on Release PR    | Should be skipped via `autorelease: pending` label                         |
-| Web release too early       | Web workflow is manual-only until you run it from Actions                  |
+| Problem                                   | Fix                                                                               |
+| ----------------------------------------- | --------------------------------------------------------------------------------- |
+| No Release PR after merge                 | Check Actions; verify `RELEASE_PLEASE_TOKEN` and Actions permissions              |
+| Duplicate changelog entries               | Never hand-edit app changelogs; close stale Release PR and re-run workflow        |
+| Release PR CI fails Prettier on changelog | `ci-release-pr` skips app changelogs; bot formats them in `changelog-*` workflows |
+| CodeRabbit on Release PR                  | Should be skipped via `autorelease: pending` label                                |
+| Web release too early                     | Web workflow is manual-only until you run it from Actions                         |

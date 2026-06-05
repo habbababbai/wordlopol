@@ -69,7 +69,7 @@ Workflow: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
 | ----------------------------------------- | ------------------- | -------------------------------------------------- |
 | Code or mixed docs+code                   | `ci`                | install, **audit**, format, lint, typecheck, build |
 | Docs only (`*.md`, `docs/**`, `plans/**`) | `ci-docs`           | install, format only                               |
-| release-please branch                     | `ci-release-pr`     | install, format only                               |
+| release-please branch                     | `ci-release-pr`     | install, format only (app changelogs excluded)     |
 | Any PR                                    | `dependency-review` | PR diff scanned for new high+ vulnerabilities      |
 
 Path logic matches [auto-label-docs.yml](../.github/workflows/auto-label-docs.yml): full `ci` is skipped only when the PR is **truly docs-only** (docs paths changed and no code paths).

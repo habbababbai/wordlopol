@@ -180,12 +180,12 @@ On commit, staged files are processed per package:
 
 ## GitHub Actions (PR checks)
 
-| PR type                   | Jobs                                                                               |
-| ------------------------- | ---------------------------------------------------------------------------------- |
-| Feature / fix (code)      | `branch-name`, `pr-title`, full `ci` (format, lint, typecheck, build)              |
-| Docs-only (markdown)      | `branch-name`, `pr-title`, `ci-docs` (format only)                                 |
-| release-please Release PR | `ci-release-pr` (format only) — no branch-name, pr-title, CodeRabbit               |
-| Renovate dependency PR    | `branch-name`, `pr-title`, `validate-release-files` skipped — full `ci` still runs |
+| PR type                   | Jobs                                                                                          |
+| ------------------------- | --------------------------------------------------------------------------------------------- |
+| Feature / fix (code)      | `branch-name`, `pr-title`, full `ci` (format, lint, typecheck, build)                         |
+| Docs-only (markdown)      | `branch-name`, `pr-title`, `ci-docs` (format only)                                            |
+| release-please Release PR | `ci-release-pr` (format only, app changelogs excluded) — no branch-name, pr-title, CodeRabbit |
+| Renovate dependency PR    | `branch-name`, `pr-title`, `validate-release-files` skipped — full `ci` still runs            |
 
 Also: `validate-release-files` blocks manual edits to app changelogs and release manifests.
 

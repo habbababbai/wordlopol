@@ -206,5 +206,16 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # App changelogs are release-please output (different markdown conventions) and are
+      # formatted by changelog-api.yml / changelog-web.yml — exclude to avoid a false failure
+      # before the bot's format commit lands.
       - name: Prettier check
-        run: pnpm format:check
+        run: |
+          {
+            cat .prettierignore
+            echo apps/api/CHANGELOG.md
+            echo apps/web/CHANGELOG.md
+          } > .prettierignore.ci-release-pr
+          pnpm exec prettier --check "**/*.{ts,tsx,js,json,md,yml,yaml}" \
+            --ignore-path .prettierignore.ci-release-pr
+          rm .prettierignore.ci-release-pr
