@@ -149,7 +149,7 @@ Send header: `Authorization: Bearer <accessToken>`
 | 404    | User not found                                       |
 | 409    | Email already registered                             |
 | 429    | Rate limit exceeded on auth endpoints                |
-| 503    | Health — DB down                                     |
+| 503    | Health — DB down / email delivery failed             |
 
 ---
 
@@ -195,7 +195,7 @@ Create environment **Wordlopol Local**:
 
 ### 4. Where tokens come from (not in API responses)
 
-`forgot-password`, `register`, and `change-email` return only generic messages. Tokens appear in the **API dev terminal** when `RESEND_API_KEY` is unset:
+`forgot-password`, `register`, and `change-email` return only generic messages. Tokens appear in the **API dev terminal** when `RESEND_API_KEY` is unset or still set to the `.env.example` placeholder:
 
 ```
 [email] To: player@example.com

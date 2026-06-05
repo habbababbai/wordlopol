@@ -15,6 +15,7 @@ import {
   buildEmailChangeUrl,
   buildPasswordResetUrl,
   buildVerificationUrl,
+  isEmailDeliveryConfigured,
   sendVerificationEmail,
 } from '../lib/email.js';
 
@@ -42,9 +43,17 @@ describe('email', () => {
     });
   });
 
+  describe('isEmailDeliveryConfigured', () => {
+    it('treats placeholder resend keys as not configured', () => {
+      expect(isEmailDeliveryConfigured('re_xxxxxxxx', 'auth@example.com')).toBe(false);
+      expect(isEmailDeliveryConfigured('re_live_real_key', 'auth@example.com')).toBe(true);
+      expect(isEmailDeliveryConfigured(undefined, 'auth@example.com')).toBe(false);
+    });
+  });
+
   describe('sendVerificationEmail', () => {
     it('uses resend when email is configured', async () => {
-      if (!env.RESEND_API_KEY || !env.EMAIL_FROM) {
+      if (!isEmailDeliveryConfigured()) {
         return;
       }
 
@@ -59,7 +68,7 @@ describe('email', () => {
     });
 
     it('logs instead of sending when email is not configured', async () => {
-      if (env.RESEND_API_KEY && env.EMAIL_FROM) {
+      if (isEmailDeliveryConfigured()) {
         return;
       }
 

@@ -63,7 +63,12 @@ export async function register(data: {
     },
   });
 
-  await sendVerificationEmail(user.email, token);
+  try {
+    await sendVerificationEmail(user.email, token);
+  } catch {
+    await prisma.user.delete({ where: { id: user.id } });
+    throw new AuthError(503, 'Email delivery failed');
+  }
 
   return { message: 'Verification email sent' };
 }

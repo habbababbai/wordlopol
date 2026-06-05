@@ -13,10 +13,29 @@ export function buildEmailChangeUrl(token: string): string {
   return `${env.APP_URL}/verify-email?token=${encodeURIComponent(token)}`;
 }
 
+function isPlaceholderResendKey(key: string): boolean {
+  return /x{4,}/i.test(key);
+}
+
+export function isEmailDeliveryConfigured(
+  resendApiKey = env.RESEND_API_KEY,
+  emailFrom = env.EMAIL_FROM,
+): boolean {
+  if (!resendApiKey || !emailFrom) {
+    return false;
+  }
+
+  return !isPlaceholderResendKey(resendApiKey);
+}
+
+function logEmailLocally(to: string, subject: string, html: string): void {
+  console.info(`[email] To: ${to}\nSubject: ${subject}\n${html}`);
+}
+
 async function sendEmail(to: string, subject: string, html: string): Promise<void> {
-  if (!env.RESEND_API_KEY || !env.EMAIL_FROM) {
+  if (!isEmailDeliveryConfigured()) {
     if (env.NODE_ENV === 'development' || env.NODE_ENV === 'test') {
-      console.info(`[email] To: ${to}\nSubject: ${subject}\n${html}`);
+      logEmailLocally(to, subject, html);
       return;
     }
 
@@ -25,13 +44,19 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
 
   const resend = new Resend(env.RESEND_API_KEY);
   const { error } = await resend.emails.send({
-    from: env.EMAIL_FROM,
+    from: env.EMAIL_FROM!,
     to,
     subject,
     html,
   });
 
   if (error) {
+    if (env.NODE_ENV === 'development') {
+      console.warn(`[email] Resend failed (${error.message}); logging email locally instead.`);
+      logEmailLocally(to, subject, html);
+      return;
+    }
+
     throw new Error(error.message);
   }
 }

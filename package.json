@@ -19,6 +19,7 @@
     "validate:branch": "bash scripts/validate-branch-name.sh",
     "validate": "pnpm validate:branch && pnpm format:check && pnpm lint && pnpm typecheck",
     "db:migrate": "pnpm --filter @wordlopol/api db:migrate",
+    "db:studio": "pnpm --filter @wordlopol/api db:studio",
     "db:import-words": "pnpm --filter @wordlopol/api db:import-words",
     "prepare": "husky"
   },
