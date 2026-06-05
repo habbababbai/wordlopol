@@ -48,6 +48,11 @@ describe('email', () => {
   });
 
   describe('sendVerificationEmail', () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    });
+
     it('uses resend when email is configured', async () => {
       vi.stubEnv('RESEND_API_KEY', 're_live_real_key');
       vi.stubEnv('EMAIL_FROM', 'auth@example.com');
@@ -64,9 +69,6 @@ describe('email', () => {
         subject: 'Potwierdź adres e-mail — Wordlopol',
         html: expect.stringContaining(encodeURIComponent('test-token')),
       });
-
-      vi.unstubAllEnvs();
-      vi.resetModules();
     });
 
     it('logs instead of sending when email is not configured', async () => {
@@ -82,9 +84,6 @@ describe('email', () => {
 
       expect(sendMock).not.toHaveBeenCalled();
       expect(info).toHaveBeenCalledOnce();
-
-      vi.unstubAllEnvs();
-      vi.resetModules();
     });
   });
 });
