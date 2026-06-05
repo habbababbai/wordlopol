@@ -76,20 +76,30 @@ Refresh tokens are stored as **SHA-256 hashes** in the database (never plaintext
 
 | Method | Path                        | Body                               | Success                                                       |
 | ------ | --------------------------- | ---------------------------------- | ------------------------------------------------------------- |
-| POST   | `/auth/register`            | `{ email, password, displayName }` | **201** `{ message }`                                         |
+| POST   | `/auth/register`            | `{ email, password, displayName }` | **201** `{ message }` (+ `devToken` in development only)      |
 | POST   | `/auth/verify-email`        | `{ token }`                        | **200** `{ message }`                                         |
 | POST   | `/auth/login`               | `{ email, password }`              | **200** `{ accessToken, user }` + `Set-Cookie: refresh_token` |
-| POST   | `/auth/resend-verification` | `{ email }`                        | **200** `{ message }` (always same text)                      |
-| POST   | `/auth/forgot-password`     | `{ email }`                        | **200** `{ message }` (always same text)                      |
+| POST   | `/auth/resend-verification` | `{ email }`                        | **200** `{ message }` (+ `devToken` in dev when email sent)   |
+| POST   | `/auth/forgot-password`     | `{ email }`                        | **200** `{ message }` (+ `devToken` in dev when email sent)   |
 | POST   | `/auth/reset-password`      | `{ token, password }`              | **200** `{ message }`                                         |
 
-Rate-limited (15 min window): `register` (5), `login` (10), `resend-verification` (5), `forgot-password` (5) per IP.
+Rate-limited (15 min window): `register` (5), `login` (10), `resend-verification` (5), `forgot-password` (5) per IP. **Disabled in `development` and `test`.**
 
 **Validation**
 
 - `password` min 8 chars on register / reset
 - `email` must be valid format
 - `displayName` required, 1–50 chars after trim
+
+**Development-only `devToken`**
+
+When `NODE_ENV=development`, token-bearing auth endpoints also return `devToken` in the JSON body so Postman can run the full collection without copying from logs or email. **Never present in production or test.**
+
+```json
+{ "message": "Verification email sent", "devToken": "64-char-hex-or-jwt" }
+```
+
+Endpoints that may include `devToken`: `register`, `resend-verification`, `forgot-password`, `change-email` (only when an email would actually be sent).
 
 **login response**
 
@@ -127,13 +137,13 @@ These endpoints read the `refresh_token` cookie (path `/auth`). No Bearer token 
 
 Send header: `Authorization: Bearer <accessToken>`
 
-| Method | Path                        | Body                               | Success                                |
-| ------ | --------------------------- | ---------------------------------- | -------------------------------------- |
-| POST   | `/auth/logout-all`          | —                                  | **200** `{ message }` + cookie cleared |
-| PATCH  | `/auth/change-display-name` | `{ displayName }`                  | **200** `{ user }`                     |
-| PATCH  | `/auth/change-password`     | `{ currentPassword, newPassword }` | **200** `{ message }`                  |
-| PATCH  | `/auth/change-email`        | `{ newEmail }`                     | **200** `{ message }`                  |
-| DELETE | `/auth/account`             | `{ password }`                     | **200** `{ message }`                  |
+| Method | Path                        | Body                               | Success                                                  |
+| ------ | --------------------------- | ---------------------------------- | -------------------------------------------------------- |
+| POST   | `/auth/logout-all`          | —                                  | **200** `{ message }` + cookie cleared                   |
+| PATCH  | `/auth/change-display-name` | `{ displayName }`                  | **200** `{ user }`                                       |
+| PATCH  | `/auth/change-password`     | `{ currentPassword, newPassword }` | **200** `{ message }`                                    |
+| PATCH  | `/auth/change-email`        | `{ newEmail }`                     | **200** `{ message }` (+ `devToken` in development only) |
+| DELETE | `/auth/account`             | `{ password }`                     | **200** `{ message }`                                    |
 
 `change-password`, `logout-all`, and `account` delete also revoke refresh sessions server-side.
 
@@ -164,25 +174,25 @@ pnpm db:import-words   # optional for health wordCount
 pnpm --filter @wordlopol/api dev
 ```
 
-API runs at `http://localhost:3001`. Keep the **dev server terminal visible** — without Resend, all email tokens are logged there.
+API runs at `http://localhost:3001`. Ensure `NODE_ENV=development` (default) so `devToken` is returned for automated Postman runs.
 
 ### 2. Environment variables
 
 Create environment **Wordlopol Local**:
 
-| Variable             | Initial value                                          | Set by                                                            | Used for                         |
-| -------------------- | ------------------------------------------------------ | ----------------------------------------------------------------- | -------------------------------- |
-| `base_url`           | `http://localhost:3001`                                | you                                                               | all requests                     |
-| `display_name`       | `Player`                                               | you                                                               | register                         |
-| `email`              | `player@example.com` (use a unique email per full run) | you / step 12 script                                              | register, login, forgot-password |
-| `new_email`          | `new-player@example.com` (unique per run)              | you                                                               | change-email                     |
-| `password`           | `secure-password`                                      | you; updated in steps 8–9 scripts                                 | login, change-password, delete   |
-| `access_token`       | _(empty)_                                              | **Login** Tests script (step 3); optional refresh script (step 4) | Bearer on steps 6, 9, 10, 12     |
-| `verify_token`       | _(empty)_                                              | **you — copy from API server log** after register                 | step 2 body                      |
-| `reset_token`        | _(empty)_                                              | **you — copy from API server log** after forgot-password          | step 8 body                      |
-| `email_change_token` | _(empty)_                                              | **you — copy from API server log** after change-email             | step 12 body                     |
+| Variable             | Initial value           | Set by                                        | Used for                         |
+| -------------------- | ----------------------- | --------------------------------------------- | -------------------------------- |
+| `base_url`           | `http://localhost:3001` | you                                           | all requests                     |
+| `display_name`       | `Player`                | collection Pre-request Script                 | register                         |
+| `email`              | _(auto)_                | collection Pre-request Script                 | register, login, forgot-password |
+| `new_email`          | _(auto)_                | collection Pre-request Script                 | change-email                     |
+| `password`           | `secure-password`       | collection script; steps 8 & 10 Tests scripts | login, change-password, delete   |
+| `access_token`       | _(empty)_               | login Tests script (step 3)                   | Bearer on steps 6, 9–13          |
+| `verify_token`       | _(empty)_               | register Tests script (step 1)                | verify-email (step 2)            |
+| `reset_token`        | _(empty)_               | forgot-password Tests script (step 7)         | reset-password (step 8)          |
+| `email_change_token` | _(empty)_               | change-email Tests script (step 11)           | verify-email (step 12)           |
 
-**Tip:** use `player-{{$timestamp}}@example.com` for `email` and `new_email` so each run starts fresh.
+You only need to set `base_url` manually — the collection scripts populate the rest on each run.
 
 ### 3. Collection settings
 
@@ -193,53 +203,71 @@ Create environment **Wordlopol Local**:
 | Bearer routes | Authorization → **Bearer Token** → `{{access_token}}`            |
 | Content-Type  | `application/json` on all POST/PATCH/DELETE with body            |
 
-### 4. Where tokens come from (not in API responses)
+### 4. Collection Pre-request Script
 
-`forgot-password`, `register`, and `change-email` return only generic messages. Tokens appear in the **API dev terminal** when `RESEND_API_KEY` is unset or still set to the `.env.example` placeholder:
+Add at **collection** level (runs once per collection run):
 
+```javascript
+if (!pm.collectionVariables.get('run_initialized')) {
+  const runId = Date.now();
+  pm.environment.set('email', `player-${runId}@example.com`);
+  pm.environment.set('new_email', `new-player-${runId}@example.com`);
+  pm.environment.set('password', 'secure-password');
+  pm.environment.set('display_name', 'Player');
+  pm.collectionVariables.set('run_initialized', 'true');
+}
 ```
-[email] To: player@example.com
-Subject: ...
-<p>...<a href="http://localhost:5173/...?token=abc123...">...</a></p>
-```
 
-Copy only the **`token=` query value** (64-char hex) into the matching environment variable:
+### 5. Automated collection (14 requests)
 
-| After request                | Log link contains          | Paste into env var   | Used in                              |
-| ---------------------------- | -------------------------- | -------------------- | ------------------------------------ |
-| POST `/auth/register`        | `verify-email?token=...`   | `verify_token`       | POST `/auth/verify-email` (step 2)   |
-| POST `/auth/forgot-password` | `reset-password?token=...` | `reset_token`        | POST `/auth/reset-password` (step 8) |
-| PATCH `/auth/change-email`   | `verify-email?token=...`   | `email_change_token` | POST `/auth/verify-email` (step 12)  |
+Run with **Collection Runner** in order. No manual token copying.
 
-With Resend configured, use the same token from the email link instead of the log.
+| #   | Name                | Method | Path                        | Auth   | Body                                                                                      |
+| --- | ------------------- | ------ | --------------------------- | ------ | ----------------------------------------------------------------------------------------- |
+| —   | Health              | GET    | `/health`                   | —      | _(none)_                                                                                  |
+| 1   | Register            | POST   | `/auth/register`            | —      | `{ "email": "{{email}}", "password": "{{password}}", "displayName": "{{display_name}}" }` |
+| 2   | Verify email        | POST   | `/auth/verify-email`        | —      | `{ "token": "{{verify_token}}" }`                                                         |
+| 3   | Login               | POST   | `/auth/login`               | —      | `{ "email": "{{email}}", "password": "{{password}}" }`                                    |
+| 4   | Refresh             | POST   | `/auth/refresh`             | Cookie | _(none)_                                                                                  |
+| 5   | Logout              | POST   | `/auth/logout`              | Cookie | _(none)_                                                                                  |
+| 6   | Logout all          | POST   | `/auth/logout-all`          | Bearer | _(none)_                                                                                  |
+| 7   | Forgot password     | POST   | `/auth/forgot-password`     | —      | `{ "email": "{{email}}" }`                                                                |
+| 8   | Reset password      | POST   | `/auth/reset-password`      | —      | `{ "token": "{{reset_token}}", "password": "new-password" }`                              |
+| 9   | Change display name | PATCH  | `/auth/change-display-name` | Bearer | `{ "displayName": "Updated Player" }`                                                     |
+| 10  | Change password     | PATCH  | `/auth/change-password`     | Bearer | `{ "currentPassword": "{{password}}", "newPassword": "changed-password" }`                |
+| 11  | Change email        | PATCH  | `/auth/change-email`        | Bearer | `{ "newEmail": "{{new_email}}" }`                                                         |
+| 12  | Verify email change | POST   | `/auth/verify-email`        | —      | `{ "token": "{{email_change_token}}" }`                                                   |
+| 13  | Delete account      | DELETE | `/auth/account`             | Bearer | `{ "password": "{{password}}" }`                                                          |
 
-### 5. Minimal collection (13 auth requests)
-
-Run in order in one session (< 15 min so `access_token` from login stays valid).
-
-| #   | Method | Path                        | Auth   | Body                                                                                      | After success                                     |
-| --- | ------ | --------------------------- | ------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| 1   | POST   | `/auth/register`            | —      | `{ "email": "{{email}}", "password": "{{password}}", "displayName": "{{display_name}}" }` | Copy `verify_token` from log                      |
-| 2   | POST   | `/auth/verify-email`        | —      | `{ "token": "{{verify_token}}" }`                                                         | Expect `"Email verified"`                         |
-| 3   | POST   | `/auth/login`               | —      | `{ "email": "{{email}}", "password": "{{password}}" }`                                    | Saves `access_token`; sets cookie; returns `user` |
-| 4   | POST   | `/auth/refresh`             | Cookie | _(none)_                                                                                  | Optional: update `access_token`                   |
-| 5   | POST   | `/auth/logout`              | Cookie | _(none)_                                                                                  | Cookie cleared                                    |
-| 6   | POST   | `/auth/logout-all`          | Bearer | _(none)_                                                                                  | Uses `access_token` from step 3                   |
-| 7   | POST   | `/auth/forgot-password`     | —      | `{ "email": "{{email}}" }`                                                                | Copy `reset_token` from log                       |
-| 8   | POST   | `/auth/reset-password`      | —      | `{ "token": "{{reset_token}}", "password": "new-password" }`                              | Set `password` → `new-password`                   |
-| 9   | PATCH  | `/auth/change-display-name` | Bearer | `{ "displayName": "Updated Player" }`                                                     | Returns updated `user`                            |
-| 10  | PATCH  | `/auth/change-password`     | Bearer | `{ "currentPassword": "{{password}}", "newPassword": "changed-password" }`                | Set `password` → `changed-password`               |
-| 11  | PATCH  | `/auth/change-email`        | Bearer | `{ "newEmail": "{{new_email}}" }`                                                         | Copy `email_change_token` from log                |
-| 12  | POST   | `/auth/verify-email`        | —      | `{ "token": "{{email_change_token}}" }`                                                   | Expect `"Email changed"`                          |
-| 13  | DELETE | `/auth/account`             | Bearer | `{ "password": "{{password}}" }`                                                          | `password` = `changed-password`                   |
-
-**Optional:** POST `/auth/resend-verification` with `{ "email": "{{email}}" }` if step 1 log has no token.
-
-**Health (you already have):** GET `{{base_url}}/health`
+**Password chain:** step 8 → `new-password` · step 10 → `changed-password` · step 13 uses `{{password}}` (= `changed-password` after step 10 script).
 
 ### 6. Tests scripts
 
-**Login (step 3)** — saves Bearer token:
+Shared helper — paste at the top of each script that captures a token, or duplicate the two lines inline:
+
+```javascript
+function saveDevToken(envVar) {
+  const { devToken } = pm.response.json();
+  pm.test(`${envVar} set from devToken`, () => pm.expect(devToken).to.be.a('string').and.not.empty);
+  pm.environment.set(envVar, devToken);
+}
+```
+
+**Register (step 1):**
+
+```javascript
+pm.test('201', () => pm.response.to.have.status(201));
+saveDevToken('verify_token');
+```
+
+**Verify email (step 2):**
+
+```javascript
+pm.test('200', () => pm.response.to.have.status(200));
+pm.test('Email verified', () => pm.expect(pm.response.json().message).to.eql('Email verified'));
+```
+
+**Login (step 3):**
 
 ```javascript
 pm.test('200', () => pm.response.to.have.status(200));
@@ -253,10 +281,20 @@ pm.test('user profile', () => {
 pm.test('refresh cookie', () => pm.expect(pm.cookies.has('refresh_token')).to.be.true);
 ```
 
+**Forgot password (step 7):**
+
+```javascript
+pm.test('200', () => pm.response.to.have.status(200));
+saveDevToken('reset_token');
+```
+
 **Reset password (step 8):**
 
 ```javascript
 pm.test('200', () => pm.response.to.have.status(200));
+pm.test('Password reset', () => {
+  pm.expect(pm.response.json().message).to.eql('Password reset');
+});
 pm.environment.set('password', 'new-password');
 ```
 
@@ -265,6 +303,13 @@ pm.environment.set('password', 'new-password');
 ```javascript
 pm.test('200', () => pm.response.to.have.status(200));
 pm.environment.set('password', 'changed-password');
+```
+
+**Change email (step 11):**
+
+```javascript
+pm.test('200', () => pm.response.to.have.status(200));
+saveDevToken('email_change_token');
 ```
 
 **Verify email change (step 12):**
@@ -282,7 +327,7 @@ pm.environment.set('email', pm.environment.get('new_email'));
 | Cookie vs Bearer   | Steps 4–5 need cookie (run before logout clears it). Steps 6, 9–13 need Bearer from step 3                         |
 | Password chain     | After step 8 → `new-password`; after step 10 → `changed-password` (step 13 delete uses this)                       |
 | No re-login needed | Same `access_token` from step 3 works for all Bearer steps if run within 15 min                                    |
-| Rate limits        | register/login/forgot/resend: 429 after too many attempts per IP (disabled in `NODE_ENV=test` only)                |
+| Rate limits        | Disabled in `development` and `test`; active in production                                                         |
 
 ---
 
@@ -303,22 +348,22 @@ pm.environment.set('email', pm.environment.get('new_email'));
 - Forgot-password / resend-verification do not reveal whether email exists
 - Previous password-reset tokens invalidated on new forgot-password request
 - `POST /auth/resend-verification` for stuck unverified accounts
-- 39 automated tests — 37 integration + 2 e2e (health, tokens, middleware, auth flows)
+- 42 automated tests — 40 integration + 2 e2e (health, tokens, middleware, auth flows)
 
 ### Remaining gaps
 
-| Item                                   | Risk     | Notes                                                         |
-| -------------------------------------- | -------- | ------------------------------------------------------------- |
-| **Access JWT not revocable**           | Low      | By design; 15 min window; refresh revocation stops renewal    |
-| **Email change without password**      | Low      | Authenticated user can request change with only Bearer token  |
-| **`optionalAuth` / `requireVerified`** | —        | Middleware exists but not wired to game routes yet (expected) |
-| **Email delivery in dev**              | Dev only | Tokens logged to console — configure Resend in production     |
+| Item                                   | Risk     | Notes                                                                     |
+| -------------------------------------- | -------- | ------------------------------------------------------------------------- |
+| **Access JWT not revocable**           | Low      | By design; 15 min window; refresh revocation stops renewal                |
+| **Email change without password**      | Low      | Authenticated user can request change with only Bearer token              |
+| **`optionalAuth` / `requireVerified`** | —        | Middleware exists but not wired to game routes yet (expected)             |
+| **devToken in responses**              | Dev only | Returned only when `NODE_ENV=development`; omitted in production and test |
 
 ---
 
 ## Postman quick checklist
 
-See [Postman setup guide](#postman-setup-guide) for environment variables, token sources, and scripts.
+See [Postman setup guide](#postman-setup-guide) for the automated collection, scripts, and environment setup.
 
 | #   | Method | Path                        | Auth   |
 | --- | ------ | --------------------------- | ------ |

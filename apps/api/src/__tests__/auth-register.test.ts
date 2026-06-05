@@ -28,7 +28,7 @@ describe('auth register verify login', () => {
   it('registers, verifies email, and logs in', async () => {
     const agent = await createTestAgent();
 
-    await agent
+    const registerRes = await agent
       .post('/auth/register')
       .send({
         email: 'player@example.com',
@@ -38,6 +38,7 @@ describe('auth register verify login', () => {
       .expect(201)
       .expect({ message: 'Verification email sent' });
 
+    expect(registerRes.body.devToken).toBeUndefined();
     expect(verificationToken.value).not.toBe('');
 
     await agent

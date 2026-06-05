@@ -17,6 +17,7 @@ import {
   verifyEmailChangeToken,
 } from '../lib/tokens.js';
 import { toUserProfile } from '../lib/user-profile.js';
+import { withDevToken } from '../lib/dev-auth-tokens.js';
 import type { UserProfileDto } from '@wordlopol/shared';
 
 const BCRYPT_ROUNDS = 12;
@@ -70,7 +71,7 @@ export async function register(data: {
     throw new AuthError(503, 'Email delivery failed');
   }
 
-  return { message: 'Verification email sent' };
+  return withDevToken({ message: 'Verification email sent' }, token);
 }
 
 export async function verifyEmail(token: string): Promise<{ message: string }> {
@@ -161,7 +162,9 @@ export async function logoutAll(userId: string): Promise<void> {
   await revokeAllRefreshTokens(userId);
 }
 
-export async function resendVerification(email: string): Promise<{ message: string }> {
+export async function resendVerification(
+  email: string,
+): Promise<{ message: string; devToken?: string }> {
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (user && !user.emailVerifiedAt) {
@@ -178,12 +181,19 @@ export async function resendVerification(email: string): Promise<{ message: stri
     });
 
     await sendVerificationEmail(user.email, token);
+
+    return withDevToken(
+      { message: 'If the email exists and is unverified, a verification link was sent' },
+      token,
+    );
   }
 
   return { message: 'If the email exists and is unverified, a verification link was sent' };
 }
 
-export async function forgotPassword(email: string): Promise<{ message: string }> {
+export async function forgotPassword(
+  email: string,
+): Promise<{ message: string; devToken?: string }> {
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (user) {
@@ -200,6 +210,8 @@ export async function forgotPassword(email: string): Promise<{ message: string }
     });
 
     await sendPasswordResetEmail(user.email, token);
+
+    return withDevToken({ message: 'If the email exists, a reset link was sent' }, token);
   }
 
   return { message: 'If the email exists, a reset link was sent' };
@@ -274,7 +286,7 @@ export async function requestEmailChange(
   const token = signEmailChangeToken(userId, newEmail);
   await sendEmailChangeEmail(newEmail, token);
 
-  return { message: 'Verification email sent' };
+  return withDevToken({ message: 'Verification email sent' }, token);
 }
 
 export async function changeDisplayName(

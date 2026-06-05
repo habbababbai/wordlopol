@@ -7,7 +7,7 @@ function createAuthRateLimiter(max: number) {
     max,
     standardHeaders: true,
     legacyHeaders: false,
-    skip: () => env.NODE_ENV === 'test',
+    skip: () => env.NODE_ENV === 'test' || env.NODE_ENV === 'development',
     handler: (_req, res) => {
       res.status(429).json({ error: 'Too many requests' });
     },

@@ -36,7 +36,7 @@ const changeDisplayNameSchema = z.object({
 });
 
 const verifyEmailSchema = z.object({
-  token: z.string().min(1),
+  token: z.string().trim().min(1),
 });
 
 const loginSchema = z.object({
@@ -49,7 +49,7 @@ const emailOnlySchema = z.object({
 });
 
 const resetPasswordSchema = z.object({
-  token: z.string().min(1),
+  token: z.string().trim().min(1),
   password: z.string().min(8),
 });
 
