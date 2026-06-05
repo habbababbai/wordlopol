@@ -11,6 +11,7 @@ Polish Wordle-style word game. Guess 5-letter Polish words — diacritics matter
   - `commit-msg` — commit message format (Commitlint)
   - `pre-push` — branch name, Prettier check, lint, typecheck
 - **PR checks** (GitHub Actions): branch name, PR title, Prettier, ESLint, typecheck, build
+- **Changelogs**: per-app auto-update via release-please — see [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md)
 - **Manual**: `pnpm validate` runs branch + format + lint + typecheck
 - **Plans**: implementation steps live in [`plans/`](./plans/)
 
@@ -48,13 +49,10 @@ pnpm install
 cp .env.example .env
 # Edit .env with JWT secrets and Resend key when ready
 
-# 3. Word list — copy your Polish words file
-cp /path/to/your/words.txt data/words.txt
-
-# 4. Start Postgres
+# 3. Start Postgres (port 5433 — avoids conflict with local Postgres on 5432)
 docker compose up -d
 
-# 5. Database (after migrations in Phase 2)
+# 4. Database
 pnpm db:migrate
 pnpm db:import-words
 
@@ -62,7 +60,7 @@ pnpm db:import-words
 pnpm dev
 ```
 
-- API: http://localhost:3001/health
+- API: http://localhost:3001/health → `{ "status": "ok", "database": "connected", "wordCount": 4062 }`
 - Web: http://localhost:5173
 
 ## Word list format
@@ -100,10 +98,11 @@ Auth flows (verify email, password reset, change email) use [Resend](https://res
 
 ## Docs
 
-| Document                                         | Description                                         |
-| ------------------------------------------------ | --------------------------------------------------- |
-| [COMMIT_CONVENTIONS.md](./COMMIT_CONVENTIONS.md) | Commit scopes, PR structure, Husky/Commitlint setup |
-| [plans/](./plans/)                               | Step-by-step implementation guides                  |
+| Document                                                       | Description                                         |
+| -------------------------------------------------------------- | --------------------------------------------------- |
+| [COMMIT_CONVENTIONS.md](./COMMIT_CONVENTIONS.md)               | Commit scopes, PR structure, Husky/Commitlint setup |
+| [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md) | Per-app changelog workflows (API, Web)              |
+| [plans/](./plans/)                                             | Step-by-step implementation guides                  |
 
 ### Implementation plans
 

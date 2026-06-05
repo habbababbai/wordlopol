@@ -1,0 +1,28 @@
+name: Changelog — Web
+
+# Runs only when a PR is merged into main (not on feature branches or PR open/sync)
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'packages/shared/**'
+      - '.github/workflows/changelog-web.yml'
+      - '.github/release-please/web-*.json'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release Please — Web
+        uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: .github/release-please/web-config.json
+          manifest-file: .github/release-please/web-manifest.json
