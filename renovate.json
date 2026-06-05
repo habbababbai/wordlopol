@@ -1,0 +1,30 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "schedule": ["before 9am on Monday"],
+  "rangeStrategy": "bump",
+  "packageRules": [
+    {
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "groupName": "dev-dependencies"
+    },
+    {
+      "matchPackageNames": ["prisma", "@prisma/client", "@prisma/adapter-pg"],
+      "groupName": "prisma"
+    },
+    {
+      "matchPackageNames": ["react", "react-dom", "react-router-dom"],
+      "groupName": "react"
+    },
+    {
+      "matchPackageNames": ["vite", "@vitejs/plugin-react"],
+      "groupName": "vite"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions"
+    }
+  ]
+}

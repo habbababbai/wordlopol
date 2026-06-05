@@ -4,8 +4,8 @@ Scaffold the monorepo with tooling and placeholders. No game logic yet.
 
 ## Prerequisites
 
-- Node.js 20+
-- pnpm 9+ (`corepack enable && corepack prepare pnpm@9.15.0 --activate`)
+- Node.js 22+
+- pnpm 11+ (`corepack enable && corepack prepare pnpm@11.5.2 --activate`)
 - Docker (for local Postgres)
 - Git
 

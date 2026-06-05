@@ -13,6 +13,7 @@ Polish Wordle-style word game. Guess 5-letter Polish words — diacritics matter
 - **PR checks** (GitHub Actions): branch name, PR title, then full CI or light docs-only CI — see [pull_request_template.md](./.github/pull_request_template.md)
 - **Changelogs**: root [CHANGELOG.md](./CHANGELOG.md) (manual) + per-app via release-please — [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md)
 - **CodeRabbit**: inline code review only; **never edits PR description** — [docs/CODERABBIT.md](./docs/CODERABBIT.md)
+- **Supply chain**: pnpm 11 policies, audit CI, Renovate, action pinning — [docs/SUPPLY_CHAIN.md](./docs/SUPPLY_CHAIN.md)
 - **Manual**: `pnpm validate` runs branch + format + lint + typecheck
 - **Plans**: implementation steps live in [`plans/`](./plans/)
 
@@ -36,8 +37,8 @@ Future: `apps/mobile/` (React Native + Expo).
 
 ## Prerequisites
 
-- Node.js 20+
-- pnpm 9+ (`corepack enable`)
+- Node.js 22+
+- pnpm 11+ (`corepack enable && corepack prepare pnpm@11.5.2 --activate`)
 - Docker (local Postgres)
 
 ## Quick start
