@@ -12,7 +12,7 @@ Polish Wordle-style word game. Guess 5-letter Polish words — diacritics matter
   - `pre-push` — branch name, Prettier check, lint, typecheck
 - **PR checks** (GitHub Actions): branch name, PR title, Prettier, ESLint, typecheck, build
 - **Changelogs**: per-app auto-update via release-please — [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md)
-- **CodeRabbit**: AI PR reviews — [docs/CODERABBIT.md](./docs/CODERABBIT.md)
+- **CodeRabbit**: AI PR reviews — [docs/CODERABBIT.md](./docs/CODERABBIT.md) (requires [coderabbit.ai](https://coderabbit.ai) repo toggle + [code review limits](https://github.com/habbababbai/wordlopol/settings/moderation) off)
 - **Manual**: `pnpm validate` runs branch + format + lint + typecheck
 - **Plans**: implementation steps live in [`plans/`](./plans/)
 

@@ -2,10 +2,12 @@
 language: en-US
 reviews:
   profile: chill
+  # Do not submit formal GitHub "Request changes" reviews — blocked by Code review limits
   request_changes_workflow: false
+  # Do not submit formal review status — use inline comments only (more reliable for bots)
+  review_status: false
   high_level_summary: true
   poem: false
-  review_status: true
   auto_review:
     enabled: true
     drafts: false
