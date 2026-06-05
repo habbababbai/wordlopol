@@ -56,6 +56,12 @@ describe('e2e: auth flow', () => {
       .expect(200);
 
     expect(verifyAccessToken(loginRes.body.accessToken).userId).toEqual(expect.any(String));
+    expect(loginRes.body.user).toEqual({
+      id: expect.any(String),
+      email: 'e2e-player@example.com',
+      displayName: 'E2E Player',
+      emailVerified: true,
+    });
     expect(loginRes.headers['set-cookie']?.[0]).toContain('refresh_token=');
 
     const refreshRes = await agent.post('/auth/refresh').expect(200);

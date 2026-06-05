@@ -110,4 +110,54 @@ describe('auth account endpoints', () => {
     const deleted = await prisma.user.findUnique({ where: { id: user.id } });
     expect(deleted).toBeNull();
   });
+
+  it('changes display name', async () => {
+    const { user } = await createVerifiedUserWithPassword();
+
+    const res = await (
+      await createTestAgent()
+    )
+      .patch('/auth/change-display-name')
+      .set('Authorization', `Bearer ${signAccessToken(user.id)}`)
+      .send({ displayName: 'New Name' })
+      .expect(200);
+
+    expect(res.body.user).toEqual({
+      id: user.id,
+      email: user.email,
+      displayName: 'New Name',
+      emailVerified: true,
+    });
+
+    const updated = await prisma.user.findUnique({ where: { id: user.id } });
+    expect(updated?.displayName).toBe('New Name');
+  });
+
+  it('rejects unchanged display name', async () => {
+    const { user } = await createVerifiedUserWithPassword();
+
+    const res = await (
+      await createTestAgent()
+    )
+      .patch('/auth/change-display-name')
+      .set('Authorization', `Bearer ${signAccessToken(user.id)}`)
+      .send({ displayName: 'Test Player' });
+
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ error: 'Display name unchanged' });
+  });
+
+  it('rejects blank display name', async () => {
+    const { user } = await createVerifiedUserWithPassword();
+
+    const res = await (
+      await createTestAgent()
+    )
+      .patch('/auth/change-display-name')
+      .set('Authorization', `Bearer ${signAccessToken(user.id)}`)
+      .send({ displayName: '   ' });
+
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ error: 'Invalid request' });
+  });
 });

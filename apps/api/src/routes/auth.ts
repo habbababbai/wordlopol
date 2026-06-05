@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import {
   AuthError,
+  changeDisplayName,
   changePassword,
   deleteAccount,
   forgotPassword,
@@ -27,6 +28,10 @@ import {
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
+  displayName: z.string().trim().min(1).max(50),
+});
+
+const changeDisplayNameSchema = z.object({
   displayName: z.string().trim().min(1).max(50),
 });
 
@@ -109,9 +114,9 @@ authRouter.post(
   loginRateLimit,
   handleAuthRoute(async (req, res) => {
     const body = loginSchema.parse(req.body);
-    const { accessToken, refreshToken } = await login(body);
+    const { accessToken, refreshToken, user } = await login(body);
     setRefreshCookie(res, refreshToken);
-    res.json({ accessToken });
+    res.json({ accessToken, user });
   }),
 );
 
@@ -196,6 +201,16 @@ authRouter.patch(
   handleAuthRoute(async (req, res) => {
     const { newEmail } = changeEmailSchema.parse(req.body);
     const result = await requestEmailChange(req.userId!, newEmail);
+    res.json(result);
+  }),
+);
+
+authRouter.patch(
+  '/change-display-name',
+  authenticate,
+  handleAuthRoute(async (req, res) => {
+    const { displayName } = changeDisplayNameSchema.parse(req.body);
+    const result = await changeDisplayName(req.userId!, displayName);
     res.json(result);
   }),
 );

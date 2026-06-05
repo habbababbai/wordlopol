@@ -55,7 +55,13 @@ describe('auth register verify login', () => {
       .expect(200);
 
     expect(loginRes.body.accessToken).toEqual(expect.any(String));
-    expect(verifyAccessToken(loginRes.body.accessToken).userId).toEqual(expect.any(String));
+    expect(loginRes.body.user).toEqual({
+      id: expect.any(String),
+      email: 'player@example.com',
+      displayName: 'Player',
+      emailVerified: true,
+    });
+    expect(verifyAccessToken(loginRes.body.accessToken).userId).toEqual(loginRes.body.user.id);
     expect(loginRes.headers['set-cookie']?.[0]).toContain('refresh_token=');
   });
 

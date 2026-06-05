@@ -16,6 +16,8 @@ import {
   signEmailChangeToken,
   verifyEmailChangeToken,
 } from '../lib/tokens.js';
+import { toUserProfile } from '../lib/user-profile.js';
+import type { UserProfileDto } from '@wordlopol/shared';
 
 const BCRYPT_ROUNDS = 12;
 const EMAIL_VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
@@ -112,7 +114,7 @@ export async function verifyEmail(token: string): Promise<{ message: string }> {
 export async function login(data: {
   email: string;
   password: string;
-}): Promise<{ accessToken: string; refreshToken: string }> {
+}): Promise<{ accessToken: string; refreshToken: string; user: UserProfileDto }> {
   const user = await prisma.user.findUnique({ where: { email: data.email } });
 
   if (!user || !(await bcrypt.compare(data.password, user.passwordHash))) {
@@ -126,7 +128,7 @@ export async function login(data: {
   const accessToken = signAccessToken(user.id);
   const { token: refreshToken } = await createRefreshToken(user.id);
 
-  return { accessToken, refreshToken };
+  return { accessToken, refreshToken, user: toUserProfile(user) };
 }
 
 export async function refreshSession(
@@ -268,6 +270,28 @@ export async function requestEmailChange(
   await sendEmailChangeEmail(newEmail, token);
 
   return { message: 'Verification email sent' };
+}
+
+export async function changeDisplayName(
+  userId: string,
+  displayName: string,
+): Promise<{ user: UserProfileDto }> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+
+  if (!user) {
+    throw new AuthError(404, 'User not found');
+  }
+
+  if (user.displayName === displayName) {
+    throw new AuthError(400, 'Display name unchanged');
+  }
+
+  const updated = await prisma.user.update({
+    where: { id: userId },
+    data: { displayName },
+  });
+
+  return { user: toUserProfile(updated) };
 }
 
 export async function deleteAccount(

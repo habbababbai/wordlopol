@@ -24,7 +24,7 @@ sequenceDiagram
 
     Note over Client,DB: Login & sessions
     Client->>API: POST /auth/login
-    API-->>Client: accessToken (JSON) + refresh_token (httpOnly cookie)
+    API-->>Client: accessToken + user (JSON) + refresh_token (httpOnly cookie)
     Client->>API: Bearer accessToken on protected routes
     Client->>API: POST /auth/refresh (cookie auto-sent)
     API-->>Client: new accessToken + rotated refresh cookie
@@ -74,14 +74,14 @@ Refresh tokens are stored as **SHA-256 hashes** in the database (never plaintext
 
 ### Auth — public
 
-| Method | Path                        | Body                               | Success                                                 |
-| ------ | --------------------------- | ---------------------------------- | ------------------------------------------------------- |
-| POST   | `/auth/register`            | `{ email, password, displayName }` | **201** `{ message }`                                   |
-| POST   | `/auth/verify-email`        | `{ token }`                        | **200** `{ message }`                                   |
-| POST   | `/auth/login`               | `{ email, password }`              | **200** `{ accessToken }` + `Set-Cookie: refresh_token` |
-| POST   | `/auth/resend-verification` | `{ email }`                        | **200** `{ message }` (always same text)                |
-| POST   | `/auth/forgot-password`     | `{ email }`                        | **200** `{ message }` (always same text)                |
-| POST   | `/auth/reset-password`      | `{ token, password }`              | **200** `{ message }`                                   |
+| Method | Path                        | Body                               | Success                                                       |
+| ------ | --------------------------- | ---------------------------------- | ------------------------------------------------------------- |
+| POST   | `/auth/register`            | `{ email, password, displayName }` | **201** `{ message }`                                         |
+| POST   | `/auth/verify-email`        | `{ token }`                        | **200** `{ message }`                                         |
+| POST   | `/auth/login`               | `{ email, password }`              | **200** `{ accessToken, user }` + `Set-Cookie: refresh_token` |
+| POST   | `/auth/resend-verification` | `{ email }`                        | **200** `{ message }` (always same text)                      |
+| POST   | `/auth/forgot-password`     | `{ email }`                        | **200** `{ message }` (always same text)                      |
+| POST   | `/auth/reset-password`      | `{ token, password }`              | **200** `{ message }`                                         |
 
 Rate-limited (15 min window): `register` (5), `login` (10), `resend-verification` (5), `forgot-password` (5) per IP.
 
@@ -90,6 +90,20 @@ Rate-limited (15 min window): `register` (5), `login` (10), `resend-verification
 - `password` min 8 chars on register / reset
 - `email` must be valid format
 - `displayName` required, 1–50 chars after trim
+
+**login response**
+
+```json
+{
+  "accessToken": "...",
+  "user": {
+    "id": "...",
+    "email": "player@example.com",
+    "displayName": "Player",
+    "emailVerified": true
+  }
+}
+```
 
 **verify-email responses**
 
@@ -113,12 +127,13 @@ These endpoints read the `refresh_token` cookie (path `/auth`). No Bearer token 
 
 Send header: `Authorization: Bearer <accessToken>`
 
-| Method | Path                    | Body                               | Success                                |
-| ------ | ----------------------- | ---------------------------------- | -------------------------------------- |
-| POST   | `/auth/logout-all`      | —                                  | **200** `{ message }` + cookie cleared |
-| PATCH  | `/auth/change-password` | `{ currentPassword, newPassword }` | **200** `{ message }`                  |
-| PATCH  | `/auth/change-email`    | `{ newEmail }`                     | **200** `{ message }`                  |
-| DELETE | `/auth/account`         | `{ password }`                     | **200** `{ message }`                  |
+| Method | Path                        | Body                               | Success                                |
+| ------ | --------------------------- | ---------------------------------- | -------------------------------------- |
+| POST   | `/auth/logout-all`          | —                                  | **200** `{ message }` + cookie cleared |
+| PATCH  | `/auth/change-display-name` | `{ displayName }`                  | **200** `{ user }`                     |
+| PATCH  | `/auth/change-password`     | `{ currentPassword, newPassword }` | **200** `{ message }`                  |
+| PATCH  | `/auth/change-email`        | `{ newEmail }`                     | **200** `{ message }`                  |
+| DELETE | `/auth/account`             | `{ password }`                     | **200** `{ message }`                  |
 
 `change-password`, `logout-all`, and `account` delete also revoke refresh sessions server-side.
 
@@ -159,13 +174,13 @@ Create environment **Wordlopol Local**:
 | -------------------- | ------------------------------------------------------ | ----------------------------------------------------------------- | -------------------------------- |
 | `base_url`           | `http://localhost:3001`                                | you                                                               | all requests                     |
 | `display_name`       | `Player`                                               | you                                                               | register                         |
-| `email`              | `player@example.com` (use a unique email per full run) | you / step 11 script                                              | register, login, forgot-password |
+| `email`              | `player@example.com` (use a unique email per full run) | you / step 12 script                                              | register, login, forgot-password |
 | `new_email`          | `new-player@example.com` (unique per run)              | you                                                               | change-email                     |
 | `password`           | `secure-password`                                      | you; updated in steps 8–9 scripts                                 | login, change-password, delete   |
 | `access_token`       | _(empty)_                                              | **Login** Tests script (step 3); optional refresh script (step 4) | Bearer on steps 6, 9, 10, 12     |
 | `verify_token`       | _(empty)_                                              | **you — copy from API server log** after register                 | step 2 body                      |
 | `reset_token`        | _(empty)_                                              | **you — copy from API server log** after forgot-password          | step 8 body                      |
-| `email_change_token` | _(empty)_                                              | **you — copy from API server log** after change-email             | step 11 body                     |
+| `email_change_token` | _(empty)_                                              | **you — copy from API server log** after change-email             | step 12 body                     |
 
 **Tip:** use `player-{{$timestamp}}@example.com` for `email` and `new_email` so each run starts fresh.
 
@@ -194,28 +209,29 @@ Copy only the **`token=` query value** (64-char hex) into the matching environme
 | ---------------------------- | -------------------------- | -------------------- | ------------------------------------ |
 | POST `/auth/register`        | `verify-email?token=...`   | `verify_token`       | POST `/auth/verify-email` (step 2)   |
 | POST `/auth/forgot-password` | `reset-password?token=...` | `reset_token`        | POST `/auth/reset-password` (step 8) |
-| PATCH `/auth/change-email`   | `verify-email?token=...`   | `email_change_token` | POST `/auth/verify-email` (step 11)  |
+| PATCH `/auth/change-email`   | `verify-email?token=...`   | `email_change_token` | POST `/auth/verify-email` (step 12)  |
 
 With Resend configured, use the same token from the email link instead of the log.
 
-### 5. Minimal collection (12 auth requests)
+### 5. Minimal collection (13 auth requests)
 
 Run in order in one session (< 15 min so `access_token` from login stays valid).
 
-| #   | Method | Path                    | Auth   | Body                                                                                      | After success                       |
-| --- | ------ | ----------------------- | ------ | ----------------------------------------------------------------------------------------- | ----------------------------------- |
-| 1   | POST   | `/auth/register`        | —      | `{ "email": "{{email}}", "password": "{{password}}", "displayName": "{{display_name}}" }` | Copy `verify_token` from log        |
-| 2   | POST   | `/auth/verify-email`    | —      | `{ "token": "{{verify_token}}" }`                                                         | Expect `"Email verified"`           |
-| 3   | POST   | `/auth/login`           | —      | `{ "email": "{{email}}", "password": "{{password}}" }`                                    | Saves `access_token`; sets cookie   |
-| 4   | POST   | `/auth/refresh`         | Cookie | _(none)_                                                                                  | Optional: update `access_token`     |
-| 5   | POST   | `/auth/logout`          | Cookie | _(none)_                                                                                  | Cookie cleared                      |
-| 6   | POST   | `/auth/logout-all`      | Bearer | _(none)_                                                                                  | Uses `access_token` from step 3     |
-| 7   | POST   | `/auth/forgot-password` | —      | `{ "email": "{{email}}" }`                                                                | Copy `reset_token` from log         |
-| 8   | POST   | `/auth/reset-password`  | —      | `{ "token": "{{reset_token}}", "password": "new-password" }`                              | Set `password` → `new-password`     |
-| 9   | PATCH  | `/auth/change-password` | Bearer | `{ "currentPassword": "{{password}}", "newPassword": "changed-password" }`                | Set `password` → `changed-password` |
-| 10  | PATCH  | `/auth/change-email`    | Bearer | `{ "newEmail": "{{new_email}}" }`                                                         | Copy `email_change_token` from log  |
-| 11  | POST   | `/auth/verify-email`    | —      | `{ "token": "{{email_change_token}}" }`                                                   | Expect `"Email changed"`            |
-| 12  | DELETE | `/auth/account`         | Bearer | `{ "password": "{{password}}" }`                                                          | `password` = `changed-password`     |
+| #   | Method | Path                        | Auth   | Body                                                                                      | After success                                     |
+| --- | ------ | --------------------------- | ------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| 1   | POST   | `/auth/register`            | —      | `{ "email": "{{email}}", "password": "{{password}}", "displayName": "{{display_name}}" }` | Copy `verify_token` from log                      |
+| 2   | POST   | `/auth/verify-email`        | —      | `{ "token": "{{verify_token}}" }`                                                         | Expect `"Email verified"`                         |
+| 3   | POST   | `/auth/login`               | —      | `{ "email": "{{email}}", "password": "{{password}}" }`                                    | Saves `access_token`; sets cookie; returns `user` |
+| 4   | POST   | `/auth/refresh`             | Cookie | _(none)_                                                                                  | Optional: update `access_token`                   |
+| 5   | POST   | `/auth/logout`              | Cookie | _(none)_                                                                                  | Cookie cleared                                    |
+| 6   | POST   | `/auth/logout-all`          | Bearer | _(none)_                                                                                  | Uses `access_token` from step 3                   |
+| 7   | POST   | `/auth/forgot-password`     | —      | `{ "email": "{{email}}" }`                                                                | Copy `reset_token` from log                       |
+| 8   | POST   | `/auth/reset-password`      | —      | `{ "token": "{{reset_token}}", "password": "new-password" }`                              | Set `password` → `new-password`                   |
+| 9   | PATCH  | `/auth/change-display-name` | Bearer | `{ "displayName": "Updated Player" }`                                                     | Returns updated `user`                            |
+| 10  | PATCH  | `/auth/change-password`     | Bearer | `{ "currentPassword": "{{password}}", "newPassword": "changed-password" }`                | Set `password` → `changed-password`               |
+| 11  | PATCH  | `/auth/change-email`        | Bearer | `{ "newEmail": "{{new_email}}" }`                                                         | Copy `email_change_token` from log                |
+| 12  | POST   | `/auth/verify-email`        | —      | `{ "token": "{{email_change_token}}" }`                                                   | Expect `"Email changed"`                          |
+| 13  | DELETE | `/auth/account`             | Bearer | `{ "password": "{{password}}" }`                                                          | `password` = `changed-password`                   |
 
 **Optional:** POST `/auth/resend-verification` with `{ "email": "{{email}}" }` if step 1 log has no token.
 
@@ -227,8 +243,13 @@ Run in order in one session (< 15 min so `access_token` from login stays valid).
 
 ```javascript
 pm.test('200', () => pm.response.to.have.status(200));
-const { accessToken } = pm.response.json();
+const { accessToken, user } = pm.response.json();
 pm.environment.set('access_token', accessToken);
+pm.test('user profile', () => {
+  pm.expect(user.email).to.eql(pm.environment.get('email'));
+  pm.expect(user.displayName).to.be.a('string').and.not.empty;
+  pm.expect(user.emailVerified).to.be.true;
+});
 pm.test('refresh cookie', () => pm.expect(pm.cookies.has('refresh_token')).to.be.true);
 ```
 
@@ -239,14 +260,14 @@ pm.test('200', () => pm.response.to.have.status(200));
 pm.environment.set('password', 'new-password');
 ```
 
-**Change password (step 9):**
+**Change password (step 10):**
 
 ```javascript
 pm.test('200', () => pm.response.to.have.status(200));
 pm.environment.set('password', 'changed-password');
 ```
 
-**Verify email change (step 11):**
+**Verify email change (step 12):**
 
 ```javascript
 pm.test('200', () => pm.response.to.have.status(200));
@@ -258,8 +279,8 @@ pm.environment.set('email', pm.environment.get('new_email'));
 | Topic              | Note                                                                                                               |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------ |
 | Auth types         | **None** = public · **Cookie** = `refresh_token` auto-sent · **Bearer** = `Authorization: Bearer {{access_token}}` |
-| Cookie vs Bearer   | Steps 4–5 need cookie (run before logout clears it). Steps 6, 9–10, 12 need Bearer from step 3                     |
-| Password chain     | After step 8 → `new-password`; after step 9 → `changed-password` (step 12 delete uses this)                        |
+| Cookie vs Bearer   | Steps 4–5 need cookie (run before logout clears it). Steps 6, 9–13 need Bearer from step 3                         |
+| Password chain     | After step 8 → `new-password`; after step 10 → `changed-password` (step 13 delete uses this)                       |
 | No re-login needed | Same `access_token` from step 3 works for all Bearer steps if run within 15 min                                    |
 | Rate limits        | register/login/forgot/resend: 429 after too many attempts per IP (disabled in `NODE_ENV=test` only)                |
 
@@ -282,7 +303,7 @@ pm.environment.set('email', pm.environment.get('new_email'));
 - Forgot-password / resend-verification do not reveal whether email exists
 - Previous password-reset tokens invalidated on new forgot-password request
 - `POST /auth/resend-verification` for stuck unverified accounts
-- 36 automated tests — 34 integration + 2 e2e (health, tokens, middleware, auth flows)
+- 39 automated tests — 37 integration + 2 e2e (health, tokens, middleware, auth flows)
 
 ### Remaining gaps
 
@@ -299,32 +320,34 @@ pm.environment.set('email', pm.environment.get('new_email'));
 
 See [Postman setup guide](#postman-setup-guide) for environment variables, token sources, and scripts.
 
-| #   | Method | Path                    | Auth   |
-| --- | ------ | ----------------------- | ------ |
-| —   | GET    | `/health`               | —      |
-| 1   | POST   | `/auth/register`        | —      |
-| 2   | POST   | `/auth/verify-email`    | —      |
-| 3   | POST   | `/auth/login`           | —      |
-| 4   | POST   | `/auth/refresh`         | Cookie |
-| 5   | POST   | `/auth/logout`          | Cookie |
-| 6   | POST   | `/auth/logout-all`      | Bearer |
-| 7   | POST   | `/auth/forgot-password` | —      |
-| 8   | POST   | `/auth/reset-password`  | —      |
-| 9   | PATCH  | `/auth/change-password` | Bearer |
-| 10  | PATCH  | `/auth/change-email`    | Bearer |
-| 11  | POST   | `/auth/verify-email`    | —      |
-| 12  | DELETE | `/auth/account`         | Bearer |
+| #   | Method | Path                        | Auth   |
+| --- | ------ | --------------------------- | ------ |
+| —   | GET    | `/health`                   | —      |
+| 1   | POST   | `/auth/register`            | —      |
+| 2   | POST   | `/auth/verify-email`        | —      |
+| 3   | POST   | `/auth/login`               | —      |
+| 4   | POST   | `/auth/refresh`             | Cookie |
+| 5   | POST   | `/auth/logout`              | Cookie |
+| 6   | POST   | `/auth/logout-all`          | Bearer |
+| 7   | POST   | `/auth/forgot-password`     | —      |
+| 8   | POST   | `/auth/reset-password`      | —      |
+| 9   | PATCH  | `/auth/change-display-name` | Bearer |
+| 10  | PATCH  | `/auth/change-password`     | Bearer |
+| 11  | PATCH  | `/auth/change-email`        | Bearer |
+| 12  | POST   | `/auth/verify-email`        | —      |
+| 13  | DELETE | `/auth/account`             | Bearer |
 
 **Negative cases worth spot-checking:**
 
-| Method | Path                    | Expect                     |
-| ------ | ----------------------- | -------------------------- |
-| POST   | `/auth/login`           | 403 before verify-email    |
-| POST   | `/auth/register`        | 400 missing displayName    |
-| POST   | `/auth/register`        | 409 duplicate email        |
-| POST   | `/auth/refresh`         | 401 after logout           |
-| PATCH  | `/auth/change-password` | 401 wrong current password |
-| DELETE | `/auth/account`         | 401 wrong password         |
+| Method | Path                        | Expect                      |
+| ------ | --------------------------- | --------------------------- |
+| POST   | `/auth/login`               | 403 before verify-email     |
+| POST   | `/auth/register`            | 400 missing displayName     |
+| POST   | `/auth/register`            | 409 duplicate email         |
+| POST   | `/auth/refresh`             | 401 after logout            |
+| PATCH  | `/auth/change-display-name` | 400 unchanged or blank name |
+| PATCH  | `/auth/change-password`     | 401 wrong current password  |
+| DELETE | `/auth/account`             | 401 wrong password          |
 
 ---
 
