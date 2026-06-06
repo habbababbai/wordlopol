@@ -49,7 +49,7 @@
             "exec": [
               "pm.test('Status 200', () => pm.response.to.have.status(200));",
               "const body = pm.response.json();",
-              "pm.test('Has date', () => pm.expect(body.date).to.be.a('string');",
+              "pm.test('Has date', () => pm.expect(body.date).to.be.a('string'));",
               "pm.test('Has maxGuesses', () => pm.expect(body.maxGuesses).to.eql(6));",
               "pm.test('Has wordLength', () => pm.expect(body.wordLength).to.eql(5));",
               "pm.test('No answer exposed', () => pm.expect(body).to.not.have.property('answer'));",
