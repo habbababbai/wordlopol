@@ -14,17 +14,18 @@ describe('GET /daily/today', () => {
     await seedDictionaryWords(['jabłko', 'wążka', 'krzesło', 'mleko', 'stół']);
 
     const agent = await createTestAgent();
+    const dateKey = getCalendarDateKey();
     const res = await agent.get('/daily/today').expect(200);
 
     expect(res.body).toEqual({
-      date: getCalendarDateKey(),
+      date: dateKey,
       maxGuesses: 6,
       wordLength: WORD_LENGTH,
     });
     expect(res.body).not.toHaveProperty('answer');
 
     const challenge = await prisma.dailyChallenge.findUniqueOrThrow({
-      where: { date: dateKeyToUtcDate(getCalendarDateKey()) },
+      where: { date: dateKeyToUtcDate(dateKey) },
       include: { word: true },
     });
     expect(challenge.word.length).toBe(res.body.wordLength);
@@ -63,8 +64,8 @@ describe('GET /daily/today', () => {
     await prisma.word.createMany({
       data: [
         { text: 'wąż', length: 3 },
-        { text: 'jabłko', length: 5 },
-        { text: 'krzesło', length: 6 },
+        { text: 'jabłko', length: 6 },
+        { text: 'krzesło', length: 7 },
         { text: 'stół', length: 4 },
         { text: 'mleko', length: 5 },
       ],
