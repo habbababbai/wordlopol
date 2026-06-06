@@ -177,6 +177,50 @@ The response never includes the answer.
 
 ---
 
+### Infinite mode
+
+| Method | Path             | Auth                    | Description                          |
+| ------ | ---------------- | ----------------------- | ------------------------------------ |
+| GET    | `/infinite/next` | Bearer + verified email | Next word metadata from today's pool |
+
+Requires `authenticate` and `requireVerified`. Guests and unverified users cannot access infinite mode.
+
+Each Warsaw calendar day has one **shared pool** of up to 300 five-letter words (`INFINITE_POOL_SIZE`), lazy-created in `DailyWordPool`. Per player, words are drawn randomly without duplicates within a cycle; when the pool is exhausted the player starts a new cycle over the same word set in a different order.
+
+Repeated calls while a word is in progress return the same `wordNumber` (refresh-safe). The answer is never included.
+
+**200**
+
+```json
+{
+  "date": "2026-06-06",
+  "wordNumber": 1,
+  "poolSize": 300,
+  "maxGuesses": 6,
+  "wordLength": 5
+}
+```
+
+**401** — missing or invalid Bearer token
+
+```json
+{ "error": "Unauthorized" }
+```
+
+**403** — email not verified
+
+```json
+{ "error": "Email not verified" }
+```
+
+**503** — dictionary empty (no words imported)
+
+```json
+{ "error": "Dictionary not loaded" }
+```
+
+---
+
 ## Common error codes
 
 | Status | When                                                 |
@@ -422,6 +466,37 @@ Import `Wordlopol-Daily.postman_collection.json` with the same **Wordlopol Local
 
 ---
 
+## Infinite mode flow
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API
+    participant DB
+
+    Client->>API: GET /infinite/next (Bearer, verified)
+    API->>DB: find or create shared DailyWordPool for Warsaw date
+    API->>DB: pick random unused word for player cycle
+    API-->>Client: date, wordNumber, poolSize, maxGuesses, wordLength (no answer)
+```
+
+### Postman collection
+
+Import `Wordlopol-Infinite.postman_collection.json` with the same **Wordlopol Local** environment as auth.
+
+| #   | Request                   | Expect                                   |
+| --- | ------------------------- | ---------------------------------------- |
+| 00  | GET `/health`             | 200, init user, `wordCount > 0`          |
+| 01  | POST `/auth/register`     | 201, saves `verify_token`                |
+| 02  | POST `/auth/verify-email` | 200                                      |
+| 03  | POST `/auth/login`        | 200, saves `access_token`                |
+| 04  | GET `/infinite/next`      | 200, saves `infinite_date`, `wordNumber` |
+| 05  | GET `/infinite/next`      | 200, same date and `wordNumber` as 04    |
+
+Edge cases: `Wordlopol-Infinite-Negative.postman_collection.json` — 401 without Bearer, 403 unverified login.
+
+---
+
 ## Security review (current branch)
 
 ### Implemented
@@ -439,17 +514,19 @@ Import `Wordlopol-Daily.postman_collection.json` with the same **Wordlopol Local
 - Forgot-password / resend-verification do not reveal whether email exists
 - Previous password-reset tokens invalidated on new forgot-password request
 - `POST /auth/resend-verification` for stuck unverified accounts
-- 42 automated tests — 40 integration + 2 e2e (health, tokens, middleware, auth flows)
+- 73 automated integration tests + 4 e2e (health, auth, daily, infinite, tokens, middleware)
 - Daily challenge: deterministic word per Warsaw calendar day; lazy DB persistence on `GET /daily/today`
+- Infinite mode: shared daily word pool; `requireVerified` wired on `GET /infinite/next`; answer never exposed
 
 ### Remaining gaps
 
-| Item                                   | Risk     | Notes                                                                     |
-| -------------------------------------- | -------- | ------------------------------------------------------------------------- |
-| **Access JWT not revocable**           | Low      | By design; 15 min window; refresh revocation stops renewal                |
-| **Email change without password**      | Low      | Authenticated user can request change with only Bearer token              |
-| **`optionalAuth` / `requireVerified`** | —        | Middleware exists but not wired to game routes yet (expected)             |
-| **devToken in responses**              | Dev only | Returned only when `NODE_ENV=development`; omitted in production and test |
+| Item                              | Risk     | Notes                                                                       |
+| --------------------------------- | -------- | --------------------------------------------------------------------------- |
+| **Access JWT not revocable**      | Low      | By design; 15 min window; refresh revocation stops renewal                  |
+| **Email change without password** | Low      | Authenticated user can request change with only Bearer token                |
+| **`optionalAuth`**                | —        | Middleware exists but not wired to daily guest routes yet (expected)        |
+| **Guess endpoints**               | —        | `POST /infinite/guess` and `POST /daily/guess` not implemented yet (step 6) |
+| **devToken in responses**         | Dev only | Returned only when `NODE_ENV=development`; omitted in production and test   |
 
 ---
 
@@ -457,23 +534,24 @@ Import `Wordlopol-Daily.postman_collection.json` with the same **Wordlopol Local
 
 See [Postman setup guide](#postman-setup-guide) for the automated collection, scripts, and environment setup.
 
-| #   | Method | Path                        | Auth   |
-| --- | ------ | --------------------------- | ------ |
-| —   | GET    | `/health`                   | —      |
-| —   | GET    | `/daily/today`              | —      |
-| 1   | POST   | `/auth/register`            | —      |
-| 2   | POST   | `/auth/verify-email`        | —      |
-| 3   | POST   | `/auth/login`               | —      |
-| 4   | POST   | `/auth/refresh`             | Cookie |
-| 5   | POST   | `/auth/logout`              | Cookie |
-| 6   | POST   | `/auth/logout-all`          | Bearer |
-| 7   | POST   | `/auth/forgot-password`     | —      |
-| 8   | POST   | `/auth/reset-password`      | —      |
-| 9   | PATCH  | `/auth/change-display-name` | Bearer |
-| 10  | PATCH  | `/auth/change-password`     | Bearer |
-| 11  | PATCH  | `/auth/change-email`        | Bearer |
-| 12  | POST   | `/auth/verify-email`        | —      |
-| 13  | DELETE | `/auth/account`             | Bearer |
+| #   | Method | Path                        | Auth              |
+| --- | ------ | --------------------------- | ----------------- |
+| —   | GET    | `/health`                   | —                 |
+| —   | GET    | `/daily/today`              | —                 |
+| —   | GET    | `/infinite/next`            | Bearer + verified |
+| 1   | POST   | `/auth/register`            | —                 |
+| 2   | POST   | `/auth/verify-email`        | —                 |
+| 3   | POST   | `/auth/login`               | —                 |
+| 4   | POST   | `/auth/refresh`             | Cookie            |
+| 5   | POST   | `/auth/logout`              | Cookie            |
+| 6   | POST   | `/auth/logout-all`          | Bearer            |
+| 7   | POST   | `/auth/forgot-password`     | —                 |
+| 8   | POST   | `/auth/reset-password`      | —                 |
+| 9   | PATCH  | `/auth/change-display-name` | Bearer            |
+| 10  | PATCH  | `/auth/change-password`     | Bearer            |
+| 11  | PATCH  | `/auth/change-email`        | Bearer            |
+| 12  | POST   | `/auth/verify-email`        | —                 |
+| 13  | DELETE | `/auth/account`             | Bearer            |
 
 **Negative cases worth spot-checking:**
 
@@ -487,6 +565,8 @@ See [Postman setup guide](#postman-setup-guide) for the automated collection, sc
 | PATCH  | `/auth/change-password`     | 401 wrong current password  |
 | DELETE | `/auth/account`             | 401 wrong password          |
 | GET    | `/daily/today`              | 503 empty dictionary        |
+| GET    | `/infinite/next`            | 401 without Bearer          |
+| GET    | `/infinite/next`            | 403 unverified user         |
 
 ---
 
@@ -500,21 +580,25 @@ See [Postman setup guide](#postman-setup-guide) for the automated collection, sc
 
 ### Suites
 
-| Suite                         | Location         | Tests                                          |
-| ----------------------------- | ---------------- | ---------------------------------------------- |
-| `health.test.ts`              | `src/__tests__/` | DB connected / empty / degraded                |
-| `tokens.test.ts`              | `src/__tests__/` | JWT + refresh create/rotate/revoke             |
-| `middleware.test.ts`          | `src/__tests__/` | authenticate, optionalAuth, requireVerified    |
-| `email.test.ts`               | `src/__tests__/` | URL builders + send behavior                   |
-| `auth-register.test.ts`       | `src/__tests__/` | register → verify → login, resend-verification |
-| `auth-session.test.ts`        | `src/__tests__/` | refresh, logout, logout-all                    |
-| `auth-account.test.ts`        | `src/__tests__/` | reset, change-password, change-email, delete   |
-| `tokens-email-change.test.ts` | `src/__tests__/` | email-change JWT                               |
-| `daily-word-picker.test.ts`   | `src/__tests__/` | deterministic word index picker                |
-| `daily-today.test.ts`         | `src/__tests__/` | GET /daily/today, idempotency, empty dict 503  |
-| `health.e2e.ts`               | `src/__e2e__/`   | health over real HTTP                          |
-| `auth.e2e.ts`                 | `src/__e2e__/`   | register → verify → login → refresh over HTTP  |
-| `daily.e2e.ts`                | `src/__e2e__/`   | daily today over real HTTP                     |
+| Suite                          | Location         | Tests                                          |
+| ------------------------------ | ---------------- | ---------------------------------------------- |
+| `health.test.ts`               | `src/__tests__/` | DB connected / empty / degraded                |
+| `tokens.test.ts`               | `src/__tests__/` | JWT + refresh create/rotate/revoke             |
+| `middleware.test.ts`           | `src/__tests__/` | authenticate, optionalAuth, requireVerified    |
+| `email.test.ts`                | `src/__tests__/` | URL builders + send behavior                   |
+| `auth-register.test.ts`        | `src/__tests__/` | register → verify → login, resend-verification |
+| `auth-session.test.ts`         | `src/__tests__/` | refresh, logout, logout-all                    |
+| `auth-account.test.ts`         | `src/__tests__/` | reset, change-password, change-email, delete   |
+| `tokens-email-change.test.ts`  | `src/__tests__/` | email-change JWT                               |
+| `daily-word-picker.test.ts`    | `src/__tests__/` | deterministic word index picker                |
+| `daily-today.test.ts`          | `src/__tests__/` | GET /daily/today, idempotency, empty dict 503  |
+| `infinite-pool-picker.test.ts` | `src/__tests__/` | seeded shuffle and pool index picker           |
+| `infinite-pool.test.ts`        | `src/__tests__/` | shared pool creation, idempotency, 503         |
+| `infinite-next.test.ts`        | `src/__tests__/` | GET /infinite/next auth, cycles, no answer     |
+| `health.e2e.ts`                | `src/__e2e__/`   | health over real HTTP                          |
+| `auth.e2e.ts`                  | `src/__e2e__/`   | register → verify → login → refresh over HTTP  |
+| `daily.e2e.ts`                 | `src/__e2e__/`   | daily today over real HTTP                     |
+| `infinite.e2e.ts`              | `src/__e2e__/`   | infinite next over real HTTP                   |
 
 **Integration** — Supertest against an in-process Express app (`vitest.config.ts`).
 
