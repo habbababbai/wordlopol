@@ -2,10 +2,9 @@
 
 ## [0.5.0](https://github.com/habbababbai/wordlopol/compare/api-v0.4.0...api-v0.5.0) (2026-06-06)
 
-
 ### Features
 
-* **api:** add daily challenge service and GET /daily/today ([#19](https://github.com/habbababbai/wordlopol/issues/19)) ([327e1d5](https://github.com/habbababbai/wordlopol/commit/327e1d5dd031347d79874c84af913d97e39061b8))
+- **api:** add daily challenge service and GET /daily/today ([#19](https://github.com/habbababbai/wordlopol/issues/19)) ([327e1d5](https://github.com/habbababbai/wordlopol/commit/327e1d5dd031347d79874c84af913d97e39061b8))
 
 ## [0.4.0](https://github.com/habbababbai/wordlopol/compare/api-v0.3.0...api-v0.4.0) (2026-06-05)
 
