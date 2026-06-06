@@ -21,4 +21,19 @@ describe('withDevToken', () => {
       devAccessToken: 'jwt-token',
     });
   });
+
+  it('calls devAccessToken factory only in development', () => {
+    let called = false;
+    expect(
+      withDevToken({ message: 'sent' }, 'abc123', () => {
+        called = true;
+        return 'jwt-token';
+      }),
+    ).toEqual({
+      message: 'sent',
+      devToken: 'abc123',
+      devAccessToken: 'jwt-token',
+    });
+    expect(called).toBe(true);
+  });
 });

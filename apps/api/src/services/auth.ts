@@ -90,7 +90,9 @@ export async function register(data: {
     throw new AuthError(503, 'Email delivery failed');
   }
 
-  return withDevToken({ message: 'Verification email sent' }, token, signAccessToken(user.id));
+  return withDevToken({ message: 'Verification email sent' }, token, () =>
+    signAccessToken(user.id),
+  );
 }
 
 export async function verifyEmail(token: string): Promise<{ message: string }> {
