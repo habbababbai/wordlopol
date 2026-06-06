@@ -149,6 +149,34 @@ Send header: `Authorization: Bearer <accessToken>`
 
 ---
 
+### Daily challenge
+
+| Method | Path           | Auth | Description                            |
+| ------ | -------------- | ---- | -------------------------------------- |
+| GET    | `/daily/today` | —    | Today's challenge metadata (no answer) |
+
+Calendar day uses `Europe/Warsaw` (`TZ` env). The word is chosen deterministically from the dictionary and persisted lazily on first request for that date.
+
+**200**
+
+```json
+{
+  "date": "2026-06-06",
+  "maxGuesses": 6,
+  "wordLength": 5
+}
+```
+
+**503** — dictionary empty (no words imported)
+
+```json
+{ "error": "Dictionary not loaded" }
+```
+
+The response never includes the answer.
+
+---
+
 ## Common error codes
 
 | Status | When                                                 |
@@ -366,6 +394,34 @@ pm.environment.set('email', pm.environment.get('new_email'));
 
 ---
 
+## Daily challenge flow
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API
+    participant DB
+
+    Client->>API: GET /daily/today
+    API->>DB: find or create DailyChallenge for Warsaw calendar date
+    DB-->>API: challenge metadata
+    API-->>Client: date, maxGuesses, wordLength (no answer)
+```
+
+### Postman collection
+
+Import `Wordlopol-Daily.postman_collection.json` with the same **Wordlopol Local** environment as auth.
+
+| #   | Request            | Expect                      |
+| --- | ------------------ | --------------------------- |
+| 00  | GET `/health`      | 200, `wordCount > 0`        |
+| 01  | GET `/daily/today` | 200, saves `daily_date`     |
+| 02  | GET `/daily/today` | 200, same `date` as step 01 |
+
+**503 empty dictionary** — only reproducible with an empty `Word` table (covered by Vitest, not the Postman happy path).
+
+---
+
 ## Security review (current branch)
 
 ### Implemented
@@ -384,6 +440,7 @@ pm.environment.set('email', pm.environment.get('new_email'));
 - Previous password-reset tokens invalidated on new forgot-password request
 - `POST /auth/resend-verification` for stuck unverified accounts
 - 42 automated tests — 40 integration + 2 e2e (health, tokens, middleware, auth flows)
+- Daily challenge: deterministic word per Warsaw calendar day; lazy DB persistence on `GET /daily/today`
 
 ### Remaining gaps
 
@@ -403,6 +460,7 @@ See [Postman setup guide](#postman-setup-guide) for the automated collection, sc
 | #   | Method | Path                        | Auth   |
 | --- | ------ | --------------------------- | ------ |
 | —   | GET    | `/health`                   | —      |
+| —   | GET    | `/daily/today`              | —      |
 | 1   | POST   | `/auth/register`            | —      |
 | 2   | POST   | `/auth/verify-email`        | —      |
 | 3   | POST   | `/auth/login`               | —      |
@@ -428,6 +486,7 @@ See [Postman setup guide](#postman-setup-guide) for the automated collection, sc
 | PATCH  | `/auth/change-display-name` | 400 unchanged or blank name |
 | PATCH  | `/auth/change-password`     | 401 wrong current password  |
 | DELETE | `/auth/account`             | 401 wrong password          |
+| GET    | `/daily/today`              | 503 empty dictionary        |
 
 ---
 
@@ -451,8 +510,11 @@ See [Postman setup guide](#postman-setup-guide) for the automated collection, sc
 | `auth-session.test.ts`        | `src/__tests__/` | refresh, logout, logout-all                    |
 | `auth-account.test.ts`        | `src/__tests__/` | reset, change-password, change-email, delete   |
 | `tokens-email-change.test.ts` | `src/__tests__/` | email-change JWT                               |
+| `daily-word-picker.test.ts`   | `src/__tests__/` | deterministic word index picker                |
+| `daily-today.test.ts`         | `src/__tests__/` | GET /daily/today, idempotency, empty dict 503  |
 | `health.e2e.ts`               | `src/__e2e__/`   | health over real HTTP                          |
 | `auth.e2e.ts`                 | `src/__e2e__/`   | register → verify → login → refresh over HTTP  |
+| `daily.e2e.ts`                | `src/__e2e__/`   | daily today over real HTTP                     |
 
 **Integration** — Supertest against an in-process Express app (`vitest.config.ts`).
 
