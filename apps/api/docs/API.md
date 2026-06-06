@@ -227,11 +227,11 @@ Repeated calls while a word is in progress return the same `wordNumber` (refresh
 | ------ | ---------------------------------------------------- |
 | 400    | Invalid body / expired or invalid token              |
 | 401    | Missing or invalid Bearer / refresh token / password |
-| 403    | Email not verified (login)                           |
+| 403    | Email not verified (login, `/infinite/next`)         |
 | 404    | User not found                                       |
 | 409    | Email already registered                             |
 | 429    | Rate limit exceeded on auth endpoints                |
-| 503    | Health — DB down / email delivery failed             |
+| 503    | DB down, email delivery failed, or empty dictionary  |
 
 ---
 
@@ -241,17 +241,22 @@ Repeated calls while a word is in progress return the same `wordNumber` (refresh
 
 Files in `apps/api/postman/`:
 
-| File                                              | Import as               |
-| ------------------------------------------------- | ----------------------- |
-| `Wordlopol-Local.postman_environment.json`        | Environment             |
-| `Wordlopol-Auth.postman_collection.json`          | Collection (happy path) |
-| `Wordlopol-Auth-Negative.postman_collection.json` | Collection (edge cases) |
+| File                                                  | Import as                   |
+| ----------------------------------------------------- | --------------------------- |
+| `Wordlopol-Local.postman_environment.json`            | Environment                 |
+| `Wordlopol-Auth.postman_collection.json`              | Collection (auth)           |
+| `Wordlopol-Auth-Negative.postman_collection.json`     | Collection (auth edges)     |
+| `Wordlopol-Daily.postman_collection.json`             | Collection (daily)          |
+| `Wordlopol-Infinite.postman_collection.json`          | Collection (infinite)       |
+| `Wordlopol-Infinite-Negative.postman_collection.json` | Collection (infinite edges) |
 
-1. Postman → **Import** → select all three files
+1. Postman → **Import** → select the environment and collections you need (all six files for full coverage)
 2. Select environment **Wordlopol Local** (top-right dropdown)
 3. Ensure API is running: `pnpm --filter @wordlopol/api dev`
-4. Open collection **Wordlopol Auth (automated)** → **Run**
-5. Run all 14 requests in order — tokens and passwords are saved automatically via Tests scripts
+4. Open a collection (e.g. **Wordlopol Auth (automated)**) → **Run**
+5. Run requests in order — tokens and variables are saved automatically via Tests scripts
+
+See [postman/README.md](../postman/README.md) for per-collection run instructions (auth, daily, infinite).
 
 **What gets saved automatically:**
 
