@@ -38,13 +38,16 @@ export async function getOrCreateDailyChallenge(dateKey: string) {
     return existing;
   }
 
-  const wordCount = await prisma.word.count();
+  const wordCount = await prisma.word.count({
+    where: { length: WORD_LENGTH },
+  });
   if (wordCount === 0) {
     throw new DailyError(503, 'Dictionary not loaded');
   }
 
   const index = pickWordIndexForDate(dateKey, wordCount);
   const word = await prisma.word.findFirst({
+    where: { length: WORD_LENGTH },
     orderBy: { id: 'asc' },
     skip: index,
   });

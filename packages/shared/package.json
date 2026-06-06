@@ -17,7 +17,6 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@types/node": "^22.13.10",
     "@wordlopol/eslint-config": "workspace:*",
     "@wordlopol/tsconfig": "workspace:*",
     "eslint": "^9.22.0",
