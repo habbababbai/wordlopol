@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.6.0](https://github.com/habbababbai/wordlopol/compare/api-v0.5.0...api-v0.6.0) (2026-06-06)
+
+### Features
+
+- **api:** add infinite pool service and GET /infinite/next ([#21](https://github.com/habbababbai/wordlopol/issues/21)) ([130815d](https://github.com/habbababbai/wordlopol/commit/130815d562dccac6e3534154dbac909cbcd4e867))
+
 ## [0.5.0](https://github.com/habbababbai/wordlopol/compare/api-v0.4.0...api-v0.5.0) (2026-06-06)
 
 ### Features
