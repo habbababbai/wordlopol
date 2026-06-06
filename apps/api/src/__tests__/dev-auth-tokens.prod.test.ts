@@ -15,8 +15,11 @@ describe('withDevToken in test env', () => {
     expect(withDevToken({ message: 'sent' }, 'abc123', 'jwt-token')).toEqual({
       message: 'sent',
     });
-    expect(withDevToken({ message: 'sent' }, 'abc123', () => 'jwt-token')).toEqual({
+
+    const accessTokenFactory = vi.fn(() => 'jwt-token');
+    expect(withDevToken({ message: 'sent' }, 'abc123', accessTokenFactory)).toEqual({
       message: 'sent',
     });
+    expect(accessTokenFactory).not.toHaveBeenCalled();
   });
 });
