@@ -74,14 +74,14 @@ Refresh tokens are stored as **SHA-256 hashes** in the database (never plaintext
 
 ### Auth — public
 
-| Method | Path                        | Body                               | Success                                                       |
-| ------ | --------------------------- | ---------------------------------- | ------------------------------------------------------------- |
-| POST   | `/auth/register`            | `{ email, password, displayName }` | **201** `{ message }` (+ `devToken` in development only)      |
-| POST   | `/auth/verify-email`        | `{ token }`                        | **200** `{ message }`                                         |
-| POST   | `/auth/login`               | `{ email, password }`              | **200** `{ accessToken, user }` + `Set-Cookie: refresh_token` |
-| POST   | `/auth/resend-verification` | `{ email }`                        | **200** `{ message }` (+ `devToken` in dev when email sent)   |
-| POST   | `/auth/forgot-password`     | `{ email }`                        | **200** `{ message }` (+ `devToken` in dev when email sent)   |
-| POST   | `/auth/reset-password`      | `{ token, password }`              | **200** `{ message }`                                         |
+| Method | Path                        | Body                               | Success                                                                    |
+| ------ | --------------------------- | ---------------------------------- | -------------------------------------------------------------------------- |
+| POST   | `/auth/register`            | `{ email, password, displayName }` | **201** `{ message }` (+ `devToken`, `devAccessToken` in development only) |
+| POST   | `/auth/verify-email`        | `{ token }`                        | **200** `{ message }`                                                      |
+| POST   | `/auth/login`               | `{ email, password }`              | **200** `{ accessToken, user }` + `Set-Cookie: refresh_token`              |
+| POST   | `/auth/resend-verification` | `{ email }`                        | **200** `{ message }` (+ `devToken` in dev when email sent)                |
+| POST   | `/auth/forgot-password`     | `{ email }`                        | **200** `{ message }` (+ `devToken` in dev when email sent)                |
+| POST   | `/auth/reset-password`      | `{ token, password }`              | **200** `{ message }`                                                      |
 
 Rate-limited (15 min window): `register` (5), `login` (10), `resend-verification` (5), `forgot-password` (5) per IP. **Disabled in `development` and `test`.**
 
@@ -91,15 +91,17 @@ Rate-limited (15 min window): `register` (5), `login` (10), `resend-verification
 - `email` must be valid format
 - `displayName` required, 1–50 chars after trim
 
-**Development-only `devToken`**
+**Development-only `devToken` and `devAccessToken`**
 
 When `NODE_ENV=development`, token-bearing auth endpoints also return `devToken` in the JSON body so Postman can run the full collection without copying from logs or email. **Never present in production or test.**
 
+`register` also returns `devAccessToken` (a valid access JWT for the new, unverified user) so negative Postman flows can hit protected routes such as `GET /infinite/next` and expect **403 Email not verified**.
+
 ```json
-{ "message": "Verification email sent", "devToken": "64-char-hex-or-jwt" }
+{ "message": "Verification email sent", "devToken": "64-char-hex", "devAccessToken": "eyJ..." }
 ```
 
-Endpoints that may include `devToken`: `register`, `resend-verification`, `forgot-password`, `change-email` (only when an email would actually be sent).
+Endpoints that may include `devToken`: `register`, `resend-verification`, `forgot-password`, `change-email` (only when an email would actually be sent). Only `register` includes `devAccessToken`.
 
 **login response**
 

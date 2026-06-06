@@ -13,4 +13,12 @@ describe('withDevToken', () => {
       devToken: 'abc123',
     });
   });
+
+  it('adds devAccessToken when provided in development', () => {
+    expect(withDevToken({ message: 'sent' }, 'abc123', 'jwt-token')).toEqual({
+      message: 'sent',
+      devToken: 'abc123',
+      devAccessToken: 'jwt-token',
+    });
+  });
 });

@@ -1,5 +1,6 @@
 import { pickWordIndexForDate } from './daily.js';
 
+/** FNV-1a 32-bit hash used as the base for deterministic shuffles and pool indices. */
 function fnv1a32(input: string): number {
   let hash = 0x811c9dc5;
   for (let i = 0; i < input.length; i++) {
@@ -9,6 +10,7 @@ function fnv1a32(input: string): number {
   return hash >>> 0;
 }
 
+/** Derives the next pseudo-random value from a seed and step counter. */
 function nextRandom(state: { value: number }, seed: string, counter: number): number {
   state.value = fnv1a32(`${seed}:${counter}:${state.value}`);
   return state.value;

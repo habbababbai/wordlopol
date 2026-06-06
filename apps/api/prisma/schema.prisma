@@ -107,7 +107,7 @@ model InfinitePlayerDay {
   currentWordId Int?
 
   user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  word Word? @relation("CurrentInfiniteWord", fields: [currentWordId], references: [id])
+  word Word? @relation("CurrentInfiniteWord", fields: [currentWordId], references: [id], onDelete: SetNull)
 
   @@id([userId, date])
 }
@@ -119,7 +119,7 @@ model InfiniteWordUsage {
   wordId      Int
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  word Word @relation(fields: [wordId], references: [id])
+  word Word @relation(fields: [wordId], references: [id], onDelete: Restrict)
 
   @@unique([userId, date, cycleNumber, wordId])
   @@index([userId, date, cycleNumber])

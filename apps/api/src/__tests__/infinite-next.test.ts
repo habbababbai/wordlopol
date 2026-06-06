@@ -3,7 +3,7 @@ import { WORD_LENGTH } from '@wordlopol/shared';
 import { signAccessToken } from '../lib/tokens.js';
 import { prisma } from '../lib/prisma.js';
 import { dateKeyToUtcDate, getCalendarDateKey } from '../lib/daily-date.js';
-import { completeInfiniteWord, getNextWord } from '../services/infinite.js';
+import { completeInfiniteWord, getNextWord, getOrCreateDailyPool } from '../services/infinite.js';
 import {
   createTestAgent,
   createTestUser,
@@ -177,5 +177,37 @@ describe('infinite word progression', () => {
     expect(new Set(cycle0).size).toBe(5);
     expect(new Set(cycle1).size).toBe(5);
     expect(cycle1).not.toEqual(cycle0);
+  });
+
+  it('returns wordNumber 1 when the next pick starts a new cycle', async () => {
+    await seedDictionaryWords(TEST_POOL_WORDS);
+    const { user } = await createVerifiedUserWithPassword();
+    const dateKey = getCalendarDateKey();
+    const date = dateKeyToUtcDate(dateKey);
+    const pool = await getOrCreateDailyPool(dateKey);
+
+    for (const entry of pool) {
+      await prisma.infiniteWordUsage.create({
+        data: {
+          userId: user.id,
+          date,
+          cycleNumber: 0,
+          wordId: entry.wordId,
+        },
+      });
+    }
+
+    await prisma.infinitePlayerDay.create({
+      data: {
+        userId: user.id,
+        date,
+        cycleNumber: 0,
+        currentWordId: null,
+      },
+    });
+
+    const next = await getNextWord(user.id);
+
+    expect(next.wordNumber).toBe(1);
   });
 });

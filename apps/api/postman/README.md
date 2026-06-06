@@ -49,10 +49,11 @@ Requires `NODE_ENV=development` (devToken on register).
 2. Open **Wordlopol Infinite (negative)** → **Run**
 3. Run all folders — each scenario is self-contained
 
-| Folder             | Expect |
-| ------------------ | ------ |
-| 01 No auth         | 401    |
-| 02 Unverified user | 403    |
+| Folder                       | Expect                                    |
+| ---------------------------- | ----------------------------------------- |
+| 01 No auth                   | 401                                       |
+| 02 Unverified login          | 403                                       |
+| 02 Unverified /infinite/next | 403 (uses `devAccessToken` from register) |
 
 ## Run auth negative / edge cases
 

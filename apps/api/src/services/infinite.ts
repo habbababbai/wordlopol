@@ -205,6 +205,14 @@ export async function getNextWord(userId: string): Promise<InfiniteWordDto> {
     playerDay.cycleNumber,
   );
 
+  let wordNumber = finishedCount + 1;
+  if (cycleNumber !== playerDay.cycleNumber) {
+    const newFinishedCount = await prisma.infiniteWordUsage.count({
+      where: { userId, date, cycleNumber },
+    });
+    wordNumber = newFinishedCount + 1;
+  }
+
   await prisma.infinitePlayerDay.update({
     where: { userId_date: { userId, date } },
     data: {
@@ -213,7 +221,7 @@ export async function getNextWord(userId: string): Promise<InfiniteWordDto> {
     },
   });
 
-  return buildInfiniteWordDto(dateKey, finishedCount + 1, pool.length);
+  return buildInfiniteWordDto(dateKey, wordNumber, pool.length);
 }
 
 /**

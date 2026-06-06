@@ -69,7 +69,11 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Status 201', () => pm.response.to.have.status(201));",
-                  "pm.environment.set('verify_token', pm.response.json().devToken);"
+                  "const body = pm.response.json();",
+                  "pm.test('devToken present', () => pm.expect(body.devToken).to.be.a('string').and.not.empty);",
+                  "pm.test('devAccessToken present', () => pm.expect(body.devAccessToken).to.be.a('string').and.not.empty);",
+                  "pm.environment.set('verify_token', body.devToken);",
+                  "pm.environment.set('access_token', body.devAccessToken);"
                 ]
               }
             }
@@ -110,6 +114,40 @@
               "options": { "raw": { "language": "json" } }
             },
             "url": "{{base_url}}/auth/login"
+          }
+        },
+        {
+          "name": "Neg Inf 04 Unverified user hits /infinite/next",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const accessToken = pm.environment.get('access_token');",
+                  "if (!accessToken) {",
+                  "  throw new Error('access_token is empty — run Neg Inf 02 [init] Register first');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Email not verified', () => {",
+                  "  pm.expect(pm.response.json().error).to.eql('Email not verified');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/infinite/next"
           }
         }
       ]
