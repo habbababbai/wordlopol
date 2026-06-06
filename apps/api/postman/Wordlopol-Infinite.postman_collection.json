@@ -1,0 +1,209 @@
+{
+  "info": {
+    "name": "Wordlopol Infinite (automated)",
+    "description": "Infinite mode happy path for local development.\n\nSETUP:\n1. Import Wordlopol-Local.postman_environment.json\n2. Select **Wordlopol Local** in the environment dropdown (top-right)\n3. Ensure dictionary is loaded (`pnpm db:import-words`)\n4. Run collection from **00 Health** through **05 Infinite Next again** in order\n\nRequires NODE_ENV=development (devToken on register).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3001"
+    }
+  ],
+  "item": [
+    {
+      "name": "00 Health",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const runId = Date.now();",
+              "pm.environment.set('email', `infinite-${runId}@example.com`);",
+              "pm.environment.set('password', 'secure-password');",
+              "pm.environment.set('display_name', 'Player');",
+              "pm.environment.set('access_token', '');",
+              "pm.environment.set('verify_token', '');",
+              "console.log('[init] email =', pm.environment.get('email'));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Database connected', () => {",
+              "  pm.expect(pm.response.json().database).to.eql('connected');",
+              "});",
+              "pm.test('Dictionary loaded', () => {",
+              "  pm.expect(pm.response.json().wordCount).to.be.above(0);",
+              "});",
+              "pm.test('Environment active', () => {",
+              "  pm.expect(pm.environment.get('base_url'), 'Select Wordlopol Local environment (top-right)').to.eql('http://localhost:3001');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/health"
+      }
+    },
+    {
+      "name": "01 Register",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.test('devToken present', () => pm.expect(body.devToken).to.be.a('string').and.not.empty);",
+              "pm.environment.set('verify_token', body.devToken);",
+              "console.log('[saved] verify_token');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"displayName\": \"{{display_name}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{base_url}}/auth/register"
+      }
+    },
+    {
+      "name": "02 Verify email",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Email verified', () => {",
+              "  pm.expect(pm.response.json().message).to.eql('Email verified');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"token\": \"{{verify_token}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{base_url}}/auth/verify-email"
+      }
+    },
+    {
+      "name": "03 Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const { accessToken, user } = pm.response.json();",
+              "pm.environment.set('access_token', accessToken);",
+              "pm.test('access_token saved', () => pm.expect(accessToken).to.be.a('string').and.not.empty);",
+              "pm.test('user verified', () => pm.expect(user.emailVerified).to.be.true);",
+              "console.log('[saved] access_token');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{base_url}}/auth/login"
+      }
+    },
+    {
+      "name": "04 Infinite Next",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Has date', () => pm.expect(body.date).to.be.a('string'));",
+              "pm.test('Has wordNumber', () => pm.expect(body.wordNumber).to.eql(1));",
+              "pm.test('Has poolSize', () => pm.expect(body.poolSize).to.be.above(0));",
+              "pm.test('Has maxGuesses', () => pm.expect(body.maxGuesses).to.eql(6));",
+              "pm.test('Has wordLength', () => pm.expect(body.wordLength).to.eql(5));",
+              "pm.test('No answer exposed', () => pm.expect(body).to.not.have.property('answer'));",
+              "pm.environment.set('infinite_date', body.date);",
+              "pm.environment.set('infinite_word_number', String(body.wordNumber));",
+              "console.log('[saved] infinite_date =', body.date);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+        "url": "{{base_url}}/infinite/next"
+      }
+    },
+    {
+      "name": "05 Infinite Next again",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const infiniteDate = pm.environment.get('infinite_date');",
+              "if (!infiniteDate) {",
+              "  throw new Error('infinite_date is empty — run 04 Infinite Next first');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Same calendar date', () => {",
+              "  pm.expect(body.date).to.eql(pm.environment.get('infinite_date'));",
+              "});",
+              "pm.test('Same in-progress wordNumber', () => {",
+              "  pm.expect(String(body.wordNumber)).to.eql(pm.environment.get('infinite_word_number'));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+        "url": "{{base_url}}/infinite/next"
+      }
+    }
+  ]
+}

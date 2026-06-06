@@ -26,14 +26,20 @@ Run from repo root with `pnpm --filter @wordlopol/api <script>` or from this dir
 
 From monorepo root: `pnpm db:migrate`, `pnpm db:import-words`, `pnpm test:all`.
 
+After pulling schema changes, apply pending migrations before running the API locally:
+
+```bash
+pnpm db:migrate   # e.g. InfinitePlayerDay / InfiniteWordUsage (infinite mode)
+```
+
 ## Testing
 
-Requires Postgres on port **5433** (`docker compose up -d` from repo root). Tests use database `wordlopol_test` (created automatically on first run).
+Requires Postgres on port **5433** (`docker compose up -d` from repo root). Tests use database `wordlopol_test` (created and migrated automatically on first test run).
 
 ```bash
 pnpm test              # integration only
 pnpm test:coverage     # HTML + lcov in apps/api/coverage/
-pnpm test:e2e          # real HTTP (health + auth flow)
+pnpm test:e2e          # real HTTP (health, auth, daily, infinite)
 pnpm test:all          # both suites — same as CI
 ```
 

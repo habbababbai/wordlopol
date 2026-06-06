@@ -27,6 +27,8 @@ model User {
   passwordResetTokens     PasswordResetToken[]
   gameResults             GameResult[]
   stats                   UserStats?
+  infinitePlayerDays      InfinitePlayerDay[]
+  infiniteWordUsages      InfiniteWordUsage[]
 }
 
 model RefreshToken {
@@ -70,8 +72,10 @@ model Word {
   text   String @unique
   length Int
 
-  dailyChallenges DailyChallenge[]
-  dailyWordPools  DailyWordPool[]
+  dailyChallenges     DailyChallenge[]
+  dailyWordPools      DailyWordPool[]
+  infinitePlayerDays  InfinitePlayerDay[] @relation("CurrentInfiniteWord")
+  infiniteWordUsages  InfiniteWordUsage[]
 }
 
 model DailyChallenge {
@@ -94,6 +98,31 @@ model DailyWordPool {
 
   @@unique([date, order])
   @@index([date])
+}
+
+model InfinitePlayerDay {
+  userId        String
+  date          DateTime @db.Date
+  cycleNumber   Int      @default(0)
+  currentWordId Int?
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  word Word? @relation("CurrentInfiniteWord", fields: [currentWordId], references: [id], onDelete: SetNull)
+
+  @@id([userId, date])
+}
+
+model InfiniteWordUsage {
+  userId      String
+  date        DateTime @db.Date
+  cycleNumber Int
+  wordId      Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  word Word @relation(fields: [wordId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, date, cycleNumber, wordId])
+  @@index([userId, date, cycleNumber])
 }
 
 model GameResult {

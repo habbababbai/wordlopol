@@ -2,12 +2,14 @@
 
 ## Files
 
-| File                                              | Purpose                                           |
-| ------------------------------------------------- | ------------------------------------------------- |
-| `Wordlopol-Local.postman_environment.json`        | Shared environment (only set `base_url` manually) |
-| `Wordlopol-Auth.postman_collection.json`          | Auth happy-path flow (14 requests)                |
-| `Wordlopol-Auth-Negative.postman_collection.json` | Auth edge cases & error responses (9 folders)     |
-| `Wordlopol-Daily.postman_collection.json`         | Daily challenge happy path (3 requests)           |
+| File                                                  | Purpose                                           |
+| ----------------------------------------------------- | ------------------------------------------------- |
+| `Wordlopol-Local.postman_environment.json`            | Shared environment (only set `base_url` manually) |
+| `Wordlopol-Auth.postman_collection.json`              | Auth happy-path flow (14 requests)                |
+| `Wordlopol-Auth-Negative.postman_collection.json`     | Auth edge cases & error responses (9 folders)     |
+| `Wordlopol-Daily.postman_collection.json`             | Daily challenge happy path (3 requests)           |
+| `Wordlopol-Infinite.postman_collection.json`          | Infinite mode happy path (6 requests)             |
+| `Wordlopol-Infinite-Negative.postman_collection.json` | Infinite edge cases (401, 403)                    |
 
 ## Import
 
@@ -31,6 +33,27 @@ If the environment is not selected, only Health will pass — auth requests send
 4. Run **00 Health** → **01 Daily Today** → **02 Daily Today again**
 
 Empty-dictionary **503** is covered by Vitest, not the Postman happy path.
+
+## Run infinite mode
+
+1. Same environment (**Wordlopol Local**) and running API
+2. Dictionary must be loaded: `pnpm db:import-words` (or health shows `wordCount > 0`)
+3. Open **Wordlopol Infinite (automated)** → **Run**
+4. Run **00 Health** through **05 Infinite Next again** in order
+
+Requires `NODE_ENV=development` (devToken on register).
+
+## Run infinite negative / edge cases
+
+1. Same environment (**Wordlopol Local**) and running API
+2. Open **Wordlopol Infinite (negative)** → **Run**
+3. Run all folders — each scenario is self-contained
+
+| Folder                       | Expect                                    |
+| ---------------------------- | ----------------------------------------- |
+| 01 No auth                   | 401                                       |
+| 02 Unverified login          | 403                                       |
+| 02 Unverified /infinite/next | 403 (uses `devAccessToken` from register) |
 
 ## Run auth negative / edge cases
 
@@ -70,6 +93,12 @@ After **01 Daily Today**:
 
 ```
 [saved] daily_date = 2026-06-06
+```
+
+After **04 Infinite Next**:
+
+```
+[saved] infinite_date = 2026-06-06
 ```
 
 If **01 Register** fails, the console logs the request body and response.
