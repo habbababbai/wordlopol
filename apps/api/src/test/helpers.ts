@@ -54,3 +54,11 @@ export async function resetDatabase(): Promise<void> {
     await prisma.$executeRawUnsafe(`TRUNCATE TABLE "public"."${tablename}" CASCADE`);
   }
 }
+
+export async function seedDictionaryWords(texts: string[]): Promise<void> {
+  const { prisma } = await import('../lib/prisma.js');
+
+  await prisma.word.createMany({
+    data: texts.map((text) => ({ text, length: text.length })),
+  });
+}

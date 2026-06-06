@@ -1,0 +1,35 @@
+---
+description: Deliver PR descriptions and copy-paste artifacts in fenced markdown blocks
+alwaysApply: true
+---
+
+# Markdown deliverables
+
+When the user asks for a **PR description**, **PR body**, **commit message template**, **changelog entry**, or similar text they will paste elsewhere — put the **full content inside a single fenced markdown code block** (` ```markdown `).
+
+## Do
+
+- One copy-paste block with the complete body (headings, checklists, bullets intact)
+- Put the PR **title** on its own line **outside** the block when helpful
+- Use the project's PR template sections when proposing PRs (see `.github/pull_request_template.md`)
+
+## Do not
+
+- Render the PR body as normal chat prose with headings (it loses structure when copied)
+- Summarize "here's what to include" instead of giving the actual markdown
+- Wait for the user to say "in markdown" — **default to the fenced block** for paste-ready artifacts
+
+## Example
+
+**PR title:** `feat(api): add daily challenge service`
+
+```markdown
+## Summary
+
+- First bullet
+- Second bullet
+
+## Test plan
+
+- [x] `pnpm test:all`
+```

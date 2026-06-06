@@ -1,28 +1,38 @@
-# Postman — Wordlopol Auth
+# Postman — Wordlopol API
 
 ## Files
 
 | File                                              | Purpose                                           |
 | ------------------------------------------------- | ------------------------------------------------- |
 | `Wordlopol-Local.postman_environment.json`        | Shared environment (only set `base_url` manually) |
-| `Wordlopol-Auth.postman_collection.json`          | Happy-path flow (14 requests)                     |
-| `Wordlopol-Auth-Negative.postman_collection.json` | Edge cases & error responses (9 folders)          |
+| `Wordlopol-Auth.postman_collection.json`          | Auth happy-path flow (14 requests)                |
+| `Wordlopol-Auth-Negative.postman_collection.json` | Auth edge cases & error responses (9 folders)     |
+| `Wordlopol-Daily.postman_collection.json`         | Daily challenge happy path (3 requests)           |
 
 ## Import
 
 1. Postman → **Import**
-2. Select all three files in this folder
+2. Select the files you need from this folder
 3. **Important:** top-right dropdown → select **Wordlopol Local**
 
-If the environment is not selected, only Health will pass — all other requests send empty `{{email}}` / `{{password}}`.
+If the environment is not selected, only Health will pass — auth requests send empty `{{email}}` / `{{password}}`.
 
-## Run happy path
+## Run auth happy path
 
 1. `pnpm --filter @wordlopol/api dev` (must be `NODE_ENV=development`)
 2. Open **Wordlopol Auth (automated)** → **Run**
 3. Run all 14 requests **in order**, starting from **00 Health**
 
-## Run negative / edge cases
+## Run daily challenge
+
+1. Same environment (**Wordlopol Local**) and running API
+2. Dictionary must be loaded: `pnpm db:import-words` (or health shows `wordCount > 0`)
+3. Open **Wordlopol Daily (automated)** → **Run**
+4. Run **00 Health** → **01 Daily Today** → **02 Daily Today again**
+
+Empty-dictionary **503** is covered by Vitest, not the Postman happy path.
+
+## Run auth negative / edge cases
 
 1. Same environment (**Wordlopol Local**) and running API
 2. Open **Wordlopol Auth (negative)** → **Run**
@@ -44,7 +54,7 @@ Run this after auth changes or occasionally — not on every happy-path run. CI 
 
 ## Debug
 
-Open **View → Show Postman Console**. After **00 Health** you should see:
+Open **View → Show Postman Console**. After **00 Health** (auth collection) you should see:
 
 ```
 [init] email = player-1780...@example.com
@@ -54,6 +64,12 @@ After **01 Register**:
 
 ```
 [saved] verify_token
+```
+
+After **01 Daily Today**:
+
+```
+[saved] daily_date = 2026-06-06
 ```
 
 If **01 Register** fails, the console logs the request body and response.
@@ -66,3 +82,4 @@ If **01 Register** fails, the console logs the request body and response.
 | `devToken present` fails | API not in development mode | Restart `pnpm dev`                      |
 | `email is empty` error   | Skipped **00 Health**       | Always run full collection from start   |
 | 409 on Register          | Re-ran without Health init  | Run collection from **00 Health** again |
+| Daily 503                | Empty dictionary            | Run `pnpm db:import-words`              |

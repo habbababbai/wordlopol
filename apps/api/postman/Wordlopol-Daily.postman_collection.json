@@ -1,0 +1,103 @@
+{
+  "info": {
+    "name": "Wordlopol Daily (automated)",
+    "description": "Daily challenge happy path for local development.\n\nSETUP:\n1. Import Wordlopol-Local.postman_environment.json\n2. Select **Wordlopol Local** in the environment dropdown (top-right)\n3. Ensure dictionary is loaded (`pnpm db:import-words`)\n4. Run collection from **00 Health** through **02 Daily Today again** in order",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3001"
+    }
+  ],
+  "item": [
+    {
+      "name": "00 Health",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Database connected', () => {",
+              "  pm.expect(pm.response.json().database).to.eql('connected');",
+              "});",
+              "pm.test('Dictionary loaded', () => {",
+              "  pm.expect(pm.response.json().wordCount).to.be.above(0);",
+              "});",
+              "pm.test('Environment active', () => {",
+              "  pm.expect(pm.environment.get('base_url'), 'Select Wordlopol Local environment (top-right)').to.eql('http://localhost:3001');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/health"
+      }
+    },
+    {
+      "name": "01 Daily Today",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Has date', () => pm.expect(body.date).to.be.a('string'));",
+              "pm.test('Has maxGuesses', () => pm.expect(body.maxGuesses).to.eql(6));",
+              "pm.test('Has wordLength', () => pm.expect(body.wordLength).to.eql(5));",
+              "pm.test('No answer exposed', () => pm.expect(body).to.not.have.property('answer'));",
+              "pm.environment.set('daily_date', body.date);",
+              "console.log('[saved] daily_date =', body.date);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/daily/today"
+      }
+    },
+    {
+      "name": "02 Daily Today again",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const dailyDate = pm.environment.get('daily_date');",
+              "if (!dailyDate) {",
+              "  throw new Error('daily_date is empty — run 01 Daily Today first');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Same calendar date', () => {",
+              "  pm.expect(pm.response.json().date).to.eql(pm.environment.get('daily_date'));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/daily/today"
+      }
+    }
+  ]
+}
