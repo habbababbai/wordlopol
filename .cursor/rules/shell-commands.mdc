@@ -1,0 +1,49 @@
+---
+description: Limit shell commands — no pnpm install; ask before running; verify-only exceptions
+alwaysApply: true
+---
+
+# Shell commands
+
+## Why
+
+Agents can hang on long installs, wipe `node_modules`, or change git/DB state without the user noticing. The user controls their environment — run destructive or slow commands only when they ask, or when a narrow verify-only exception applies.
+
+## Default: ask first
+
+Do not run shell commands unless the user or plan **explicitly allows** them, or they fall under **pre-approved verification** below.
+
+If a command seems **needed to continue** but was **not** permitted — **stop, explain why it's needed, and ask** before running. Do not assume permission or "helpfully" unblock yourself.
+
+Example: tests fail with missing module → say *"Tests need deps; run `pnpm install` locally?"* — do not run install.
+
+## Never run without explicit user request
+
+| Command | Why |
+| --- | --- |
+| `pnpm install`, `npm install` | Slow, can recreate `node_modules`, may change lockfile; user may have install in progress |
+| `git commit`, `git push`, destructive git | Irreversible or publishes work; user owns commit messages and push timing |
+| `docker compose up`, migrations, seed/import | Changes local infra and data the user may not want touched |
+| Deploy, release, env-changing scripts | Production or shared-environment risk |
+
+If deps look broken, **tell the user** what to run — do not install yourself.
+
+## Pre-approved without asking (verification & read-only)
+
+Allowed when **implementing**, **fixing**, or when the **plan lists a verify step** — because they check the agent's code without changing project state:
+
+| Command | Why it's OK |
+| --- | --- |
+| `pnpm test`, `test:all`, `test:e2e`, `test:coverage` | Confirms the change works; read-only on repo (uses test DB) |
+| `pnpm lint`, `typecheck`, `validate`, `build` | Catches errors before handoff; no install or deploy |
+| `git status`, `git diff`, `git log` | Read-only inspection for commits and PRs |
+
+**Everything else → ask first**, even if it would unblock the task.
+
+## When user asks to run something
+
+Run exactly what they asked (minimal equivalent). Report output briefly — no extra commands unless verify list applies.
+
+## If verification fails due to missing deps
+
+Stop. Explain the failure, suggest the command (e.g. `pnpm install`), and **wait for approval** before retrying anything beyond read-only checks.

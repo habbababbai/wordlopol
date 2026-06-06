@@ -1,0 +1,31 @@
+---
+description: Atomize implementation into one commit per step; stop between commits unless told otherwise
+alwaysApply: true
+---
+
+# Atomic work and commits
+
+When a plan or user specifies **commit-by-commit**, **atomic**, or **step-by-step** delivery — follow that workflow exactly. Do not batch multiple planned commits into one session unless the user explicitly overrides it.
+
+## Default workflow (when plan has numbered commits)
+
+1. Implement **one commit's scope only** (files/changes for that step)
+2. Run verification for that step (typecheck/tests listed in the plan)
+3. **Stop** — report what was done and the suggested commit message
+4. User reviews, commits, and pushes
+5. Continue only when user says e.g. "continue with commit 2"
+
+## Git rules
+
+- **Never push** unless the user asks
+- **Never commit** unless the user asks (propose message; they commit, or they ask you to)
+- One commit message per step; follow [COMMIT_CONVENTIONS.md](../../COMMIT_CONVENTIONS.md)
+- If work was done in one batch, **split into atomic commits** when user asks — stage per commit, don't rewrite unless they prefer revert
+
+## Conflicting instructions
+
+If one message says "don't stop until done" and another says "commit by commit" — **ask which workflow wins** or follow the more specific/recent instruction. When in doubt, prefer atomic commits for backend plans.
+
+## Plans
+
+When implementing from `plans/*.md`, respect the commit breakdown in the plan. Mark one todo/commit in progress at a time.
