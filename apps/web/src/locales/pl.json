@@ -13,14 +13,49 @@
     "infinite": "Nieskończony",
     "profile": "Profil",
     "login": "Zaloguj",
-    "accountSettings": "Ustawienia konta"
+    "accountSettings": "Ustawienia konta",
+    "openMenu": "Otwórz menu",
+    "closeMenu": "Zamknij menu"
   },
   "home": {
+    "localeBadge": "PL",
     "tagline": "Polski Wordle — zgadnij słowo na 5 liter.",
     "playToday": "Graj dziś",
-    "apiUnavailable": "API niedostępne",
-    "apiConnecting": "Łączenie z API...",
-    "apiStatus": "API: {{status}}"
+    "playInfinite": "Tryb nieskończony",
+    "registerCta": "Zarejestruj się",
+    "guestPrompt": "aby śledzić swoje statystyki i grać bez ograniczeń.",
+    "lockedBadge": "Zaloguj",
+    "loginCta": "Zaloguj się",
+    "features": {
+      "daily": {
+        "title": "Tryb dzienny",
+        "description": "Jedno słowo na dobę dla wszystkich graczy. Sprawdź czy uda ci się dziś.",
+        "cta": "Graj teraz"
+      },
+      "infinite": {
+        "title": "Tryb nieskończony",
+        "description": "Graj ile chcesz. Buduj serię i rywalizuj ze swoim rekordem.",
+        "ctaGuest": "Zaloguj się",
+        "ctaAuth": "Zagraj"
+      },
+      "stats": {
+        "title": "Statystyki",
+        "description": "Śledź swoje wyniki, serię zwycięstw i rozkład prób.",
+        "ctaGuest": "Zaloguj się",
+        "ctaAuth": "Moje wyniki"
+      }
+    },
+    "howToPlay": {
+      "title": "Jak grać?",
+      "correctHint": "jest na właściwym miejscu.",
+      "presentHint": "jest w słowie, ale na innym miejscu.",
+      "rules": [
+        "Masz 6 prób na odgadnięcie słowa.",
+        "Polskie znaki ą, ć, ę, ł, ń, ó, ś, ź, ż mają znaczenie.",
+        "Nowe słowo pojawia się każdego dnia.",
+        "Wyniki możesz udostępnić znajomym."
+      ]
+    }
   },
   "theme": {
     "lightMode": "☀ Jasny",
