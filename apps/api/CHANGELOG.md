@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/habbababbai/wordlopol/compare/api-v0.6.0...api-v0.7.0) (2026-06-07)
+
+
+### Features
+
+* **api:** add daily and infinite guess endpoints ([#23](https://github.com/habbababbai/wordlopol/issues/23)) ([cea6661](https://github.com/habbababbai/wordlopol/commit/cea666133a18d4b2a98a6630c233ac823a30348d))
+
 ## [0.6.0](https://github.com/habbababbai/wordlopol/compare/api-v0.5.0...api-v0.6.0) (2026-06-06)
 
 ### Features
