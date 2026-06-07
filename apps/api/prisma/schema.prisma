@@ -116,6 +116,7 @@ model InfinitePlayerDay {
   date          DateTime @db.Date
   cycleNumber   Int      @default(0)
   currentWordId Int?
+  guessCount    Int      @default(0)
 
   user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   word Word? @relation("CurrentInfiniteWord", fields: [currentWordId], references: [id], onDelete: SetNull)
