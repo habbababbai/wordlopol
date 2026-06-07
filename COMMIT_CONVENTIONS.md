@@ -196,10 +196,10 @@ PR title must match commit rules, e.g. `feat(api): add jwt refresh rotation`
 - **Root** [CHANGELOG.md](./CHANGELOG.md) — repo CI, tooling, docs (you edit manually)
 - **Apps** [apps/api/CHANGELOG.md](./apps/api/CHANGELOG.md), [apps/web/CHANGELOG.md](./apps/web/CHANGELOG.md) — release-please only
 
-| Workflow            | Triggers on              | Release PR / tag |
-| ------------------- | ------------------------ | ---------------- |
-| `changelog-api.yml` | `apps/api/**`, `data/**` | `api-v0.x.x`     |
-| `changelog-web.yml` | **Manual** (Actions)     | `web-v0.x.x`     |
+| Workflow            | Triggers on                    | Release PR / tag |
+| ------------------- | ------------------------------ | ---------------- |
+| `changelog-api.yml` | `apps/api/**`, `data/**`       | `api-v0.x.x`     |
+| `changelog-web.yml` | Push to `main` (`apps/web/**`) | `web-v0.x.x`     |
 
 After merging a releasable api PR, merge the **Release PR** from release-please. See [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md).
 
