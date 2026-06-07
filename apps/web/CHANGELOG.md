@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/habbababbai/wordlopol/compare/web-v0.3.0...web-v0.4.0) (2026-06-07)
+
+
+### Features
+
+* **web:** add vitest and testing library setup ([#34](https://github.com/habbababbai/wordlopol/issues/34)) ([3651101](https://github.com/habbababbai/wordlopol/commit/36511016c617397c63c3c711a98eb9f60719b5e7))
+
 ## [0.3.0](https://github.com/habbababbai/wordlopol/compare/web-v0.2.0...web-v0.3.0) (2026-06-07)
 
 ### Features
