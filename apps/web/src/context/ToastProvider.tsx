@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import type { ToastItem, ToastOptions } from '../components/ui/toast-types';
 import { ToastContext } from './toast-context';
@@ -12,6 +12,16 @@ function createToastId(): string {
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
+  useEffect(() => {
+    const timers = timersRef.current;
+    return () => {
+      for (const timer of timers.values()) {
+        clearTimeout(timer);
+      }
+      timers.clear();
+    };
+  }, []);
 
   const dismiss = useCallback((id: string) => {
     const timer = timersRef.current.get(id);
@@ -27,7 +37,20 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       const id = createToastId();
       const item: ToastItem = { id, message, variant };
 
-      setToasts((current) => [...current, item].slice(-4));
+      setToasts((current) => {
+        const next = [...current, item].slice(-4);
+        const nextIds = new Set(next.map((t) => t.id));
+        for (const toast of current) {
+          if (!nextIds.has(toast.id)) {
+            const evictedTimer = timersRef.current.get(toast.id);
+            if (evictedTimer) {
+              clearTimeout(evictedTimer);
+              timersRef.current.delete(toast.id);
+            }
+          }
+        }
+        return next;
+      });
 
       const timer = setTimeout(() => {
         dismiss(id);

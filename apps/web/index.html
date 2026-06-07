@@ -9,7 +9,9 @@
     <script>
       (function () {
         var theme = localStorage.getItem('wordlopol-theme');
-        document.documentElement.classList.toggle('dark', theme !== 'light');
+        var isDark = theme !== 'light';
+        document.documentElement.classList.toggle('dark', isDark);
+        document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
       })();
     </script>
     <div id="root"></div>

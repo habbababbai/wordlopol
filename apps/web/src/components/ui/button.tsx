@@ -10,14 +10,14 @@ type ButtonProps = ComponentProps<'button'> &
     asChild?: boolean;
   };
 
-export function Button({ className, variant, size, asChild = false, ...props }: ButtonProps) {
+export function Button({ className, variant, size, asChild = false, type, ...props }: ButtonProps) {
   const Comp = asChild ? Slot : 'button';
 
   return (
     <Comp
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
+      {...(asChild ? props : { type: type ?? 'button', ...props })}
     />
   );
 }

@@ -21,7 +21,12 @@ export function Home() {
         Wordlopol
       </h1>
       <p className="text-base text-muted-foreground">Polski Wordle — zgadnij słowo na 5 liter.</p>
-      <p className="text-sm text-muted-foreground">
+      <p
+        className="text-sm text-muted-foreground"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         {isLoading && 'Łączenie z API...'}
         {error && 'API niedostępne'}
         {data && `API: ${data.status}`}
