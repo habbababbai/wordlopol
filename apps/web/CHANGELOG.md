@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/habbababbai/wordlopol/compare/web-v0.2.0...web-v0.3.0) (2026-06-07)
+
+
+### Features
+
+* **web:** add app layout and route stubs ([#32](https://github.com/habbababbai/wordlopol/issues/32)) ([0cff505](https://github.com/habbababbai/wordlopol/commit/0cff505d1f7b4ee3f22acab1dbc95d6ff5b0b6ac))
+
 ## [0.2.0](https://github.com/habbababbai/wordlopol/compare/web-v0.1.0...web-v0.2.0) (2026-06-07)
 
 ### Features
