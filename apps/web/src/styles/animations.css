@@ -43,6 +43,51 @@
   }
 }
 
+@keyframes amb-drift-1 {
+  0% {
+    transform: translate(0, 0);
+  }
+  33% {
+    transform: translate(60px, -40px);
+  }
+  66% {
+    transform: translate(-30px, 50px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes amb-drift-2 {
+  0% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(-70px, 30px);
+  }
+  70% {
+    transform: translate(40px, -50px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes amb-drift-3 {
+  0% {
+    transform: translate(0, 0);
+  }
+  30% {
+    transform: translate(50px, 60px);
+  }
+  65% {
+    transform: translate(-40px, -30px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .animate-tile-flip {
     animation: tile-flip 0.5s ease-in-out both;
@@ -58,5 +103,17 @@
 
   .spinner-spin {
     animation: spin 0.8s linear infinite;
+  }
+
+  .amb-orb-1 {
+    animation: amb-drift-1 38s ease-in-out infinite;
+  }
+
+  .amb-orb-2 {
+    animation: amb-drift-2 28s ease-in-out infinite;
+  }
+
+  .amb-orb-3 {
+    animation: amb-drift-3 45s ease-in-out infinite;
   }
 }
