@@ -16,6 +16,6 @@ Step-by-step guides for building Wordlopol, a Polish Wordle-style game.
 
 ## Current phase
 
-**Phase 1** — Monorepo scaffold, tooling, docs. No game logic yet.
+**Phase 3** — Frontend: design system and game UI. Backend (auth, daily, infinite) is in place.
 
-After Phase 1 checklist passes, proceed to [03-backend-implementation.md](./03-backend-implementation.md).
+Active branch: `feat/web-design-system`. See [04-frontend-implementation.md](./04-frontend-implementation.md).

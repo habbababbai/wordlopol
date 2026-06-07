@@ -1,3 +1,3 @@
-import config from '@wordlopol/eslint-config/react';
+import { createReactTypecheckedConfig } from '@wordlopol/eslint-config/react-typechecked';
 
-export default config;
+export default createReactTypecheckedConfig(import.meta.dirname);
