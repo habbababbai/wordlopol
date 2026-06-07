@@ -5,9 +5,21 @@ import { GameTile } from '../GameTile';
 const CORRECT_EXAMPLE = ['G', 'O', 'R', 'Ą', 'C'] as const;
 const PRESENT_EXAMPLE = ['P', 'Ę', 'T', 'L', 'A'] as const;
 
+function toRulesList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === 'string');
+  }
+
+  if (typeof value === 'string') {
+    return [value];
+  }
+
+  return [];
+}
+
 export function HomeHowToPlay() {
   const { t } = useTranslation();
-  const rules = t('home.howToPlay.rules', { returnObjects: true }) as string[];
+  const rules = toRulesList(t('home.howToPlay.rules', { returnObjects: true }));
 
   return (
     <section className="flex flex-col gap-6 border-t border-border pt-12">
@@ -29,7 +41,7 @@ export function HomeHowToPlay() {
               ))}
             </div>
             <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-[var(--tile-correct)]">G</span>{' '}
+              <span className="font-semibold text-(--tile-correct)">G</span>{' '}
               {t('home.howToPlay.correctHint')}
             </p>
           </div>
@@ -46,7 +58,7 @@ export function HomeHowToPlay() {
               ))}
             </div>
             <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-[var(--tile-present)]">T</span>{' '}
+              <span className="font-semibold text-(--tile-present)">T</span>{' '}
               {t('home.howToPlay.presentHint')}
             </p>
           </div>
@@ -54,7 +66,7 @@ export function HomeHowToPlay() {
 
         <ul className="flex flex-col gap-3 text-sm text-muted-foreground">
           {rules.map((tip, index) => (
-            <li key={tip} className="flex items-start gap-3">
+            <li key={index} className="flex items-start gap-3">
               <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
                 {index + 1}
               </span>
