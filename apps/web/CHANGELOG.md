@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/habbababbai/wordlopol/compare/web-v0.4.0...web-v0.5.0) (2026-06-07)
+
+
+### Features
+
+* **web:** add i18n with polish and english locales ([#36](https://github.com/habbababbai/wordlopol/issues/36)) ([7ad7327](https://github.com/habbababbai/wordlopol/commit/7ad7327ee61c862879da32701b2875f83cbce766))
+
 ## [0.4.0](https://github.com/habbababbai/wordlopol/compare/web-v0.3.0...web-v0.4.0) (2026-06-07)
 
 ### Features
