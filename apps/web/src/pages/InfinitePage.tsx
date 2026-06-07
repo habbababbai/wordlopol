@@ -1,7 +1,11 @@
+import { useTranslation } from 'react-i18next';
+
 import { StubPage } from './StubPage';
 
 export function InfinitePage() {
+  const { t } = useTranslation();
+
   return (
-    <StubPage title="Tryb nieskończony" description="Gra bez limitu — wkrótce (wymaga konta)." />
+    <StubPage title={t('pages.infinite.title')} description={t('pages.infinite.description')} />
   );
 }

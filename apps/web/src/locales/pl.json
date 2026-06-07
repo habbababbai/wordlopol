@@ -1,0 +1,69 @@
+{
+  "common": {
+    "appName": "Wordlopol",
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "errors": {
+      "generic": "Coś poszło nie tak. Spróbuj ponownie."
+    }
+  },
+  "nav": {
+    "main": "Główne",
+    "daily": "Dziennie",
+    "infinite": "Nieskończony",
+    "profile": "Profil",
+    "login": "Zaloguj",
+    "accountSettings": "Ustawienia konta"
+  },
+  "home": {
+    "tagline": "Polski Wordle — zgadnij słowo na 5 liter.",
+    "playToday": "Graj dziś",
+    "apiUnavailable": "API niedostępne",
+    "apiConnecting": "Łączenie z API...",
+    "apiStatus": "API: {{status}}"
+  },
+  "theme": {
+    "lightMode": "☀ Jasny",
+    "darkMode": "☾ Ciemny",
+    "enableLight": "Włącz tryb jasny",
+    "enableDark": "Włącz tryb ciemny"
+  },
+  "pages": {
+    "daily": {
+      "title": "Wyzwanie dnia",
+      "description": "Gra dzienna — wkrótce."
+    },
+    "infinite": {
+      "title": "Tryb nieskończony",
+      "description": "Gra bez limitu — wkrótce (wymaga konta)."
+    },
+    "profile": {
+      "title": "Profil",
+      "description": "Statystyki gracza — wkrótce."
+    },
+    "login": {
+      "title": "Logowanie",
+      "description": "Formularz logowania — wkrótce."
+    },
+    "register": {
+      "title": "Rejestracja",
+      "description": "Formularz rejestracji — wkrótce."
+    },
+    "verifyEmail": {
+      "title": "Weryfikacja e-mail",
+      "description": "Potwierdzenie adresu e-mail — wkrótce."
+    },
+    "forgotPassword": {
+      "title": "Przypomnij hasło",
+      "description": "Reset hasła — wkrótce."
+    },
+    "resetPassword": {
+      "title": "Nowe hasło",
+      "description": "Ustawienie nowego hasła — wkrótce."
+    },
+    "settings": {
+      "title": "Ustawienia konta",
+      "description": "Zarządzanie kontem — wkrótce."
+    }
+  }
+}

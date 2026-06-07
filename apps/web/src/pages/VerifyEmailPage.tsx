@@ -1,7 +1,14 @@
+import { useTranslation } from 'react-i18next';
+
 import { StubPage } from './StubPage';
 
 export function VerifyEmailPage() {
+  const { t } = useTranslation();
+
   return (
-    <StubPage title="Weryfikacja e-mail" description="Potwierdzenie adresu e-mail — wkrótce." />
+    <StubPage
+      title={t('pages.verifyEmail.title')}
+      description={t('pages.verifyEmail.description')}
+    />
   );
 }

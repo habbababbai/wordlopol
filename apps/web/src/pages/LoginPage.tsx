@@ -1,5 +1,9 @@
+import { useTranslation } from 'react-i18next';
+
 import { StubPage } from './StubPage';
 
 export function LoginPage() {
-  return <StubPage title="Logowanie" description="Formularz logowania — wkrótce." />;
+  const { t } = useTranslation();
+
+  return <StubPage title={t('pages.login.title')} description={t('pages.login.description')} />;
 }
