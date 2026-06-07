@@ -7,6 +7,7 @@ import { prisma } from './lib/prisma.js';
 import { authRouter } from './routes/auth.js';
 import { dailyRouter } from './routes/daily.js';
 import { infiniteRouter } from './routes/infinite.js';
+import { userRouter } from './routes/user.js';
 
 export function createApp(): Express {
   const app = express();
@@ -27,6 +28,7 @@ export function createApp(): Express {
   app.use('/auth', authRouter);
   app.use('/daily', dailyRouter);
   app.use('/infinite', infiniteRouter);
+  app.use('/user', userRouter);
 
   app.get('/health', async (_req, res) => {
     try {
