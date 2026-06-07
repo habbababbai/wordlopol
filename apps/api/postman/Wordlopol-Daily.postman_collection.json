@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Wordlopol Daily (automated)",
-    "description": "Daily challenge happy path for local development.\n\nSETUP:\n1. Import Wordlopol-Local.postman_environment.json\n2. Select **Wordlopol Local** in the environment dropdown (top-right)\n3. Ensure dictionary is loaded (`pnpm db:import-words`)\n4. Run collection from **00 Health** through **02 Daily Today again** in order",
+    "description": "Daily challenge happy path for local development.\n\nSETUP:\n1. Import Wordlopol-Local.postman_environment.json\n2. Select **Wordlopol Local** in the environment dropdown (top-right)\n3. Ensure dictionary is loaded (`pnpm db:import-words`)\n4. Run collection from **00 Health** through **05 Guest guess missing guessNumber** in order",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -97,6 +97,89 @@
         "method": "GET",
         "header": [],
         "url": "{{base_url}}/daily/today"
+      }
+    },
+    {
+      "name": "03 Guest guess (wrong word)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Guess number 1', () => pm.expect(body.guessNumber).to.eql(1));",
+              "pm.test('Not finished', () => pm.expect(body.finished).to.eql(false));",
+              "pm.test('No answer exposed', () => pm.expect(body).to.not.have.property('answer'));",
+              "pm.test('Has letter results', () => pm.expect(body.results).to.have.lengthOf(5));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"guess\": \"mleko\",\n  \"guessNumber\": 1\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{base_url}}/daily/guess"
+      }
+    },
+    {
+      "name": "04 Guest guess not in dictionary",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 400', () => pm.response.to.have.status(400));",
+              "pm.test('Not in dictionary', () => {",
+              "  pm.expect(pm.response.json().error).to.eql('Not in dictionary');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"guess\": \"zzzzz\",\n  \"guessNumber\": 2\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{base_url}}/daily/guess"
+      }
+    },
+    {
+      "name": "05 Guest guess missing guessNumber",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 400', () => pm.response.to.have.status(400));",
+              "pm.test('guessNumber required', () => {",
+              "  pm.expect(pm.response.json().error).to.eql('guessNumber is required for guest play');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"guess\": \"mleko\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{base_url}}/daily/guess"
       }
     }
   ]

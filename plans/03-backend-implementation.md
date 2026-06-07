@@ -112,7 +112,7 @@ Cookie options (production):
 - E2E over real HTTP (`apps/api/src/__e2e__/`)
 - Coverage via `@vitest/coverage-v8` (`pnpm test:coverage`)
 - Test DB `wordlopol_test` on Postgres port 5433; CI runs `pnpm test:all`
-- Guess evaluation integration tests (not yet)
+- Guess evaluation integration tests (daily + infinite guess suites)
 
 ## Verification
 
@@ -123,7 +123,7 @@ Cookie options (production):
 - [ ] Password reset email sends (Resend dashboard)
 - [ ] Daily challenge returns same word for all users per day
 - [ ] Infinite requires auth
-- [ ] Stats update after completed game
+- [x] Stats update after completed game
 - [x] `pnpm test:all` passes in CI
 
 ## Next
