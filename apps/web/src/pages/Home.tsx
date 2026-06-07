@@ -4,11 +4,24 @@ import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import { Button } from '../components/ui/button';
 
+function getHealthStatusMessage(
+  error: Error | null,
+  isLoading: boolean,
+  data: { status: string } | undefined,
+): string {
+  if (error) return 'API niedostępne';
+  if (isLoading) return 'Łączenie z API...';
+  if (data) return `API: ${data.status}`;
+  return '';
+}
+
 export function Home() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['health'],
     queryFn: () => api.getHealth(),
   });
+
+  const statusMessage = getHealthStatusMessage(error, isLoading, data);
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-16 text-center">
@@ -26,16 +39,16 @@ export function Home() {
         <Link to="/daily">Graj dziś</Link>
       </Button>
 
-      <p
-        className="text-sm text-muted-foreground"
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-      >
-        {isLoading && 'Łączenie z API...'}
-        {error && 'API niedostępne'}
-        {data && `API: ${data.status}`}
-      </p>
+      {statusMessage && (
+        <p
+          className="text-sm text-muted-foreground"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          {statusMessage}
+        </p>
+      )}
     </div>
   );
 }
