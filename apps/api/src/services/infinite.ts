@@ -3,7 +3,9 @@ import {
   MAX_GUESSES,
   WORD_LENGTH,
   buildCyclePickOrder,
+  evaluateGuess,
   pickPoolWordIndexForDate,
+  type GuessResultDto,
   type InfiniteWordDto,
 } from '@wordlopol/shared';
 import { dateKeyToUtcDate, getCalendarDateKey } from '../lib/daily-date.js';
@@ -218,6 +220,7 @@ export async function getNextWord(userId: string): Promise<InfiniteWordDto> {
     data: {
       currentWordId: entry.wordId,
       cycleNumber,
+      guessCount: 0,
     },
   });
 
@@ -226,43 +229,168 @@ export async function getNextWord(userId: string): Promise<InfiniteWordDto> {
 
 /**
  * Marks the in-progress word as finished for the current cycle.
- * Called by the guess handler (step 6) after win or loss. Clears `currentWordId`
+ * Called by the guess handler after win or loss. Clears `currentWordId`
  * and advances `cycleNumber` when all pool words have been played today.
  */
-export async function completeInfiniteWord(userId: string): Promise<void> {
+export async function completeInfiniteWord(
+  userId: string,
+  options?: { guesses: number; won: boolean },
+): Promise<void> {
   const dateKey = getCalendarDateKey();
   const date = dateKeyToUtcDate(dateKey);
+  const pool = await getOrCreateDailyPool(dateKey);
 
-  const playerDay = await prisma.infinitePlayerDay.findUnique({
-    where: { userId_date: { userId, date } },
+  await prisma.$transaction(async (tx) => {
+    const playerDay = await tx.infinitePlayerDay.findUnique({
+      where: { userId_date: { userId, date } },
+    });
+
+    if (!playerDay?.currentWordId) {
+      return;
+    }
+
+    try {
+      await tx.infiniteWordUsage.create({
+        data: {
+          userId,
+          date,
+          cycleNumber: playerDay.cycleNumber,
+          wordId: playerDay.currentWordId,
+        },
+      });
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        throw new InfiniteError(409, 'Word already completed');
+      }
+      throw error;
+    }
+
+    const finishedCount = await tx.infiniteWordUsage.count({
+      where: { userId, date, cycleNumber: playerDay.cycleNumber },
+    });
+
+    const nextCycleNumber =
+      finishedCount >= pool.length ? playerDay.cycleNumber + 1 : playerDay.cycleNumber;
+
+    await tx.infinitePlayerDay.update({
+      where: { userId_date: { userId, date } },
+      data: {
+        currentWordId: null,
+        cycleNumber: nextCycleNumber,
+        guessCount: 0,
+      },
+    });
+
+    if (options) {
+      await tx.gameResult.create({
+        data: {
+          userId,
+          mode: 'INFINITE',
+          won: options.won,
+          guesses: options.guesses,
+        },
+      });
+
+      await tx.userStats.upsert({
+        where: { userId },
+        create: {
+          userId,
+          infinitePlayed: 1,
+          infiniteWon: options.won ? 1 : 0,
+        },
+        update: {
+          infinitePlayed: { increment: 1 },
+          ...(options.won ? { infiniteWon: { increment: 1 } } : {}),
+        },
+      });
+    }
   });
+}
 
-  if (!playerDay?.currentWordId) {
-    return;
-  }
-
-  await prisma.infiniteWordUsage.create({
-    data: {
+async function claimInfiniteGuessSlot(
+  userId: string,
+  date: Date,
+  expectedGuessCount: number,
+  currentWordId: number,
+  nextGuessCount: number,
+): Promise<void> {
+  const updated = await prisma.infinitePlayerDay.updateMany({
+    where: {
       userId,
       date,
-      cycleNumber: playerDay.cycleNumber,
-      wordId: playerDay.currentWordId,
+      guessCount: expectedGuessCount,
+      currentWordId,
     },
+    data: { guessCount: nextGuessCount },
   });
 
-  const pool = await getOrCreateDailyPool(dateKey);
-  const finishedCount = await prisma.infiniteWordUsage.count({
-    where: { userId, date, cycleNumber: playerDay.cycleNumber },
+  if (updated.count !== 1) {
+    throw new InfiniteError(409, 'Concurrent guess conflict');
+  }
+}
+
+export async function submitInfiniteGuess(
+  userId: string,
+  rawGuess: string,
+): Promise<GuessResultDto> {
+  const guess = rawGuess.trim().toLowerCase();
+
+  if (guess.length !== WORD_LENGTH) {
+    throw new InfiniteError(400, `Guess must be ${WORD_LENGTH} letters`);
+  }
+
+  const dictionaryWord = await prisma.word.findUnique({
+    where: { text: guess },
   });
+  if (!dictionaryWord) {
+    throw new InfiniteError(400, 'Not in dictionary');
+  }
 
-  const nextCycleNumber =
-    finishedCount >= pool.length ? playerDay.cycleNumber + 1 : playerDay.cycleNumber;
-
-  await prisma.infinitePlayerDay.update({
+  const dateKey = getCalendarDateKey();
+  const date = dateKeyToUtcDate(dateKey);
+  const playerDay = await prisma.infinitePlayerDay.findUnique({
     where: { userId_date: { userId, date } },
-    data: {
-      currentWordId: null,
-      cycleNumber: nextCycleNumber,
-    },
+    include: { word: true },
   });
+
+  if (!playerDay?.currentWordId || !playerDay.word) {
+    throw new InfiniteError(400, 'No word in progress');
+  }
+
+  if (playerDay.guessCount >= MAX_GUESSES) {
+    throw new InfiniteError(400, 'Game already finished');
+  }
+
+  const answer = playerDay.word.text;
+  const results = evaluateGuess(guess, answer);
+  const won = results.every((result) => result === 'correct');
+  const guessNumber = playerDay.guessCount + 1;
+  const finished = won || guessNumber === MAX_GUESSES;
+
+  if (finished) {
+    await claimInfiniteGuessSlot(
+      userId,
+      date,
+      playerDay.guessCount,
+      playerDay.currentWordId,
+      guessNumber,
+    );
+    await completeInfiniteWord(userId, { guesses: guessNumber, won });
+  } else {
+    await claimInfiniteGuessSlot(
+      userId,
+      date,
+      playerDay.guessCount,
+      playerDay.currentWordId,
+      guessNumber,
+    );
+  }
+
+  return {
+    results,
+    won,
+    finished,
+    guessNumber,
+    ...(finished ? { answer } : {}),
+  };
 }

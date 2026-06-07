@@ -7,9 +7,9 @@
 | `Wordlopol-Local.postman_environment.json`            | Shared environment (only set `base_url` manually) |
 | `Wordlopol-Auth.postman_collection.json`              | Auth happy-path flow (14 requests)                |
 | `Wordlopol-Auth-Negative.postman_collection.json`     | Auth edge cases & error responses (9 folders)     |
-| `Wordlopol-Daily.postman_collection.json`             | Daily challenge happy path (3 requests)           |
-| `Wordlopol-Infinite.postman_collection.json`          | Infinite mode happy path (6 requests)             |
-| `Wordlopol-Infinite-Negative.postman_collection.json` | Infinite edge cases (401, 403)                    |
+| `Wordlopol-Daily.postman_collection.json`             | Daily challenge happy path (6 requests)           |
+| `Wordlopol-Infinite.postman_collection.json`          | Infinite mode happy path (8 requests)             |
+| `Wordlopol-Infinite-Negative.postman_collection.json` | Infinite edge cases (401, 403, guess errors)      |
 
 ## Import
 
@@ -30,7 +30,7 @@ If the environment is not selected, only Health will pass — auth requests send
 1. Same environment (**Wordlopol Local**) and running API
 2. Dictionary must be loaded: `pnpm db:import-words` (or health shows `wordCount > 0`)
 3. Open **Wordlopol Daily (automated)** → **Run**
-4. Run **00 Health** → **01 Daily Today** → **02 Daily Today again**
+4. Run **00 Health** → **05 Guest guess missing guessNumber**
 
 Empty-dictionary **503** is covered by Vitest, not the Postman happy path.
 
@@ -39,7 +39,7 @@ Empty-dictionary **503** is covered by Vitest, not the Postman happy path.
 1. Same environment (**Wordlopol Local**) and running API
 2. Dictionary must be loaded: `pnpm db:import-words` (or health shows `wordCount > 0`)
 3. Open **Wordlopol Infinite (automated)** → **Run**
-4. Run **00 Health** through **05 Infinite Next again** in order
+4. Run **00 Health** through **07 Infinite Next after guess** in order
 
 Requires `NODE_ENV=development` (devToken on register).
 
@@ -54,6 +54,7 @@ Requires `NODE_ENV=development` (devToken on register).
 | 01 No auth                   | 401                                       |
 | 02 Unverified login          | 403                                       |
 | 02 Unverified /infinite/next | 403 (uses `devAccessToken` from register) |
+| 03 Guess errors              | 401/403/400 on `/infinite/guess`          |
 
 ## Run auth negative / edge cases
 

@@ -62,3 +62,12 @@ export async function seedDictionaryWords(texts: string[]): Promise<void> {
     data: texts.map((text) => ({ text, length: text.length })),
   });
 }
+
+/** Picks a dictionary word known to differ from `answer`; throws if none exist. */
+export function pickWrongWord(words: string[], answer: string): string {
+  const wrong = words.find((word) => word !== answer);
+  if (!wrong) {
+    throw new Error(`No wrong word available (answer=${answer}, pool=${words.join(', ')})`);
+  }
+  return wrong;
+}

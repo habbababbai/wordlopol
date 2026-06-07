@@ -153,13 +153,14 @@ Send header: `Authorization: Bearer <accessToken>`
 
 ### Daily challenge
 
-| Method | Path           | Auth | Description                            |
-| ------ | -------------- | ---- | -------------------------------------- |
-| GET    | `/daily/today` | —    | Today's challenge metadata (no answer) |
+| Method | Path           | Auth     | Description                                        |
+| ------ | -------------- | -------- | -------------------------------------------------- |
+| GET    | `/daily/today` | —        | Today's challenge metadata (no answer)             |
+| POST   | `/daily/guess` | optional | Validate a guess; persist stats when authenticated |
 
 Calendar day uses `Europe/Warsaw` (`TZ` env). The word is chosen deterministically from the dictionary and persisted lazily on first request for that date.
 
-**200**
+**GET `/daily/today` — 200**
 
 ```json
 {
@@ -169,29 +170,67 @@ Calendar day uses `Europe/Warsaw` (`TZ` env). The word is chosen deterministical
 }
 ```
 
+**POST `/daily/guess` — body**
+
+Guests must send `guessNumber` (1–6); the server tracks guess count for authenticated users automatically.
+
+```json
+{ "guess": "mleko", "guessNumber": 1 }
+```
+
+**POST `/daily/guess` — 200**
+
+```json
+{
+  "results": ["absent", "present", "absent", "correct", "absent"],
+  "won": false,
+  "finished": false,
+  "guessNumber": 1
+}
+```
+
+When `finished` is true (win or sixth guess), `answer` is included:
+
+```json
+{
+  "results": ["correct", "correct", "correct", "correct", "correct"],
+  "won": true,
+  "finished": true,
+  "guessNumber": 2,
+  "answer": "wążka"
+}
+```
+
+On completion, authenticated users get a `GameResult` row and `UserStats` update. Guests are evaluated only (no persistence).
+
+**400** — invalid guess length, not in dictionary, missing `guessNumber` (guest), or game already finished
+
+**409** — authenticated user already completed today's daily
+
 **503** — dictionary empty (no words imported)
 
 ```json
 { "error": "Dictionary not loaded" }
 ```
 
-The response never includes the answer.
+Responses never include the answer until the game is finished.
 
 ---
 
 ### Infinite mode
 
-| Method | Path             | Auth                    | Description                          |
-| ------ | ---------------- | ----------------------- | ------------------------------------ |
-| GET    | `/infinite/next` | Bearer + verified email | Next word metadata from today's pool |
+| Method | Path              | Auth                    | Description                               |
+| ------ | ----------------- | ----------------------- | ----------------------------------------- |
+| GET    | `/infinite/next`  | Bearer + verified email | Next word metadata from today's pool      |
+| POST   | `/infinite/guess` | Bearer + verified email | Validate a guess for the in-progress word |
 
 Requires `authenticate` and `requireVerified`. Guests and unverified users cannot access infinite mode.
 
 Each Warsaw calendar day has one **shared pool** of up to 300 five-letter words (`INFINITE_POOL_SIZE`), lazy-created in `DailyWordPool`. Per player, words are drawn randomly without duplicates within a cycle; when the pool is exhausted the player starts a new cycle over the same word set in a different order.
 
-Repeated calls while a word is in progress return the same `wordNumber` (refresh-safe). The answer is never included.
+Call `GET /infinite/next` before guessing. Repeated `GET /infinite/next` calls while a word is in progress return the same `wordNumber` (refresh-safe). The answer is never included until the game is finished.
 
-**200**
+**GET `/infinite/next` — 200**
 
 ```json
 {
@@ -202,6 +241,18 @@ Repeated calls while a word is in progress return the same `wordNumber` (refresh
   "wordLength": 5
 }
 ```
+
+**POST `/infinite/guess` — body**
+
+```json
+{ "guess": "mleko" }
+```
+
+**POST `/infinite/guess` — 200**
+
+Same shape as daily guess (`results`, `won`, `finished`, `guessNumber`, optional `answer` when finished). On completion, writes `GameResult` and updates `UserStats`, then clears the in-progress word so the next `GET /infinite/next` serves the following pool word.
+
+**400** — invalid guess, not in dictionary, no word in progress (call `/infinite/next` first), or game already finished
 
 **401** — missing or invalid Bearer token
 
@@ -225,15 +276,15 @@ Repeated calls while a word is in progress return the same `wordNumber` (refresh
 
 ## Common error codes
 
-| Status | When                                                 |
-| ------ | ---------------------------------------------------- |
-| 400    | Invalid body / expired or invalid token              |
-| 401    | Missing or invalid Bearer / refresh token / password |
-| 403    | Email not verified (login, `/infinite/next`)         |
-| 404    | User not found                                       |
-| 409    | Email already registered                             |
-| 429    | Rate limit exceeded on auth endpoints                |
-| 503    | DB down, email delivery failed, or empty dictionary  |
+| Status | When                                                    |
+| ------ | ------------------------------------------------------- |
+| 400    | Invalid body / expired or invalid token                 |
+| 401    | Missing or invalid Bearer / refresh token / password    |
+| 403    | Email not verified (login, infinite routes)             |
+| 404    | User not found                                          |
+| 409    | Email already registered / already played today's daily |
+| 429    | Rate limit exceeded on auth endpoints                   |
+| 503    | DB down, email delivery failed, or empty dictionary     |
 
 ---
 
@@ -457,17 +508,23 @@ sequenceDiagram
     API->>DB: find or create DailyChallenge for Warsaw calendar date
     DB-->>API: challenge metadata
     API-->>Client: date, maxGuesses, wordLength (no answer)
+    Client->>API: POST /daily/guess { guess, guessNumber? }
+    API->>DB: validate word, evaluate guess
+    API-->>Client: letter results (answer when finished)
 ```
 
 ### Postman collection
 
 Import `Wordlopol-Daily.postman_collection.json` with the same **Wordlopol Local** environment as auth.
 
-| #   | Request            | Expect                      |
-| --- | ------------------ | --------------------------- |
-| 00  | GET `/health`      | 200, `wordCount > 0`        |
-| 01  | GET `/daily/today` | 200, saves `daily_date`     |
-| 02  | GET `/daily/today` | 200, same `date` as step 01 |
+| #   | Request             | Expect                            |
+| --- | ------------------- | --------------------------------- |
+| 00  | GET `/health`       | 200, `wordCount > 0`              |
+| 01  | GET `/daily/today`  | 200, saves `daily_date`           |
+| 02  | GET `/daily/today`  | 200, same `date` as step 01       |
+| 03  | POST `/daily/guess` | 200, guest wrong guess, no answer |
+| 04  | POST `/daily/guess` | 400, not in dictionary            |
+| 05  | POST `/daily/guess` | 400, guest missing `guessNumber`  |
 
 **503 empty dictionary** — only reproducible with an empty `Word` table (covered by Vitest, not the Postman happy path).
 
@@ -485,6 +542,9 @@ sequenceDiagram
     API->>DB: find or create shared DailyWordPool for Warsaw date
     API->>DB: pick random unused word for player cycle
     API-->>Client: date, wordNumber, poolSize, maxGuesses, wordLength (no answer)
+    Client->>API: POST /infinite/guess { guess }
+    API->>DB: validate word, evaluate guess, record stats on finish
+    API-->>Client: letter results (answer when finished)
 ```
 
 ### Postman collection
@@ -499,8 +559,10 @@ Import `Wordlopol-Infinite.postman_collection.json` with the same **Wordlopol Lo
 | 03  | POST `/auth/login`        | 200, saves `access_token`                |
 | 04  | GET `/infinite/next`      | 200, saves `infinite_date`, `wordNumber` |
 | 05  | GET `/infinite/next`      | 200, same date and `wordNumber` as 04    |
+| 06  | POST `/infinite/guess`    | 200, wrong guess, no answer              |
+| 07  | GET `/infinite/next`      | 200, same in-progress `wordNumber`       |
 
-Edge cases: `Wordlopol-Infinite-Negative.postman_collection.json` — 401 without Bearer, 403 unverified login.
+Edge cases: `Wordlopol-Infinite-Negative.postman_collection.json` — 401/403 on `/next` and `/guess`, 400 without word in progress.
 
 ---
 
@@ -521,19 +583,18 @@ Edge cases: `Wordlopol-Infinite-Negative.postman_collection.json` — 401 withou
 - Forgot-password / resend-verification do not reveal whether email exists
 - Previous password-reset tokens invalidated on new forgot-password request
 - `POST /auth/resend-verification` for stuck unverified accounts
-- 73 automated integration tests + 4 e2e (health, auth, daily, infinite, tokens, middleware)
-- Daily challenge: deterministic word per Warsaw calendar day; lazy DB persistence on `GET /daily/today`
-- Infinite mode: shared daily word pool; `requireVerified` wired on `GET /infinite/next`; answer never exposed
+- 94 automated integration tests + 6 e2e (health, auth, daily, infinite, guess, tokens, middleware)
+- Daily challenge: deterministic word per Warsaw calendar day; lazy DB persistence on `GET /daily/today`; `POST /daily/guess` with optional auth
+- Infinite mode: shared daily word pool; `requireVerified` on infinite routes; `POST /infinite/guess` records stats on completion
 
 ### Remaining gaps
 
-| Item                              | Risk     | Notes                                                                       |
-| --------------------------------- | -------- | --------------------------------------------------------------------------- |
-| **Access JWT not revocable**      | Low      | By design; 15 min window; refresh revocation stops renewal                  |
-| **Email change without password** | Low      | Authenticated user can request change with only Bearer token                |
-| **`optionalAuth`**                | —        | Middleware exists but not wired to daily guest routes yet (expected)        |
-| **Guess endpoints**               | —        | `POST /infinite/guess` and `POST /daily/guess` not implemented yet (step 6) |
-| **devToken in responses**         | Dev only | Returned only when `NODE_ENV=development`; omitted in production and test   |
+| Item                              | Risk     | Notes                                                                     |
+| --------------------------------- | -------- | ------------------------------------------------------------------------- |
+| **Access JWT not revocable**      | Low      | By design; 15 min window; refresh revocation stops renewal                |
+| **Email change without password** | Low      | Authenticated user can request change with only Bearer token              |
+| **User profile endpoint**         | —        | `GET /user/profile` not implemented yet (plan step 7)                     |
+| **devToken in responses**         | Dev only | Returned only when `NODE_ENV=development`; omitted in production and test |
 
 ---
 
@@ -545,7 +606,9 @@ See [Postman setup guide](#postman-setup-guide) for the automated collection, sc
 | --- | ------ | --------------------------- | ----------------- |
 | —   | GET    | `/health`                   | —                 |
 | —   | GET    | `/daily/today`              | —                 |
+| —   | POST   | `/daily/guess`              | optional          |
 | —   | GET    | `/infinite/next`            | Bearer + verified |
+| —   | POST   | `/infinite/guess`           | Bearer + verified |
 | 1   | POST   | `/auth/register`            | —                 |
 | 2   | POST   | `/auth/verify-email`        | —                 |
 | 3   | POST   | `/auth/login`               | —                 |
@@ -562,18 +625,23 @@ See [Postman setup guide](#postman-setup-guide) for the automated collection, sc
 
 **Negative cases worth spot-checking:**
 
-| Method | Path                        | Expect                      |
-| ------ | --------------------------- | --------------------------- |
-| POST   | `/auth/login`               | 403 before verify-email     |
-| POST   | `/auth/register`            | 400 missing displayName     |
-| POST   | `/auth/register`            | 409 duplicate email         |
-| POST   | `/auth/refresh`             | 401 after logout            |
-| PATCH  | `/auth/change-display-name` | 400 unchanged or blank name |
-| PATCH  | `/auth/change-password`     | 401 wrong current password  |
-| DELETE | `/auth/account`             | 401 wrong password          |
-| GET    | `/daily/today`              | 503 empty dictionary        |
-| GET    | `/infinite/next`            | 401 without Bearer          |
-| GET    | `/infinite/next`            | 403 unverified user         |
+| Method | Path                        | Expect                        |
+| ------ | --------------------------- | ----------------------------- |
+| POST   | `/auth/login`               | 403 before verify-email       |
+| POST   | `/auth/register`            | 400 missing displayName       |
+| POST   | `/auth/register`            | 409 duplicate email           |
+| POST   | `/auth/refresh`             | 401 after logout              |
+| PATCH  | `/auth/change-display-name` | 400 unchanged or blank name   |
+| PATCH  | `/auth/change-password`     | 401 wrong current password    |
+| DELETE | `/auth/account`             | 401 wrong password            |
+| GET    | `/daily/today`              | 503 empty dictionary          |
+| POST   | `/daily/guess`              | 400 not in dictionary         |
+| POST   | `/daily/guess`              | 400 guest missing guessNumber |
+| GET    | `/infinite/next`            | 401 without Bearer            |
+| GET    | `/infinite/next`            | 403 unverified user           |
+| POST   | `/infinite/guess`           | 401 without Bearer            |
+| POST   | `/infinite/guess`           | 403 unverified user           |
+| POST   | `/infinite/guess`           | 400 no word in progress       |
 
 ---
 
@@ -599,13 +667,17 @@ See [Postman setup guide](#postman-setup-guide) for the automated collection, sc
 | `tokens-email-change.test.ts`  | `src/__tests__/` | email-change JWT                               |
 | `daily-word-picker.test.ts`    | `src/__tests__/` | deterministic word index picker                |
 | `daily-today.test.ts`          | `src/__tests__/` | GET /daily/today, idempotency, empty dict 503  |
+| `daily-guess.test.ts`          | `src/__tests__/` | POST /daily/guess guest + auth, stats          |
 | `infinite-pool-picker.test.ts` | `src/__tests__/` | seeded shuffle and pool index picker           |
 | `infinite-pool.test.ts`        | `src/__tests__/` | shared pool creation, idempotency, 503         |
 | `infinite-next.test.ts`        | `src/__tests__/` | GET /infinite/next auth, cycles, no answer     |
+| `infinite-guess.test.ts`       | `src/__tests__/` | POST /infinite/guess auth, stats, progression  |
 | `health.e2e.ts`                | `src/__e2e__/`   | health over real HTTP                          |
 | `auth.e2e.ts`                  | `src/__e2e__/`   | register → verify → login → refresh over HTTP  |
 | `daily.e2e.ts`                 | `src/__e2e__/`   | daily today over real HTTP                     |
+| `daily-guess.e2e.ts`           | `src/__e2e__/`   | daily guess over real HTTP                     |
 | `infinite.e2e.ts`              | `src/__e2e__/`   | infinite next over real HTTP                   |
+| `infinite-guess.e2e.ts`        | `src/__e2e__/`   | infinite guess over real HTTP                  |
 
 **Integration** — Supertest against an in-process Express app (`vitest.config.ts`).
 

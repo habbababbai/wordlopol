@@ -29,6 +29,7 @@ model User {
   stats                   UserStats?
   infinitePlayerDays      InfinitePlayerDay[]
   infiniteWordUsages      InfiniteWordUsage[]
+  dailyPlayerDays         DailyPlayerDay[]
 }
 
 model RefreshToken {
@@ -100,11 +101,22 @@ model DailyWordPool {
   @@index([date])
 }
 
+model DailyPlayerDay {
+  userId     String
+  date       DateTime @db.Date
+  guessCount Int      @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, date])
+}
+
 model InfinitePlayerDay {
   userId        String
   date          DateTime @db.Date
   cycleNumber   Int      @default(0)
   currentWordId Int?
+  guessCount    Int      @default(0)
 
   user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   word Word? @relation("CurrentInfiniteWord", fields: [currentWordId], references: [id], onDelete: SetNull)
@@ -140,6 +152,7 @@ model GameResult {
 
   @@index([userId])
   @@index([userId, mode])
+  @@unique([userId, dailyChallengeId])
 }
 
 model UserStats {
