@@ -5,7 +5,7 @@
 | File                                                  | Purpose                                           |
 | ----------------------------------------------------- | ------------------------------------------------- |
 | `Wordlopol-Local.postman_environment.json`            | Shared environment (only set `base_url` manually) |
-| `Wordlopol-Auth.postman_collection.json`              | Auth happy-path flow (14 requests)                |
+| `Wordlopol-Auth.postman_collection.json`              | Auth happy-path flow (15 requests)                |
 | `Wordlopol-Auth-Negative.postman_collection.json`     | Auth edge cases & error responses (9 folders)     |
 | `Wordlopol-Daily.postman_collection.json`             | Daily challenge happy path (6 requests)           |
 | `Wordlopol-Infinite.postman_collection.json`          | Infinite mode happy path (8 requests)             |
@@ -23,7 +23,7 @@ If the environment is not selected, only Health will pass — auth requests send
 
 1. `pnpm --filter @wordlopol/api dev` (must be `NODE_ENV=development`)
 2. Open **Wordlopol Auth (automated)** → **Run**
-3. Run all 14 requests **in order**, starting from **00 Health**
+3. Run all 15 requests **in order**, starting from **00 Health**
 
 ## Run daily challenge
 

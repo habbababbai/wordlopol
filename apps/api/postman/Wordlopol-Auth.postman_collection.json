@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Wordlopol Auth (automated)",
-    "description": "Full auth flow for local development.\n\nSETUP:\n1. Import Wordlopol-Local.postman_environment.json\n2. Select **Wordlopol Local** in the environment dropdown (top-right) — required!\n3. Run collection from **00 Health** through **13 Delete account** in order\n\nRequires API at NODE_ENV=development (devToken in responses).",
+    "description": "Full auth flow for local development.\n\nSETUP:\n1. Import Wordlopol-Local.postman_environment.json\n2. Select **Wordlopol Local** in the environment dropdown (top-right) — required!\n3. Run collection from **00 Health** through **14 Delete account** in order\n\nRequires API at NODE_ENV=development (devToken in responses).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -164,7 +164,43 @@
       }
     },
     {
-      "name": "04 Refresh",
+      "name": "04 Get profile",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Has profile fields', () => {",
+              "  pm.expect(body.email).to.eql(pm.environment.get('email'));",
+              "  pm.expect(body.displayName).to.eql(pm.environment.get('display_name'));",
+              "  pm.expect(body.emailVerified).to.be.true;",
+              "});",
+              "pm.test('Has zero stats', () => {",
+              "  pm.expect(body.stats).to.eql({",
+              "    dailyPlayed: 0,",
+              "    dailyWon: 0,",
+              "    infinitePlayed: 0,",
+              "    infiniteWon: 0,",
+              "    bestTimedWords: null,",
+              "    bestTimedMs: null,",
+              "    bestTimedWord: null,",
+              "  });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+        "url": "{{base_url}}/user/profile"
+      }
+    },
+    {
+      "name": "05 Refresh",
       "event": [
         {
           "listen": "test",
@@ -186,7 +222,7 @@
       }
     },
     {
-      "name": "05 Logout",
+      "name": "06 Logout",
       "event": [
         {
           "listen": "test",
@@ -208,7 +244,7 @@
       }
     },
     {
-      "name": "06 Logout all",
+      "name": "07 Logout all",
       "event": [
         {
           "listen": "test",
@@ -229,7 +265,7 @@
       }
     },
     {
-      "name": "07 Forgot password",
+      "name": "08 Forgot password",
       "event": [
         {
           "listen": "test",
@@ -257,7 +293,7 @@
       }
     },
     {
-      "name": "08 Reset password",
+      "name": "09 Reset password",
       "event": [
         {
           "listen": "test",
@@ -286,7 +322,7 @@
       }
     },
     {
-      "name": "09 Change display name",
+      "name": "10 Change display name",
       "event": [
         {
           "listen": "test",
@@ -317,7 +353,7 @@
       }
     },
     {
-      "name": "10 Change password",
+      "name": "11 Change password",
       "event": [
         {
           "listen": "test",
@@ -347,7 +383,7 @@
       }
     },
     {
-      "name": "11 Change email",
+      "name": "12 Change email",
       "event": [
         {
           "listen": "test",
@@ -379,7 +415,7 @@
       }
     },
     {
-      "name": "12 Verify email change",
+      "name": "13 Verify email change",
       "event": [
         {
           "listen": "test",
@@ -408,7 +444,7 @@
       }
     },
     {
-      "name": "13 Delete account",
+      "name": "14 Delete account",
       "event": [
         {
           "listen": "test",
