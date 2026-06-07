@@ -62,14 +62,20 @@ describe('GET /user/profile', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
-    expect(res.body.stats).toEqual({
-      dailyPlayed: 3,
-      dailyWon: 2,
-      infinitePlayed: 10,
-      infiniteWon: 7,
-      bestTimedWords: null,
-      bestTimedMs: null,
-      bestTimedWord: null,
+    expect(res.body).toEqual({
+      id: user.id,
+      email: user.email,
+      displayName: user.displayName,
+      emailVerified: true,
+      stats: {
+        dailyPlayed: 3,
+        dailyWon: 2,
+        infinitePlayed: 10,
+        infiniteWon: 7,
+        bestTimedWords: null,
+        bestTimedMs: null,
+        bestTimedWord: null,
+      },
     });
   });
 });
