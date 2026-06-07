@@ -36,6 +36,7 @@ Create once under **Issues → Labels** (any color). Used for docs-only PRs and 
 | **Skips release-please PRs**                 | `!autorelease: pending` label                                                                          |
 | **Skips docs / quiet PRs**                   | `!skip-review` label or `[skip review]` in title                                                       |
 | **Ignores markdown in reviews**              | `path_filters` exclude `*.md`, `docs/**`, `plans/**`, changelogs                                       |
+| **No docstring coverage warnings**           | `pre_merge_checks.docstrings.mode: off` — we don't use JSDoc project-wide                              |
 
 Reviews still run on feature PRs with code changes. Comments are on the **Files changed** tab — not buried in Conversation walkthroughs for skipped PRs.
 
@@ -68,11 +69,12 @@ Full CI and CodeRabbit still run on normal `feat` / `fix` PRs with code changes.
 
 ## Troubleshooting
 
-| Problem                         | Fix                                                              |
-| ------------------------------- | ---------------------------------------------------------------- |
-| Inline comments fail to post    | Code review limits (step 3) + enable repo on coderabbit.ai       |
-| CodeRabbit edits PR description | Should not happen — verify `high_level_summary: false` on `main` |
-| No review on feature PR         | Install app; enable repo; comment `@coderabbitai review`         |
-| Draft PR skipped                | Mark ready for review                                            |
+| Problem                         | Fix                                                                  |
+| ------------------------------- | -------------------------------------------------------------------- |
+| Inline comments fail to post    | Code review limits (step 3) + enable repo on coderabbit.ai           |
+| CodeRabbit edits PR description | Should not happen — verify `high_level_summary: false` on `main`     |
+| No review on feature PR         | Install app; enable repo; comment `@coderabbitai review`             |
+| Draft PR skipped                | Mark ready for review                                                |
+| Docstring coverage warning (0%) | Disabled in `.coderabbit.yaml`; merge config to `main` if still seen |
 
 Edit `.coderabbit.yaml` in a PR — CodeRabbit uses config from the **PR branch**.
