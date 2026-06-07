@@ -1,0 +1,10 @@
+---
+description: Keep responses and agent scope tight
+alwaysApply: true
+---
+
+# Concise responses
+
+- Be concise. No walls of text unless the user asks for detail.
+- When implementing: one commit-sized scope per turn, then stop and wait.
+- On ambiguous "continue" / "next" / "go for N": restate scope and ask; do not assume the next plan step.
