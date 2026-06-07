@@ -28,6 +28,8 @@ export interface GuessResultDto {
   won: boolean;
   finished: boolean;
   guessNumber: number;
+  /** Present only when the game is finished (win or sixth guess). */
+  answer?: string;
 }
 
 export interface UserProfileDto {
