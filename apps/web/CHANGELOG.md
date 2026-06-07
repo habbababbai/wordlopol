@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/habbababbai/wordlopol/compare/web-v0.5.0...web-v0.6.0) (2026-06-07)
+
+
+### Features
+
+* **web:** add static home page layout ([#38](https://github.com/habbababbai/wordlopol/issues/38)) ([5ca65de](https://github.com/habbababbai/wordlopol/commit/5ca65de21f24e70b1e91164746964976127eda1c))
+
 ## [0.5.0](https://github.com/habbababbai/wordlopol/compare/web-v0.4.0...web-v0.5.0) (2026-06-07)
 
 ### Features
