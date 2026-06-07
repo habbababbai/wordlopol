@@ -4,11 +4,11 @@ Per-app releases via [release-please](https://github.com/googleapis/release-plea
 
 ## Changelog files
 
-| File                                              | Contents                  | Updated by                                                 |
-| ------------------------------------------------- | ------------------------- | ---------------------------------------------------------- |
-| [CHANGELOG.md](../CHANGELOG.md)                   | CI, Husky, tooling, docs  | **You** in the same PR                                     |
-| [apps/api/CHANGELOG.md](../apps/api/CHANGELOG.md) | API features, fixes, perf | **release-please** (Release PR)                            |
-| [apps/web/CHANGELOG.md](../apps/web/CHANGELOG.md) | Web features, fixes, perf | **release-please** (manual workflow until web work starts) |
+| File                                              | Contents                  | Updated by                      |
+| ------------------------------------------------- | ------------------------- | ------------------------------- |
+| [CHANGELOG.md](../CHANGELOG.md)                   | CI, Husky, tooling, docs  | **You** in the same PR          |
+| [apps/api/CHANGELOG.md](../apps/api/CHANGELOG.md) | API features, fixes, perf | **release-please** (Release PR) |
+| [apps/web/CHANGELOG.md](../apps/web/CHANGELOG.md) | Web features, fixes, perf | **release-please** (Release PR) |
 
 **Never edit** `apps/*/CHANGELOG.md` or `.github/release-please/*-manifest.json` in feature PRs — CI blocks this.
 
@@ -32,15 +32,15 @@ Only **feat**, **fix**, and **perf** appear in app changelogs. Other types are h
 | Workflow                                                    | Trigger                                            | Tag          |
 | ----------------------------------------------------------- | -------------------------------------------------- | ------------ |
 | [changelog-api.yml](../.github/workflows/changelog-api.yml) | Push to `main` touching `apps/api/**` or `data/**` | `api-vX.Y.Z` |
-| [changelog-web.yml](../.github/workflows/changelog-web.yml) | **Manual only** (Actions → Run workflow)           | `web-vX.Y.Z` |
+| [changelog-web.yml](../.github/workflows/changelog-web.yml) | Push to `main` touching `apps/web/**`              | `web-vX.Y.Z` |
 
 `packages/shared/**` does not trigger either workflow. Run **Changelog — API** manually if a release only touches shared code.
 
-## Two-step release flow (API)
+## Two-step release flow (API / Web)
 
-1. Merge feature PR to `main` (e.g. `feat(api): add auth`).
-2. **Changelog — API** runs → release-please opens/updates a **Release PR** (`release-please--branches--main--components--api`).
-3. Merge the Release PR → `apps/api/CHANGELOG.md` updated, git tag `api-vX.Y.Z` created.
+1. Merge feature PR to `main` (e.g. `feat(api): add auth` or `fix(web): self-host fonts`).
+2. **Changelog — API** or **Changelog — Web** runs → release-please opens/updates a **Release PR** (`release-please--branches--main--components--{api|web}`).
+3. Merge the Release PR → `apps/{api|web}/CHANGELOG.md` updated, git tag `{api|web}-vX.Y.Z` created.
 
 Release PRs get **light CI** (Prettier only) and **no CodeRabbit** review.
 
@@ -77,4 +77,4 @@ Used for docs-only PRs (auto-applied when only markdown changes) and optional ma
 | Duplicate changelog entries               | Never hand-edit app changelogs; close stale Release PR and re-run workflow        |
 | Release PR CI fails Prettier on changelog | `ci-release-pr` skips app changelogs; bot formats them in `changelog-*` workflows |
 | CodeRabbit on Release PR                  | Should be skipped via `autorelease: pending` label                                |
-| Web release too early                     | Web workflow is manual-only until you run it from Actions                         |
+| Web Release PR missing after merge        | Check Actions; run **Changelog — Web** manually if the push trigger did not fire  |
