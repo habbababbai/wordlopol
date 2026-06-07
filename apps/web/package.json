@@ -10,7 +10,10 @@
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,json}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,json}\""
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,json}\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@fontsource-variable/dm-sans": "^5.2.8",
@@ -26,16 +29,22 @@
     "tailwind-merge": "^3.2.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@tailwindcss/vite": "^4.1.12",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^4.1.8",
     "@wordlopol/eslint-config": "workspace:*",
     "@wordlopol/tsconfig": "workspace:*",
     "eslint": "^9.22.0",
+    "jsdom": "^26.1.0",
     "prettier": "^3.5.3",
     "tailwindcss": "^4.1.12",
     "typescript": "^5.8.2",
-    "vite": "^6.2.1"
+    "vite": "^6.2.1",
+    "vitest": "^4.1.8"
   }
 }
