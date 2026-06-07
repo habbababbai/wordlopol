@@ -110,7 +110,14 @@
               "pm.test('Status 200', () => pm.response.to.have.status(200));",
               "const body = pm.response.json();",
               "pm.test('Guess number 1', () => pm.expect(body.guessNumber).to.eql(1));",
-              "pm.test('Not finished', () => pm.expect(body.finished).to.eql(false));",
+              "pm.test('Not finished', () => {",
+              "  const body = pm.response.json();",
+              "  if (body.won) {",
+              "    pm.expect(body.finished).to.eql(true);",
+              "  } else {",
+              "    pm.expect(body.finished).to.eql(false);",
+              "  }",
+              "});",
               "pm.test('No answer exposed', () => pm.expect(body).to.not.have.property('answer'));",
               "pm.test('Has letter results', () => pm.expect(body.results).to.have.lengthOf(5));"
             ]

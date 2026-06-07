@@ -152,6 +152,7 @@ model GameResult {
 
   @@index([userId])
   @@index([userId, mode])
+  @@unique([userId, dailyChallengeId])
 }
 
 model UserStats {

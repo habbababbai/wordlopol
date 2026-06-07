@@ -5,6 +5,7 @@ import { prisma } from '../lib/prisma.js';
 import { dateKeyToUtcDate, getCalendarDateKey } from '../lib/daily-date.js';
 import {
   createVerifiedUserWithPassword,
+  pickWrongWord,
   resetDatabase,
   seedDictionaryWords,
 } from '../test/helpers.js';
@@ -42,7 +43,7 @@ describe('e2e: POST /infinite/guess', () => {
       .expect(200);
 
     const answer = await getCurrentAnswer(user.id);
-    const wrongGuess = TEST_POOL_WORDS.find((word) => word !== answer)!;
+    const wrongGuess = pickWrongWord(TEST_POOL_WORDS, answer);
 
     const midGame = await request(baseUrl)
       .post('/infinite/guess')

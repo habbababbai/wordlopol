@@ -90,13 +90,14 @@ export interface SubmitDailyGuessOptions {
   guessNumber?: number;
 }
 
-async function recordDailyCompletion(
+async function recordDailyCompletionInTx(
+  tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
   userId: string,
   dailyChallengeId: number,
   guesses: number,
   won: boolean,
 ): Promise<void> {
-  await prisma.$transaction(async (tx) => {
+  try {
     await tx.gameResult.create({
       data: {
         userId,
@@ -106,19 +107,24 @@ async function recordDailyCompletion(
         dailyChallengeId,
       },
     });
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      throw new DailyError(409, 'Already played today');
+    }
+    throw error;
+  }
 
-    await tx.userStats.upsert({
-      where: { userId },
-      create: {
-        userId,
-        dailyPlayed: 1,
-        dailyWon: won ? 1 : 0,
-      },
-      update: {
-        dailyPlayed: { increment: 1 },
-        ...(won ? { dailyWon: { increment: 1 } } : {}),
-      },
-    });
+  await tx.userStats.upsert({
+    where: { userId },
+    create: {
+      userId,
+      dailyPlayed: 1,
+      dailyWon: won ? 1 : 0,
+    },
+    update: {
+      dailyPlayed: { increment: 1 },
+      ...(won ? { dailyWon: { increment: 1 } } : {}),
+    },
   });
 }
 
@@ -143,11 +149,32 @@ export async function submitDailyGuess(
     throw new DailyError(400, 'Not in dictionary');
   }
 
+  const answer = challenge.word.text;
+  const results = evaluateGuess(guess, answer);
+  const won = results.every((result) => result === 'correct');
   const { userId } = options;
-  let guessNumber: number;
 
-  if (userId) {
-    const existingResult = await prisma.gameResult.findFirst({
+  if (!userId) {
+    if (options.guessNumber == null) {
+      throw new DailyError(400, 'guessNumber is required for guest play');
+    }
+    if (options.guessNumber < 1 || options.guessNumber > MAX_GUESSES) {
+      throw new DailyError(400, `guessNumber must be between 1 and ${MAX_GUESSES}`);
+    }
+    const guessNumber = options.guessNumber;
+    const finished = won || guessNumber === MAX_GUESSES;
+
+    return {
+      results,
+      won,
+      finished,
+      guessNumber,
+      ...(finished ? { answer } : {}),
+    };
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const existingResult = await tx.gameResult.findFirst({
       where: {
         userId,
         mode: 'DAILY',
@@ -158,7 +185,7 @@ export async function submitDailyGuess(
       throw new DailyError(409, 'Already played today');
     }
 
-    const playerDay = await prisma.dailyPlayerDay.upsert({
+    const playerDay = await tx.dailyPlayerDay.upsert({
       where: { userId_date: { userId, date } },
       create: { userId, date, guessCount: 0 },
       update: {},
@@ -168,38 +195,27 @@ export async function submitDailyGuess(
       throw new DailyError(400, 'Game already finished');
     }
 
-    guessNumber = playerDay.guessCount + 1;
-  } else {
-    if (options.guessNumber == null) {
-      throw new DailyError(400, 'guessNumber is required for guest play');
-    }
-    if (options.guessNumber < 1 || options.guessNumber > MAX_GUESSES) {
-      throw new DailyError(400, `guessNumber must be between 1 and ${MAX_GUESSES}`);
-    }
-    guessNumber = options.guessNumber;
-  }
+    const guessNumber = playerDay.guessCount + 1;
+    const finished = won || guessNumber === MAX_GUESSES;
 
-  const answer = challenge.word.text;
-  const results = evaluateGuess(guess, answer);
-  const won = results.every((result) => result === 'correct');
-  const finished = won || guessNumber === MAX_GUESSES;
-
-  if (userId) {
-    await prisma.dailyPlayerDay.update({
-      where: { userId_date: { userId, date } },
+    const claimed = await tx.dailyPlayerDay.updateMany({
+      where: { userId, date, guessCount: playerDay.guessCount },
       data: { guessCount: guessNumber },
     });
+    if (claimed.count !== 1) {
+      throw new DailyError(409, 'Concurrent guess conflict');
+    }
 
     if (finished) {
-      await recordDailyCompletion(userId, challenge.id, guessNumber, won);
+      await recordDailyCompletionInTx(tx, userId, challenge.id, guessNumber, won);
     }
-  }
 
-  return {
-    results,
-    won,
-    finished,
-    guessNumber,
-    ...(finished ? { answer } : {}),
-  };
+    return {
+      results,
+      won,
+      finished,
+      guessNumber,
+      ...(finished ? { answer } : {}),
+    };
+  });
 }

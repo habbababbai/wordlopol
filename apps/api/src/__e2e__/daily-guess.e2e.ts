@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
 import { getOrCreateDailyChallenge } from '../services/daily.js';
 import { getCalendarDateKey } from '../lib/daily-date.js';
-import { resetDatabase, seedDictionaryWords } from '../test/helpers.js';
+import { resetDatabase, pickWrongWord, seedDictionaryWords } from '../test/helpers.js';
 import { baseUrl } from './server.js';
 
 const TEST_WORDS = ['wążka', 'mleko', 'aabaa', 'aacaa', 'aadaa'];
@@ -20,7 +20,7 @@ describe('e2e: POST /daily/guess', () => {
   it('evaluates a guest guess over real http', async () => {
     await seedDictionaryWords(TEST_WORDS);
     const answer = await getTodayAnswer();
-    const wrongGuess = TEST_WORDS.find((word) => word !== answer)!;
+    const wrongGuess = pickWrongWord(TEST_WORDS, answer);
 
     const midGame = await request(baseUrl)
       .post('/daily/guess')

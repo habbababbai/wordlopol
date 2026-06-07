@@ -7,6 +7,7 @@ import {
   createTestAgent,
   createTestUser,
   createVerifiedUserWithPassword,
+  pickWrongWord,
   resetDatabase,
   seedDictionaryWords,
 } from '../test/helpers.js';
@@ -77,7 +78,7 @@ describe('POST /infinite/guess', () => {
       await agent.get('/infinite/next').set('Authorization', `Bearer ${token}`).expect(200);
       return getCurrentAnswer(user.id);
     })();
-    const wrongGuess = TEST_POOL_WORDS.find((word) => word !== answer)!;
+    const wrongGuess = pickWrongWord(TEST_POOL_WORDS, answer);
 
     const agent = await createTestAgent();
     const res = await agent

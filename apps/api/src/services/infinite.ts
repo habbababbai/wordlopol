@@ -238,26 +238,32 @@ export async function completeInfiniteWord(
 ): Promise<void> {
   const dateKey = getCalendarDateKey();
   const date = dateKeyToUtcDate(dateKey);
-
-  const playerDay = await prisma.infinitePlayerDay.findUnique({
-    where: { userId_date: { userId, date } },
-  });
-
-  if (!playerDay?.currentWordId) {
-    return;
-  }
-
   const pool = await getOrCreateDailyPool(dateKey);
 
   await prisma.$transaction(async (tx) => {
-    await tx.infiniteWordUsage.create({
-      data: {
-        userId,
-        date,
-        cycleNumber: playerDay.cycleNumber,
-        wordId: playerDay.currentWordId!,
-      },
+    const playerDay = await tx.infinitePlayerDay.findUnique({
+      where: { userId_date: { userId, date } },
     });
+
+    if (!playerDay?.currentWordId) {
+      return;
+    }
+
+    try {
+      await tx.infiniteWordUsage.create({
+        data: {
+          userId,
+          date,
+          cycleNumber: playerDay.cycleNumber,
+          wordId: playerDay.currentWordId,
+        },
+      });
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        throw new InfiniteError(409, 'Word already completed');
+      }
+      throw error;
+    }
 
     const finishedCount = await tx.infiniteWordUsage.count({
       where: { userId, date, cycleNumber: playerDay.cycleNumber },
@@ -301,6 +307,28 @@ export async function completeInfiniteWord(
   });
 }
 
+async function claimInfiniteGuessSlot(
+  userId: string,
+  date: Date,
+  expectedGuessCount: number,
+  currentWordId: number,
+  nextGuessCount: number,
+): Promise<void> {
+  const updated = await prisma.infinitePlayerDay.updateMany({
+    where: {
+      userId,
+      date,
+      guessCount: expectedGuessCount,
+      currentWordId,
+    },
+    data: { guessCount: nextGuessCount },
+  });
+
+  if (updated.count !== 1) {
+    throw new InfiniteError(409, 'Concurrent guess conflict');
+  }
+}
+
 export async function submitInfiniteGuess(
   userId: string,
   rawGuess: string,
@@ -340,12 +368,22 @@ export async function submitInfiniteGuess(
   const finished = won || guessNumber === MAX_GUESSES;
 
   if (finished) {
+    await claimInfiniteGuessSlot(
+      userId,
+      date,
+      playerDay.guessCount,
+      playerDay.currentWordId,
+      guessNumber,
+    );
     await completeInfiniteWord(userId, { guesses: guessNumber, won });
   } else {
-    await prisma.infinitePlayerDay.update({
-      where: { userId_date: { userId, date } },
-      data: { guessCount: guessNumber },
-    });
+    await claimInfiniteGuessSlot(
+      userId,
+      date,
+      playerDay.guessCount,
+      playerDay.currentWordId,
+      guessNumber,
+    );
   }
 
   return {

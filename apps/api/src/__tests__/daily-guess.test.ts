@@ -7,6 +7,7 @@ import { getOrCreateDailyChallenge } from '../services/daily.js';
 import {
   createTestAgent,
   createVerifiedUserWithPassword,
+  pickWrongWord,
   resetDatabase,
   seedDictionaryWords,
 } from '../test/helpers.js';
@@ -27,7 +28,7 @@ describe('POST /daily/guess', () => {
   it('evaluates a guest guess without revealing the answer mid-game', async () => {
     await seedDictionaryWords(TEST_WORDS);
     const answer = await getTodayAnswer();
-    const wrongGuess = TEST_WORDS.find((word) => word !== answer)!;
+    const wrongGuess = pickWrongWord(TEST_WORDS, answer);
 
     const agent = await createTestAgent();
     const res = await agent
@@ -94,7 +95,7 @@ describe('POST /daily/guess', () => {
   it('tracks guess count server-side for authenticated users', async () => {
     await seedDictionaryWords(TEST_WORDS);
     const answer = await getTodayAnswer();
-    const wrongGuess = TEST_WORDS.find((word) => word !== answer)!;
+    const wrongGuess = pickWrongWord(TEST_WORDS, answer);
     const { user } = await createVerifiedUserWithPassword();
     const token = signAccessToken(user.id);
 
@@ -185,6 +186,7 @@ describe('POST /daily/guess', () => {
     await seedDictionaryWords(TEST_WORDS);
     const answer = await getTodayAnswer();
     const wrongGuesses = TEST_WORDS.filter((word) => word !== answer).slice(0, MAX_GUESSES);
+    expect(wrongGuesses.length).toBe(MAX_GUESSES);
     const { user } = await createVerifiedUserWithPassword();
     const token = signAccessToken(user.id);
 
