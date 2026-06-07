@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.8.0](https://github.com/habbababbai/wordlopol/compare/api-v0.7.0...api-v0.8.0) (2026-06-07)
+
+### Features
+
+- **api:** add GET /user/profile ([#25](https://github.com/habbababbai/wordlopol/issues/25)) ([fe9d348](https://github.com/habbababbai/wordlopol/commit/fe9d34855c38c0aebe3d41c66a59c109372de866))
+
 ## [0.7.0](https://github.com/habbababbai/wordlopol/compare/api-v0.6.0...api-v0.7.0) (2026-06-07)
 
 ### Features
