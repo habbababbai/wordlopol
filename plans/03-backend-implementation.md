@@ -70,7 +70,7 @@ Links point to `APP_URL` routes (e.g. `/verify-email?token=...`).
 - Do not reveal answer until win or 6 guesses
 - On completion (registered): write `GameResult`, update `UserStats`
 
-### 7. User profile
+### 7. User profile — done
 
 `apps/api/src/routes/user.ts`:
 

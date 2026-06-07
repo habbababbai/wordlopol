@@ -151,6 +151,42 @@ Send header: `Authorization: Bearer <accessToken>`
 
 ---
 
+### User profile
+
+| Method | Path            | Auth   | Description                        |
+| ------ | --------------- | ------ | ---------------------------------- |
+| GET    | `/user/profile` | Bearer | Profile + stats for signed-in user |
+
+Only the authenticated user can read their own profile. No public profiles.
+
+**200**
+
+```json
+{
+  "id": "uuid",
+  "email": "player@example.com",
+  "displayName": "Player",
+  "emailVerified": true,
+  "stats": {
+    "dailyPlayed": 3,
+    "dailyWon": 2,
+    "infinitePlayed": 10,
+    "infiniteWon": 7,
+    "bestTimedWords": null,
+    "bestTimedMs": null,
+    "bestTimedWord": null
+  }
+}
+```
+
+If the user has never played, numeric stats are `0` and timed fields are `null`.
+
+**401** — missing or invalid Bearer token
+
+**404** — user deleted but token still valid (rare)
+
+---
+
 ### Daily challenge
 
 | Method | Path           | Auth     | Description                                        |
@@ -583,9 +619,10 @@ Edge cases: `Wordlopol-Infinite-Negative.postman_collection.json` — 401/403 on
 - Forgot-password / resend-verification do not reveal whether email exists
 - Previous password-reset tokens invalidated on new forgot-password request
 - `POST /auth/resend-verification` for stuck unverified accounts
-- 94 automated integration tests + 6 e2e (health, auth, daily, infinite, guess, tokens, middleware)
+- 97 automated integration tests + 7 e2e (health, auth, daily, infinite, guess, profile, tokens, middleware)
 - Daily challenge: deterministic word per Warsaw calendar day; lazy DB persistence on `GET /daily/today`; `POST /daily/guess` with optional auth
 - Infinite mode: shared daily word pool; `requireVerified` on infinite routes; `POST /infinite/guess` records stats on completion
+- User profile: `GET /user/profile` returns profile + stats for authenticated user only
 
 ### Remaining gaps
 
@@ -593,7 +630,6 @@ Edge cases: `Wordlopol-Infinite-Negative.postman_collection.json` — 401/403 on
 | --------------------------------- | -------- | ------------------------------------------------------------------------- |
 | **Access JWT not revocable**      | Low      | By design; 15 min window; refresh revocation stops renewal                |
 | **Email change without password** | Low      | Authenticated user can request change with only Bearer token              |
-| **User profile endpoint**         | —        | `GET /user/profile` not implemented yet (plan step 7)                     |
 | **devToken in responses**         | Dev only | Returned only when `NODE_ENV=development`; omitted in production and test |
 
 ---
@@ -609,19 +645,21 @@ See [Postman setup guide](#postman-setup-guide) for the automated collection, sc
 | —   | POST   | `/daily/guess`              | optional          |
 | —   | GET    | `/infinite/next`            | Bearer + verified |
 | —   | POST   | `/infinite/guess`           | Bearer + verified |
+| —   | GET    | `/user/profile`             | Bearer            |
 | 1   | POST   | `/auth/register`            | —                 |
 | 2   | POST   | `/auth/verify-email`        | —                 |
 | 3   | POST   | `/auth/login`               | —                 |
-| 4   | POST   | `/auth/refresh`             | Cookie            |
-| 5   | POST   | `/auth/logout`              | Cookie            |
-| 6   | POST   | `/auth/logout-all`          | Bearer            |
-| 7   | POST   | `/auth/forgot-password`     | —                 |
-| 8   | POST   | `/auth/reset-password`      | —                 |
-| 9   | PATCH  | `/auth/change-display-name` | Bearer            |
-| 10  | PATCH  | `/auth/change-password`     | Bearer            |
-| 11  | PATCH  | `/auth/change-email`        | Bearer            |
-| 12  | POST   | `/auth/verify-email`        | —                 |
-| 13  | DELETE | `/auth/account`             | Bearer            |
+| 4   | GET    | `/user/profile`             | Bearer            |
+| 5   | POST   | `/auth/refresh`             | Cookie            |
+| 6   | POST   | `/auth/logout`              | Cookie            |
+| 7   | POST   | `/auth/logout-all`          | Bearer            |
+| 8   | POST   | `/auth/forgot-password`     | —                 |
+| 9   | POST   | `/auth/reset-password`      | —                 |
+| 10  | PATCH  | `/auth/change-display-name` | Bearer            |
+| 11  | PATCH  | `/auth/change-password`     | Bearer            |
+| 12  | PATCH  | `/auth/change-email`        | Bearer            |
+| 13  | POST   | `/auth/verify-email`        | —                 |
+| 14  | DELETE | `/auth/account`             | Bearer            |
 
 **Negative cases worth spot-checking:**
 
@@ -639,6 +677,7 @@ See [Postman setup guide](#postman-setup-guide) for the automated collection, sc
 | POST   | `/daily/guess`              | 400 guest missing guessNumber |
 | GET    | `/infinite/next`            | 401 without Bearer            |
 | GET    | `/infinite/next`            | 403 unverified user           |
+| GET    | `/user/profile`             | 401 without Bearer            |
 | POST   | `/infinite/guess`           | 401 without Bearer            |
 | POST   | `/infinite/guess`           | 403 unverified user           |
 | POST   | `/infinite/guess`           | 400 no word in progress       |
@@ -672,12 +711,14 @@ See [Postman setup guide](#postman-setup-guide) for the automated collection, sc
 | `infinite-pool.test.ts`        | `src/__tests__/` | shared pool creation, idempotency, 503         |
 | `infinite-next.test.ts`        | `src/__tests__/` | GET /infinite/next auth, cycles, no answer     |
 | `infinite-guess.test.ts`       | `src/__tests__/` | POST /infinite/guess auth, stats, progression  |
+| `user-profile.test.ts`         | `src/__tests__/` | GET /user/profile auth, zero + persisted stats |
 | `health.e2e.ts`                | `src/__e2e__/`   | health over real HTTP                          |
 | `auth.e2e.ts`                  | `src/__e2e__/`   | register → verify → login → refresh over HTTP  |
 | `daily.e2e.ts`                 | `src/__e2e__/`   | daily today over real HTTP                     |
 | `daily-guess.e2e.ts`           | `src/__e2e__/`   | daily guess over real HTTP                     |
 | `infinite.e2e.ts`              | `src/__e2e__/`   | infinite next over real HTTP                   |
 | `infinite-guess.e2e.ts`        | `src/__e2e__/`   | infinite guess over real HTTP                  |
+| `user-profile.e2e.ts`          | `src/__e2e__/`   | user profile over real HTTP                    |
 
 **Integration** — Supertest against an in-process Express app (`vitest.config.ts`).
 

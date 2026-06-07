@@ -42,5 +42,12 @@ reviews:
     - path: '.github/**'
       instructions: |
         CI/CD and automation. Verify workflow triggers, permissions, and pnpm/turbo usage.
+  pre_merge_checks:
+    # TypeScript project — no JSDoc convention; default 80% threshold is always 0% noise
+    docstrings:
+      mode: 'off'
+  finishing_touches:
+    docstrings:
+      enabled: false
 chat:
   auto_reply: true
