@@ -1,16 +1,19 @@
+import { useTranslation } from 'react-i18next';
+
 import { useTheme } from '../hooks/useTheme';
 
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <button
       type="button"
       onClick={toggleTheme}
       className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted cursor-pointer"
-      aria-label={theme === 'dark' ? 'Włącz tryb jasny' : 'Włącz tryb ciemny'}
+      aria-label={theme === 'dark' ? t('theme.enableLight') : t('theme.enableDark')}
     >
-      {theme === 'dark' ? '☀ Jasny' : '☾ Ciemny'}
+      {theme === 'dark' ? t('theme.lightMode') : t('theme.darkMode')}
     </button>
   );
 }

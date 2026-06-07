@@ -6,6 +6,7 @@ import { App } from './App';
 import { ThemeProvider } from './context/ThemeProvider';
 import { ToastProvider } from './context/ToastProvider';
 import { Toaster } from './components/Toaster';
+import './i18n';
 import './index.css';
 
 const queryClient = new QueryClient();

@@ -1,5 +1,14 @@
+import { useTranslation } from 'react-i18next';
+
 import { StubPage } from './StubPage';
 
 export function ForgotPasswordPage() {
-  return <StubPage title="Przypomnij hasło" description="Reset hasła — wkrótce." />;
+  const { t } = useTranslation();
+
+  return (
+    <StubPage
+      title={t('pages.forgotPassword.title')}
+      description={t('pages.forgotPassword.description')}
+    />
+  );
 }

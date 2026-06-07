@@ -1,5 +1,14 @@
+import { useTranslation } from 'react-i18next';
+
 import { StubPage } from './StubPage';
 
 export function ResetPasswordPage() {
-  return <StubPage title="Nowe hasło" description="Ustawienie nowego hasła — wkrótce." />;
+  const { t } = useTranslation();
+
+  return (
+    <StubPage
+      title={t('pages.resetPassword.title')}
+      description={t('pages.resetPassword.description')}
+    />
+  );
 }
