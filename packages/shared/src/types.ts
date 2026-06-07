@@ -49,6 +49,10 @@ export interface UserStatsDto {
   bestTimedWord: string | null;
 }
 
+export interface UserProfileResponseDto extends UserProfileDto {
+  stats: UserStatsDto;
+}
+
 export interface AuthResponseDto {
   accessToken: string;
   user: UserProfileDto;
