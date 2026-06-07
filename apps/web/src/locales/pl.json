@@ -45,8 +45,8 @@
     },
     "howToPlay": {
       "title": "Jak grać?",
-      "correctHint": "{{letter}} jest na właściwym miejscu.",
-      "presentHint": "{{letter}} jest w słowie, ale na innym miejscu.",
+      "correctHint": "jest na właściwym miejscu.",
+      "presentHint": "jest w słowie, ale na innym miejscu.",
       "rules": [
         "Masz 6 prób na odgadnięcie słowa.",
         "Polskie znaki ą, ć, ę, ł, ń, ó, ś, ź, ż mają znaczenie.",
