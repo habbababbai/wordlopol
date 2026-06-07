@@ -2,20 +2,44 @@
 
 Build the React + Vite game UI after backend endpoints exist.
 
+**Design:** [Wordlopol — Figma Make](https://www.figma.com/make/RggardTz2oWCfly04e4HdX/Wordlopol) — tokens, components, and screen layouts live there. Port into `apps/web`; use React Router (not the prototype’s screen state).
+
 ## Order of work
 
-### 1. API client
+### 1. Design foundation
+
+- Tailwind v4 + CSS variables (`apps/web/src/styles/`)
+- Light / dark theme (`ThemeContext`, default dark)
+- UI primitives per Figma design system screen (tiles, buttons, badges, toasts, loaders, inputs)
+- `/dev/ui` gallery in development only
+
+### 2. App shell & routing
+
+```
+/           → Home (play daily as guest)
+/daily      → Daily game
+/infinite   → Infinite (auth + verified email)
+/profile    → Stats (auth required)
+/login      → Login
+/register   → Register
+/verify-email, /forgot-password, /reset-password
+/settings   → Account settings
+```
+
+`AppLayout` — header, main, footer.
+
+### 3. API client
 
 Extend `apps/web/src/api/client.ts`:
 
 - Base URL from env (`VITE_API_URL`)
 - Attach access token to requests
-- Refresh token flow on 401 (cookie sent automatically with `credentials: 'include'`)
+- Refresh token flow on 401 (`credentials: 'include'`)
 - On refresh failure → redirect to login
 - `logout()` → `POST /auth/logout`, clear in-memory access token
 - Typed responses using `@wordlopol/shared` DTOs
 
-### 2. Auth pages
+### 4. Auth pages
 
 | Route              | Component          | API                                                       |
 | ------------------ | ------------------ | --------------------------------------------------------- |
@@ -26,72 +50,47 @@ Extend `apps/web/src/api/client.ts`:
 | `/reset-password`  | ResetPasswordPage  | POST `/auth/reset-password`                               |
 | `/settings`        | SettingsPage       | change password/email, logout all devices, delete account |
 
-Use TanStack Query for mutations. Auth context for user state.
+TanStack Query for mutations. `AuthContext` for user state. `ProtectedRoute` + verified-email guard for infinite.
 
-### 3. Polish keyboard
+### 5. Game components
 
-`apps/web/src/components/PolishKeyboard.tsx`:
+`PolishKeyboard.tsx` — Polish layout, physical keyboard mapping, key states.
 
-- Full Polish layout: ą, ć, ę, ł, ń, ó, ś, ź, ż
-- Physical keyboard mapping for Polish input
-- Key states: unused, correct, present, absent
+`GameBoard.tsx` — 6 × 5 tiles, flip animation, share modal (optional).
 
-### 4. Game board
+### 6. Game pages
 
-`apps/web/src/components/GameBoard.tsx`:
+**Daily** — `GET /daily/today`, `POST /daily/guess` (registered). Guests: local state.
 
-- 6 rows × 5 tiles
-- Flip animation on guess submit
-- Color coding: green (correct), yellow (present), gray (absent)
+**Infinite** — `GET /infinite/next` (protected, verified).
 
-### 5. Daily mode
+**Profile** — `GET /user/profile`, stats; timed placeholders for Phase 4.
 
-`apps/web/src/pages/DailyPage.tsx`:
+### 7. Polish & accessibility
 
-- Fetch `GET /daily/today`
-- Guests: local state only (or client-side evaluation)
-- Registered: `POST /daily/guess`, persist progress
-- Share result grid (optional, no leaderboard)
+Responsive (mobile-first), focus-visible, ARIA, `prefers-reduced-motion`.
 
-### 6. Infinite mode
+## Atomic commits
 
-`apps/web/src/pages/InfinitePage.tsx`:
-
-- Protected route (login + verified email)
-- `GET /infinite/next` on load / after win
-- Track streak locally; server tracks stats
-
-### 7. Profile page
-
-`apps/web/src/pages/ProfilePage.tsx`:
-
-- `GET /user/profile`
-- Show: games played/won (daily + infinite)
-- Placeholders for timed stats (Phase 4)
-
-### 8. Routing & layout
-
-```
-/           → Home (play daily as guest)
-/daily      → Daily game
-/infinite   → Infinite (auth required)
-/profile    → Stats (auth required)
-/login      → Login
-/register   → Register
-/settings   → Account settings
-```
-
-### 9. Styling
-
-- Dark theme default (Wordle-like)
-- Responsive layout (mobile-first)
-- Accessible focus states and ARIA labels
+| #   | Suggested message                                         |
+| --- | --------------------------------------------------------- |
+| 1   | `docs(web): restructure frontend plan with design system` |
+| 2   | `feat(web): add design tokens and theme switching`        |
+| 3   | `feat(web): add form primitives`                          |
+| 4   | `feat(web): add tile badge and loader components`         |
+| 5   | `feat(web): add toast notifications and dev ui page`      |
+| 6   | `feat(web): add app layout and route stubs`               |
+| 7   | `feat(web): add api client and auth context`              |
+| 8   | `feat(web): add auth pages`                               |
+| 9   | `feat(web): add game board and polish keyboard`           |
+| 10  | `feat(web): add game and profile pages`                   |
 
 ## Verification
 
+- [ ] Design system matches Figma; theme persists across reload
 - [ ] Guest can play daily without account
 - [ ] Registered user sees stats on profile
-- [ ] Infinite blocked for guests
+- [ ] Infinite blocked for guests / unverified users
 - [ ] Polish diacritics work on keyboard and input
 - [ ] Auth flows complete end-to-end
 - [ ] Logout clears session; protected routes redirect to login
