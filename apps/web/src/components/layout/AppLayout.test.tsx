@@ -17,7 +17,7 @@ describe('AppLayout', () => {
       { route: '/' },
     );
 
-    expect(screen.getByRole('link', { name: 'Wordlopol' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: 'Wordlopol PL' })).toHaveAttribute('href', '/');
     expect(screen.getByRole('link', { name: 'Dziennie' })).toHaveAttribute('href', '/daily');
     expect(screen.getByRole('link', { name: 'Nieskończony' })).toHaveAttribute('href', '/infinite');
     expect(screen.getByRole('link', { name: 'Profil' })).toHaveAttribute('href', '/profile');

@@ -10,7 +10,7 @@ export function Home() {
     <div className="relative flex flex-1 flex-col">
       <AmbientBackground />
 
-      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col gap-16 px-4 py-12">
+      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col gap-12 px-4 py-8 sm:gap-16 sm:py-12">
         <HomeHero />
         <HomeFeatureCards isLoggedIn={isLoggedIn} />
         <HomeHowToPlay />

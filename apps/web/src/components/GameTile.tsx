@@ -11,6 +11,7 @@ type GameTileProps = {
   size?: 'sm' | 'md' | 'lg';
   waveBounce?: boolean;
   waveDelay?: number;
+  className?: string;
 };
 
 const sizeClasses = {
@@ -35,6 +36,7 @@ export function GameTile({
   size = 'md',
   waveBounce = false,
   waveDelay = 0,
+  className,
 }: GameTileProps) {
   const revealed = state === 'correct' || state === 'present' || state === 'absent';
 
@@ -59,6 +61,7 @@ export function GameTile({
         stateClasses[state],
         'relative flex select-none items-center justify-center overflow-hidden rounded-[var(--radius-sm)] font-bold uppercase',
         animationClass,
+        className,
       )}
       style={animationStyle}
     >

@@ -13,7 +13,9 @@
     "infinite": "Nieskończony",
     "profile": "Profil",
     "login": "Zaloguj",
-    "accountSettings": "Ustawienia konta"
+    "accountSettings": "Ustawienia konta",
+    "openMenu": "Otwórz menu",
+    "closeMenu": "Zamknij menu"
   },
   "home": {
     "localeBadge": "PL",
