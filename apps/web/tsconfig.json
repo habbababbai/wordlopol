@@ -2,6 +2,7 @@
   "extends": "@wordlopol/tsconfig/react.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "noUncheckedIndexedAccess": true,
     "paths": {
       "@/*": ["src/*"]
     }
