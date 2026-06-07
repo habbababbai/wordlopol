@@ -41,6 +41,8 @@ function MenuIcon() {
   );
 }
 
+const MOBILE_NAV_ID = 'mobile-nav';
+
 function CloseIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -83,6 +85,7 @@ export function AppLayout() {
               type="button"
               className="flex size-9 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-muted md:hidden [&_svg]:size-4"
               aria-label={mobileOpen ? t('nav.closeMenu') : t('nav.openMenu')}
+              aria-controls={MOBILE_NAV_ID}
               aria-expanded={mobileOpen}
               onClick={() => setMobileOpen((open) => !open)}
             >
@@ -93,6 +96,7 @@ export function AppLayout() {
 
         {mobileOpen && (
           <nav
+            id={MOBILE_NAV_ID}
             className="flex flex-col gap-1 border-t border-border bg-card px-4 py-3 md:hidden"
             aria-label={t('nav.main')}
           >
