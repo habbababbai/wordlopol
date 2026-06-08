@@ -1,21 +1,13 @@
-# Wordlopol — Implementation Plans
+# Implementation plans
 
-Step-by-step guides for building Wordlopol, a Polish Wordle-style game.
+| Document                                                         | Purpose                                 |
+| ---------------------------------------------------------------- | --------------------------------------- |
+| [02-architecture.md](./02-architecture.md)                       | System design, data model, shared types |
+| [04-frontend-implementation.md](./04-frontend-implementation.md) | **Active** — remaining web work         |
+| [05-future-features.md](./05-future-features.md)                 | Timed mode, multiplayer, mobile         |
 
-## Reading order
-
-| #   | Document                                                         | When to use                                |
-| --- | ---------------------------------------------------------------- | ------------------------------------------ |
-| 1   | [01-initial-repo-setup.md](./01-initial-repo-setup.md)           | First-time repo bootstrap and verification |
-| 2   | [02-architecture.md](./02-architecture.md)                       | System design, data model, API contracts   |
-| 3   | [03-backend-implementation.md](./03-backend-implementation.md)   | Phase 2 — API, auth, gameplay endpoints    |
-| 4   | [04-frontend-implementation.md](./04-frontend-implementation.md) | Phase 3 — React app, game UI               |
-| 5   | [05-future-features.md](./05-future-features.md)                 | Timed mode, multiplayer, mobile            |
-
-**Also see**: [docs/CONTRIBUTING.md](../docs/CONTRIBUTING.md) — commits, PRs, and releases.
+**Contributing:** [docs/CONTRIBUTING.md](../docs/CONTRIBUTING.md)
 
 ## Current phase
 
-**Phase 3** — Frontend: design system and game UI. Backend (auth, daily, infinite) is in place.
-
-Active branch: `feat/web-design-system`. See [04-frontend-implementation.md](./04-frontend-implementation.md).
+**Frontend v1** — auth pages and game UI. Backend is complete. See [04-frontend-implementation.md](./04-frontend-implementation.md).
