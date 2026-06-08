@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
-import { api } from '../api/client';
+import { useRegisterMutation } from '../hooks/mutations/use-register-mutation';
 import { AuthFormCard } from '../components/auth/AuthFormCard';
 import { AuthPageLayout } from '../components/auth/AuthPageLayout';
 import { FormField } from '../components/auth/FormField';
@@ -20,6 +20,7 @@ type RegisterSuccess = {
 
 export function RegisterPage() {
   const { t } = useTranslation();
+  const registerMutation = useRegisterMutation();
   const [apiError, setApiError] = useState<string | null>(null);
   const [success, setSuccess] = useState<RegisterSuccess | null>(null);
 
@@ -37,7 +38,7 @@ export function RegisterPage() {
     setApiError(null);
 
     try {
-      const result = await api.register({
+      const result = await registerMutation.mutateAsync({
         email: values.email,
         displayName: values.displayName,
         password: values.password,
@@ -84,11 +85,15 @@ export function RegisterPage() {
         description={t('auth.register.description')}
         formProps={{
           onSubmit: (event) => void onSubmit(event),
-          'aria-busy': formState.isSubmitting,
+          'aria-busy': formState.isSubmitting || registerMutation.isPending,
         }}
         footer={
           <>
-            <Button type="submit" className="w-full" disabled={formState.isSubmitting}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={formState.isSubmitting || registerMutation.isPending}
+            >
               {t('auth.actions.register')}
             </Button>
             <p className="text-center text-sm text-muted-foreground">

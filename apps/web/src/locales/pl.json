@@ -13,6 +13,8 @@
     "infinite": "Nieskończony",
     "profile": "Profil",
     "login": "Zaloguj",
+    "logout": "Wyloguj",
+    "logoutError": "Nie udało się wylogować. Spróbuj ponownie.",
     "accountSettings": "Ustawienia konta",
     "openMenu": "Otwórz menu",
     "closeMenu": "Zamknij menu"
@@ -121,6 +123,10 @@
       "title": "Nowe hasło",
       "description": "Ustaw nowe hasło do swojego konta.",
       "success": "Hasło zostało zmienione. Za chwilę przekierujemy do logowania."
+    },
+    "guards": {
+      "emailNotVerified": "Potwierdź adres e-mail, aby korzystać z tej funkcji.",
+      "verifyEmailLink": "Przejdź do weryfikacji e-mail"
     }
   },
   "pages": {
@@ -134,7 +140,24 @@
     },
     "profile": {
       "title": "Profil",
-      "description": "Statystyki gracza — wkrótce."
+      "loading": "Ładowanie profilu…",
+      "errorTitle": "Nie udało się wczytać profilu",
+      "errorMessage": "Sprawdź połączenie i spróbuj ponownie.",
+      "retry": "Spróbuj ponownie",
+      "emailVerified": "Zweryfikowany",
+      "emailNotVerified": "Niezweryfikowany",
+      "stats": {
+        "title": "Statystyki",
+        "played": "Rozegrane",
+        "won": "Wygrane",
+        "winRate": "Skuteczność",
+        "daily": {
+          "title": "Tryb dzienny"
+        },
+        "infinite": {
+          "title": "Tryb nieskończony"
+        }
+      }
     },
     "login": {
       "title": "Logowanie",

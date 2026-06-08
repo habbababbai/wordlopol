@@ -8,7 +8,7 @@ import { AuthFormCard } from '../components/auth/AuthFormCard';
 import { AuthPageLayout } from '../components/auth/AuthPageLayout';
 import { FormField } from '../components/auth/FormField';
 import { Button } from '../components/ui/button';
-import { useAuth } from '../hooks/useAuth';
+import { useLoginMutation } from '../hooks/mutations/use-login-mutation';
 import { getApiErrorMessage } from '../lib/api-error-message';
 import type { LoginFormValues } from '../lib/auth-form-types';
 import { loginSchema } from '../lib/auth-schemas';
@@ -19,7 +19,7 @@ export function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { login } = useAuth();
+  const loginMutation = useLoginMutation();
   const [apiError, setApiError] = useState<string | null>(null);
 
   const { register, handleSubmit, formState } = useForm<LoginFormValues>({
@@ -31,7 +31,10 @@ export function LoginPage() {
     setApiError(null);
 
     try {
-      await login(values.email, values.password);
+      await loginMutation.mutateAsync({
+        email: values.email,
+        password: values.password,
+      });
       void navigate(resolveReturnTo(searchParams.get('returnTo')));
     } catch (err) {
       setApiError(getApiErrorMessage(err, t('common.errors.generic')));
@@ -45,11 +48,15 @@ export function LoginPage() {
         description={t('auth.login.description')}
         formProps={{
           onSubmit: (event) => void onSubmit(event),
-          'aria-busy': formState.isSubmitting,
+          'aria-busy': formState.isSubmitting || loginMutation.isPending,
         }}
         footer={
           <>
-            <Button type="submit" className="w-full" disabled={formState.isSubmitting}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={formState.isSubmitting || loginMutation.isPending}
+            >
               {t('auth.actions.login')}
             </Button>
             <p className="text-center text-sm text-muted-foreground">

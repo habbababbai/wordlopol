@@ -1,6 +1,8 @@
 import { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
 
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { RequireVerifiedEmail } from './components/auth/RequireVerifiedEmail';
 import { AppLayout } from './components/layout/AppLayout';
 import { DailyPage } from './pages/DailyPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
@@ -23,14 +25,18 @@ export function App() {
       <Route element={<AppLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/daily" element={<DailyPage />} />
-        <Route path="/infinite" element={<InfinitePage />} />
-        <Route path="/profile" element={<ProfilePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route element={<RequireVerifiedEmail />}>
+            <Route path="/infinite" element={<InfinitePage />} />
+          </Route>
+        </Route>
       </Route>
 
       {DevUiPage && (

@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
-import { api } from '../api/client';
+import { useForgotPasswordMutation } from '../hooks/mutations/use-forgot-password-mutation';
 import { AuthFormCard } from '../components/auth/AuthFormCard';
 import { AuthPageLayout } from '../components/auth/AuthPageLayout';
 import { FormField } from '../components/auth/FormField';
@@ -16,6 +16,7 @@ import { getFormFieldError, translateFieldError } from '../lib/field-error';
 
 export function ForgotPasswordPage() {
   const { t } = useTranslation();
+  const forgotPasswordMutation = useForgotPasswordMutation();
   const [submitted, setSubmitted] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
@@ -28,7 +29,7 @@ export function ForgotPasswordPage() {
     setApiError(null);
 
     try {
-      await api.forgotPassword({ email: values.email });
+      await forgotPasswordMutation.mutateAsync({ email: values.email });
       setSubmitted(true);
     } catch (err) {
       setApiError(getApiErrorMessage(err, t('common.errors.generic')));
@@ -59,11 +60,15 @@ export function ForgotPasswordPage() {
         description={t('auth.forgotPassword.description')}
         formProps={{
           onSubmit: (event) => void onSubmit(event),
-          'aria-busy': formState.isSubmitting,
+          'aria-busy': formState.isSubmitting || forgotPasswordMutation.isPending,
         }}
         footer={
           <>
-            <Button type="submit" className="w-full" disabled={formState.isSubmitting}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={formState.isSubmitting || forgotPasswordMutation.isPending}
+            >
               {t('auth.actions.forgotPassword')}
             </Button>
             <p className="text-center text-sm text-muted-foreground">

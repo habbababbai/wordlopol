@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 
+import { loginPathWithReturnTo } from '../../lib/return-to';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 
@@ -13,6 +15,7 @@ type FeatureCardConfig = {
   titleKey: 'daily' | 'infinite' | 'stats';
   locked?: boolean;
   ctaKey: 'cta' | 'ctaGuest' | 'ctaAuth';
+  href: string;
 };
 
 function FeatureIcon({ children }: { children: ReactNode }) {
@@ -75,23 +78,25 @@ export function HomeFeatureCards({ isLoggedIn = false }: HomeFeatureCardsProps) 
   const { t } = useTranslation();
 
   const cards: FeatureCardConfig[] = [
-    { icon: <CalendarIcon />, titleKey: 'daily', ctaKey: 'cta' },
+    { icon: <CalendarIcon />, titleKey: 'daily', ctaKey: 'cta', href: '/daily' },
     {
       icon: <InfinityIcon />,
       titleKey: 'infinite',
       locked: !isLoggedIn,
       ctaKey: isLoggedIn ? 'ctaAuth' : 'ctaGuest',
+      href: isLoggedIn ? '/infinite' : loginPathWithReturnTo('/infinite'),
     },
     {
       icon: <TrophyIcon />,
       titleKey: 'stats',
       ctaKey: isLoggedIn ? 'ctaAuth' : 'ctaGuest',
+      href: isLoggedIn ? '/profile' : loginPathWithReturnTo('/profile'),
     },
   ];
 
   return (
     <section className="grid gap-4 sm:grid-cols-3">
-      {cards.map(({ icon, titleKey, locked, ctaKey }) => (
+      {cards.map(({ icon, titleKey, locked, ctaKey, href }) => (
         <div
           key={titleKey}
           className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 transition-shadow hover:shadow-md"
@@ -110,9 +115,15 @@ export function HomeFeatureCards({ isLoggedIn = false }: HomeFeatureCardsProps) 
             </p>
           </div>
 
-          <Button variant="ghost" className="h-auto justify-start p-0 text-sm font-semibold">
-            {t(`home.features.${titleKey}.${ctaKey}`)}
-            <span aria-hidden="true">→</span>
+          <Button
+            asChild
+            variant="ghost"
+            className="h-auto justify-start p-0 text-sm font-semibold"
+          >
+            <Link to={href}>
+              {t(`home.features.${titleKey}.${ctaKey}`)}
+              <span aria-hidden="true">→</span>
+            </Link>
           </Button>
         </div>
       ))}

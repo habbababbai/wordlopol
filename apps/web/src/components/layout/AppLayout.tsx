@@ -1,6 +1,10 @@
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+
+import { useLogoutMutation } from '@/hooks/mutations/use-logout-mutation';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/useToast';
 
 import { cn } from '../../lib/utils';
 import { ThemeToggle } from '../ThemeToggle';
@@ -33,6 +37,27 @@ function NavItem({
   );
 }
 
+function NavButton({
+  children,
+  onClick,
+  disabled,
+}: {
+  children: ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {children}
+    </button>
+  );
+}
+
 function MenuIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -51,11 +76,53 @@ function CloseIcon() {
   );
 }
 
+function AuthNavItems({
+  onNavigate,
+  onLogout,
+  logoutPending,
+}: {
+  onNavigate?: () => void;
+  onLogout: () => void;
+  logoutPending: boolean;
+}) {
+  const { t } = useTranslation();
+  const { isAuthenticated } = useAuth();
+
+  if (isAuthenticated) {
+    return (
+      <NavButton onClick={onLogout} disabled={logoutPending}>
+        {t('nav.logout')}
+      </NavButton>
+    );
+  }
+
+  return (
+    <NavItem to="/login" onClick={onNavigate}>
+      {t('nav.login')}
+    </NavItem>
+  );
+}
+
 export function AppLayout() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const logoutMutation = useLogoutMutation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const closeMobile = () => setMobileOpen(false);
+
+  const handleLogout = () => {
+    void (async () => {
+      try {
+        await logoutMutation.mutateAsync();
+        closeMobile();
+        void navigate('/');
+      } catch {
+        toast({ message: t('nav.logoutError'), variant: 'error' });
+      }
+    })();
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -75,7 +142,7 @@ export function AppLayout() {
             <NavItem to="/daily">{t('nav.daily')}</NavItem>
             <NavItem to="/infinite">{t('nav.infinite')}</NavItem>
             <NavItem to="/profile">{t('nav.profile')}</NavItem>
-            <NavItem to="/login">{t('nav.login')}</NavItem>
+            <AuthNavItems onLogout={handleLogout} logoutPending={logoutMutation.isPending} />
           </nav>
 
           <div className="flex items-center gap-1">
@@ -109,9 +176,11 @@ export function AppLayout() {
             <NavItem to="/profile" onClick={closeMobile}>
               {t('nav.profile')}
             </NavItem>
-            <NavItem to="/login" onClick={closeMobile}>
-              {t('nav.login')}
-            </NavItem>
+            <AuthNavItems
+              onNavigate={closeMobile}
+              onLogout={handleLogout}
+              logoutPending={logoutMutation.isPending}
+            />
           </nav>
         )}
       </header>

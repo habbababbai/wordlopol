@@ -5,19 +5,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
 import { renderWithProviders } from '@/test/render';
 
-const resetPasswordMock = vi.hoisted(() => vi.fn());
+const mutateAsyncMock = vi.hoisted(() => vi.fn());
 const navigateMock = vi.fn();
 
-vi.mock('@/api/client', async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
-  return {
-    ...actual,
-    api: {
-      ...(actual.api as Record<string, unknown>),
-      resetPassword: resetPasswordMock,
-    },
-  };
-});
+vi.mock('@/hooks/mutations/use-reset-password-mutation', () => ({
+  useResetPasswordMutation: () => ({
+    mutateAsync: mutateAsyncMock,
+    isPending: false,
+  }),
+}));
 
 vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
@@ -33,7 +29,7 @@ describe('ResetPasswordPage', () => {
   });
 
   beforeEach(() => {
-    resetPasswordMock.mockReset();
+    mutateAsyncMock.mockReset();
     navigateMock.mockReset();
   });
 
@@ -42,7 +38,7 @@ describe('ResetPasswordPage', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: 'Nowe hasło' })).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('Brak tokenu w linku');
-    expect(resetPasswordMock).not.toHaveBeenCalled();
+    expect(mutateAsyncMock).not.toHaveBeenCalled();
   });
 
   it('shows password mismatch validation error', async () => {
@@ -59,12 +55,12 @@ describe('ResetPasswordPage', () => {
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Hasła nie są identyczne');
     });
-    expect(resetPasswordMock).not.toHaveBeenCalled();
+    expect(mutateAsyncMock).not.toHaveBeenCalled();
   });
 
   it('resets password and redirects to login', async () => {
     const user = userEvent.setup();
-    resetPasswordMock.mockResolvedValueOnce({ message: 'Password reset' });
+    mutateAsyncMock.mockResolvedValueOnce({ message: 'Password reset' });
 
     renderWithProviders(<ResetPasswordPage />, {
       route: '/reset-password?token=valid-token',
@@ -75,7 +71,7 @@ describe('ResetPasswordPage', () => {
     await user.click(screen.getByRole('button', { name: 'Ustaw nowe hasło' }));
 
     await waitFor(() => {
-      expect(resetPasswordMock).toHaveBeenCalledWith({
+      expect(mutateAsyncMock).toHaveBeenCalledWith({
         token: 'valid-token',
         password: 'secure-password',
       });

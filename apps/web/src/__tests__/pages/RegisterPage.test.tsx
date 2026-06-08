@@ -6,18 +6,14 @@ import { ApiError } from '@/api/errors';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { renderWithProviders } from '@/test/render';
 
-const registerMock = vi.hoisted(() => vi.fn());
+const mutateAsyncMock = vi.hoisted(() => vi.fn());
 
-vi.mock('@/api/client', async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
-  return {
-    ...actual,
-    api: {
-      ...(actual.api as Record<string, unknown>),
-      register: registerMock,
-    },
-  };
-});
+vi.mock('@/hooks/mutations/use-register-mutation', () => ({
+  useRegisterMutation: () => ({
+    mutateAsync: mutateAsyncMock,
+    isPending: false,
+  }),
+}));
 
 describe('RegisterPage', () => {
   afterEach(() => {
@@ -25,7 +21,7 @@ describe('RegisterPage', () => {
   });
 
   beforeEach(() => {
-    registerMock.mockReset();
+    mutateAsyncMock.mockReset();
   });
 
   it('renders register fields', () => {
@@ -52,12 +48,12 @@ describe('RegisterPage', () => {
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Hasła nie są identyczne');
     });
-    expect(registerMock).not.toHaveBeenCalled();
+    expect(mutateAsyncMock).not.toHaveBeenCalled();
   });
 
   it('shows success state after registration', async () => {
     const user = userEvent.setup();
-    registerMock.mockResolvedValueOnce({ message: 'Verification email sent' });
+    mutateAsyncMock.mockResolvedValueOnce({ message: 'Verification email sent' });
 
     renderWithProviders(<RegisterPage />, { route: '/register' });
 
@@ -68,7 +64,7 @@ describe('RegisterPage', () => {
     await user.click(screen.getByRole('button', { name: 'Zarejestruj się' }));
 
     await waitFor(() => {
-      expect(registerMock).toHaveBeenCalledWith({
+      expect(mutateAsyncMock).toHaveBeenCalledWith({
         email: 'player@example.com',
         displayName: 'Player',
         password: 'secure-password',
@@ -81,7 +77,7 @@ describe('RegisterPage', () => {
 
   it('shows API error message', async () => {
     const user = userEvent.setup();
-    registerMock.mockRejectedValueOnce(new ApiError(409, 'Email already registered'));
+    mutateAsyncMock.mockRejectedValueOnce(new ApiError(409, 'Email already registered'));
 
     renderWithProviders(<RegisterPage />, { route: '/register' });
 

@@ -1,9 +1,10 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, type RenderOptions, type RenderResult } from '@testing-library/react';
 import type { ReactElement, ReactNode } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 
-import { AuthProvider } from '@/context/AuthProvider';
+import { createQueryClient } from '@/api/create-query-client';
+import { SessionBootstrap } from '@/components/auth/SessionBootstrap';
 import { ThemeProvider } from '@/context/ThemeProvider';
 
 type RenderWithProvidersOptions = {
@@ -14,19 +15,14 @@ export function renderWithProviders(
   ui: ReactElement,
   { route = '/', ...options }: RenderWithProvidersOptions = {},
 ): RenderResult {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-    },
-  });
+  const queryClient = createQueryClient({ retry: false });
 
   function Wrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={[route]}>
-          <AuthProvider>
-            <ThemeProvider>{children}</ThemeProvider>
-          </AuthProvider>
+          <SessionBootstrap />
+          <ThemeProvider>{children}</ThemeProvider>
         </MemoryRouter>
       </QueryClientProvider>
     );
