@@ -70,7 +70,7 @@ Copy root `.env.example` to `.env`. Key variables:
 
 User-facing API changes are recorded in [CHANGELOG.md](./CHANGELOG.md).
 
-- **Do not edit** this file in feature PRs — release-please updates it via a Release PR after merge.
+- **Do not edit** this file in feature PRs — run **Changelog — API** from Actions, then merge the Release PR.
 - Version bumps follow PR title: `fix(api):` patch · `feat(api):` minor · `feat(api)!:` major
 - See [docs/CHANGELOG_AUTOMATION.md](../../docs/CHANGELOG_AUTOMATION.md)
 
