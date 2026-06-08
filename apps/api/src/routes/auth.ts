@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import cookieParser from 'cookie-parser';
 import { z } from 'zod';
 
 import { asyncHandler } from '../lib/async-handler.js';
@@ -15,6 +16,7 @@ import {
   resendVerificationRateLimit,
   verifyEmailRateLimit,
 } from '../middleware/auth-rate-limit.js';
+import { csrfProtection, generateCsrfToken } from '../middleware/csrf.js';
 import {
   changeDisplayName,
   changePassword,
@@ -74,6 +76,17 @@ const deleteAccountSchema = z.object({
 
 export const authRouter: Router = Router();
 
+authRouter.use(cookieParser());
+authRouter.use(csrfProtection);
+
+authRouter.get(
+  '/csrf',
+  asyncHandler(async (req, res) => {
+    const csrfToken = generateCsrfToken(req, res);
+    res.json({ csrfToken });
+  }),
+);
+
 authRouter.post(
   '/register',
   registerRateLimit,
@@ -101,7 +114,8 @@ authRouter.post(
   asyncHandler(async (req, res) => {
     const session = await login(req.body);
     setRefreshCookie(res, session.refreshToken);
-    res.json({ accessToken: session.accessToken, user: session.user });
+    const csrfToken = generateCsrfToken(req, res, { overwrite: true });
+    res.json({ accessToken: session.accessToken, user: session.user, csrfToken });
   }),
 );
 
@@ -117,7 +131,8 @@ authRouter.post(
 
     const session = await refreshSession(refreshToken);
     setRefreshCookie(res, session.refreshToken);
-    res.json({ accessToken: session.accessToken });
+    const csrfToken = generateCsrfToken(req, res, { overwrite: true });
+    res.json({ accessToken: session.accessToken, csrfToken });
   }),
 );
 

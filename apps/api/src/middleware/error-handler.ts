@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
 
 import { HttpError } from '../lib/http-error.js';
+import { isInvalidCsrfTokenError } from './csrf.js';
 
 export function errorHandler(
   error: unknown,
@@ -11,6 +12,11 @@ export function errorHandler(
 ): void {
   if (res.headersSent) {
     next(error);
+    return;
+  }
+
+  if (isInvalidCsrfTokenError(error)) {
+    res.status(403).json({ error: 'Invalid CSRF token' });
     return;
   }
 
