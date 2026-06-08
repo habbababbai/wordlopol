@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
-import { api } from '../api/client';
+import { useResetPasswordMutation } from '../hooks/mutations/use-reset-password-mutation';
 import { AuthFormCard } from '../components/auth/AuthFormCard';
 import { AuthPageLayout } from '../components/auth/AuthPageLayout';
 import { FormField } from '../components/auth/FormField';
@@ -22,6 +22,7 @@ export function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
 
+  const resetPasswordMutation = useResetPasswordMutation();
   const [success, setSuccess] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
@@ -52,7 +53,7 @@ export function ResetPasswordPage() {
     setApiError(null);
 
     try {
-      await api.resetPassword({ token, password: values.password });
+      await resetPasswordMutation.mutateAsync({ token, password: values.password });
       setSuccess(true);
     } catch (err) {
       setApiError(getApiErrorMessage(err, t('common.errors.generic')));
@@ -99,10 +100,14 @@ export function ResetPasswordPage() {
         description={t('auth.resetPassword.description')}
         formProps={{
           onSubmit: (event) => void onSubmit(event),
-          'aria-busy': formState.isSubmitting,
+          'aria-busy': formState.isSubmitting || resetPasswordMutation.isPending,
         }}
         footer={
-          <Button type="submit" className="w-full" disabled={formState.isSubmitting}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={formState.isSubmitting || resetPasswordMutation.isPending}
+          >
             {t('auth.actions.resetPassword')}
           </Button>
         }

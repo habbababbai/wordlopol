@@ -6,15 +6,12 @@ import { ApiError } from '@/api/errors';
 import { LoginPage } from '@/pages/LoginPage';
 import { renderWithProviders } from '@/test/render';
 
-const loginMock = vi.fn();
+const mutateAsyncMock = vi.fn();
 
-vi.mock('@/hooks/useAuth', () => ({
-  useAuth: () => ({
-    user: null,
-    isAuthenticated: false,
-    isLoading: false,
-    login: loginMock,
-    logout: vi.fn(),
+vi.mock('@/hooks/mutations/use-login-mutation', () => ({
+  useLoginMutation: () => ({
+    mutateAsync: mutateAsyncMock,
+    isPending: false,
   }),
 }));
 
@@ -34,7 +31,7 @@ describe('LoginPage', () => {
   });
 
   beforeEach(() => {
-    loginMock.mockReset();
+    mutateAsyncMock.mockReset();
     navigateMock.mockReset();
   });
 
@@ -48,7 +45,7 @@ describe('LoginPage', () => {
 
   it('submits credentials and navigates to returnTo', async () => {
     const user = userEvent.setup();
-    loginMock.mockResolvedValueOnce(undefined);
+    mutateAsyncMock.mockResolvedValueOnce(undefined);
 
     renderWithProviders(<LoginPage />, { route: '/login?returnTo=%2Fprofile' });
 
@@ -57,7 +54,10 @@ describe('LoginPage', () => {
     await user.click(screen.getByRole('button', { name: 'Zaloguj się' }));
 
     await waitFor(() => {
-      expect(loginMock).toHaveBeenCalledWith('player@example.com', 'secure-password');
+      expect(mutateAsyncMock).toHaveBeenCalledWith({
+        email: 'player@example.com',
+        password: 'secure-password',
+      });
       expect(navigateMock).toHaveBeenCalledWith('/profile');
     });
   });
@@ -69,7 +69,7 @@ describe('LoginPage', () => {
     { route: '/login?returnTo=https%3A%2F%2Fevil.com', label: 'external URL' },
   ])('defaults to / when returnTo is invalid ($label)', async ({ route }) => {
     const user = userEvent.setup();
-    loginMock.mockResolvedValueOnce(undefined);
+    mutateAsyncMock.mockResolvedValueOnce(undefined);
 
     renderWithProviders(<LoginPage />, { route });
 
@@ -84,7 +84,7 @@ describe('LoginPage', () => {
 
   it('shows API error message', async () => {
     const user = userEvent.setup();
-    loginMock.mockRejectedValueOnce(new ApiError(401, 'Invalid credentials'));
+    mutateAsyncMock.mockRejectedValueOnce(new ApiError(401, 'Invalid credentials'));
 
     renderWithProviders(<LoginPage />, { route: '/login' });
 

@@ -5,18 +5,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
 import { renderWithProviders } from '@/test/render';
 
-const forgotPasswordMock = vi.hoisted(() => vi.fn());
+const mutateAsyncMock = vi.hoisted(() => vi.fn());
 
-vi.mock('@/api/client', async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
-  return {
-    ...actual,
-    api: {
-      ...(actual.api as Record<string, unknown>),
-      forgotPassword: forgotPasswordMock,
-    },
-  };
-});
+vi.mock('@/hooks/mutations/use-forgot-password-mutation', () => ({
+  useForgotPasswordMutation: () => ({
+    mutateAsync: mutateAsyncMock,
+    isPending: false,
+  }),
+}));
 
 describe('ForgotPasswordPage', () => {
   afterEach(() => {
@@ -24,7 +20,7 @@ describe('ForgotPasswordPage', () => {
   });
 
   beforeEach(() => {
-    forgotPasswordMock.mockReset();
+    mutateAsyncMock.mockReset();
   });
 
   it('renders email field', () => {
@@ -36,7 +32,7 @@ describe('ForgotPasswordPage', () => {
 
   it('shows success message after submit', async () => {
     const user = userEvent.setup();
-    forgotPasswordMock.mockResolvedValueOnce({
+    mutateAsyncMock.mockResolvedValueOnce({
       message: 'If the email exists, instructions were sent',
     });
 
@@ -46,7 +42,7 @@ describe('ForgotPasswordPage', () => {
     await user.click(screen.getByRole('button', { name: 'Przypomnij hasło' }));
 
     await waitFor(() => {
-      expect(forgotPasswordMock).toHaveBeenCalledWith({ email: 'player@example.com' });
+      expect(mutateAsyncMock).toHaveBeenCalledWith({ email: 'player@example.com' });
       expect(
         screen.getByText('Jeśli konto istnieje, wysłaliśmy instrukcje resetu hasła.'),
       ).toBeInTheDocument();
@@ -55,7 +51,7 @@ describe('ForgotPasswordPage', () => {
 
   it('shows same success message for any successful API response', async () => {
     const user = userEvent.setup();
-    forgotPasswordMock.mockResolvedValueOnce({ message: 'Different server message' });
+    mutateAsyncMock.mockResolvedValueOnce({ message: 'Different server message' });
 
     renderWithProviders(<ForgotPasswordPage />, { route: '/forgot-password' });
 

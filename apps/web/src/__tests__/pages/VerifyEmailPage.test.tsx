@@ -5,20 +5,23 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { VerifyEmailPage } from '@/pages/VerifyEmailPage';
 import { renderWithProviders } from '@/test/render';
 
-const verifyEmailMock = vi.hoisted(() => vi.fn());
-const resendVerificationMock = vi.hoisted(() => vi.fn());
+const verifyEmailOnceMock = vi.hoisted(() => vi.fn());
+const resendMutateAsyncMock = vi.hoisted(() => vi.fn());
 
-vi.mock('@/api/client', async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
-  return {
-    ...actual,
-    api: {
-      ...(actual.api as Record<string, unknown>),
-      verifyEmail: verifyEmailMock,
-      resendVerification: resendVerificationMock,
-    },
-  };
-});
+vi.mock('@/hooks/mutations/use-verify-email-mutation', () => ({
+  verifyEmailOnce: verifyEmailOnceMock,
+  useVerifyEmailMutation: () => ({
+    mutateAsync: verifyEmailOnceMock,
+    isPending: false,
+  }),
+}));
+
+vi.mock('@/hooks/mutations/use-resend-verification-mutation', () => ({
+  useResendVerificationMutation: () => ({
+    mutateAsync: resendMutateAsyncMock,
+    isPending: false,
+  }),
+}));
 
 describe('VerifyEmailPage', () => {
   afterEach(() => {
@@ -26,19 +29,19 @@ describe('VerifyEmailPage', () => {
   });
 
   beforeEach(() => {
-    verifyEmailMock.mockReset();
-    resendVerificationMock.mockReset();
+    verifyEmailOnceMock.mockReset();
+    resendMutateAsyncMock.mockReset();
   });
 
   it('auto-verifies when token is present', async () => {
-    verifyEmailMock.mockResolvedValueOnce({ message: 'Email verified' });
+    verifyEmailOnceMock.mockResolvedValueOnce(undefined);
 
     renderWithProviders(<VerifyEmailPage />, {
       route: '/verify-email?token=valid-token',
     });
 
     await waitFor(() => {
-      expect(verifyEmailMock).toHaveBeenCalledWith({ token: 'valid-token' });
+      expect(verifyEmailOnceMock).toHaveBeenCalledWith('valid-token');
       expect(
         screen.getByText('E-mail został potwierdzony. Możesz się zalogować.'),
       ).toBeInTheDocument();
@@ -52,12 +55,12 @@ describe('VerifyEmailPage', () => {
       screen.getByRole('heading', { level: 1, name: 'Weryfikacja e-mail' }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText('E-mail')).toBeInTheDocument();
-    expect(verifyEmailMock).not.toHaveBeenCalled();
+    expect(verifyEmailOnceMock).not.toHaveBeenCalled();
   });
 
   it('submits resend verification form', async () => {
     const user = userEvent.setup();
-    resendVerificationMock.mockResolvedValueOnce({ message: 'Verification email sent' });
+    resendMutateAsyncMock.mockResolvedValueOnce({ message: 'Verification email sent' });
 
     renderWithProviders(<VerifyEmailPage />, { route: '/verify-email' });
 
@@ -65,7 +68,7 @@ describe('VerifyEmailPage', () => {
     await user.click(screen.getByRole('button', { name: 'Wyślij ponownie' }));
 
     await waitFor(() => {
-      expect(resendVerificationMock).toHaveBeenCalledWith({ email: 'player@example.com' });
+      expect(resendMutateAsyncMock).toHaveBeenCalledWith({ email: 'player@example.com' });
       expect(
         screen.getByText('Jeśli konto istnieje, wysłaliśmy nowy link weryfikacyjny.'),
       ).toBeInTheDocument();

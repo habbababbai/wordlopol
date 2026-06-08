@@ -4,12 +4,13 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 
-import { api } from '../api/client';
 import { AuthFormCard } from '../components/auth/AuthFormCard';
 import { AuthPageLayout } from '../components/auth/AuthPageLayout';
 import { FormField } from '../components/auth/FormField';
 import { Spinner } from '../components/ui/loader';
 import { Button } from '../components/ui/button';
+import { useResendVerificationMutation } from '../hooks/mutations/use-resend-verification-mutation';
+import { verifyEmailOnce } from '../hooks/mutations/use-verify-email-mutation';
 import { getApiErrorMessage } from '../lib/api-error-message';
 import type { EmailOnlyFormValues } from '../lib/auth-form-types';
 import { emailOnlySchema } from '../lib/auth-schemas';
@@ -17,29 +18,11 @@ import { getFormFieldError, translateFieldError } from '../lib/field-error';
 
 type VerifyStatus = 'idle' | 'verifying' | 'success' | 'error';
 
-const verifyRequests = new Map<string, Promise<void>>();
-
-function verifyEmailOnce(token: string): Promise<void> {
-  const existing = verifyRequests.get(token);
-  if (existing) {
-    return existing;
-  }
-
-  const request = api
-    .verifyEmail({ token })
-    .then(() => undefined)
-    .finally(() => {
-      verifyRequests.delete(token);
-    });
-
-  verifyRequests.set(token, request);
-  return request;
-}
-
 export function VerifyEmailPage() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
+  const resendVerificationMutation = useResendVerificationMutation();
 
   const [verifyStatus, setVerifyStatus] = useState<VerifyStatus>(token ? 'verifying' : 'idle');
   const [resendSuccess, setResendSuccess] = useState(false);
@@ -80,7 +63,7 @@ export function VerifyEmailPage() {
     setResendSuccess(false);
 
     try {
-      await api.resendVerification({ email: values.email });
+      await resendVerificationMutation.mutateAsync({ email: values.email });
       setResendSuccess(true);
     } catch (err) {
       setResendError(getApiErrorMessage(err, t('common.errors.generic')));
@@ -131,10 +114,14 @@ export function VerifyEmailPage() {
         }
         formProps={{
           onSubmit: (event) => void onResend(event),
-          'aria-busy': formState.isSubmitting,
+          'aria-busy': formState.isSubmitting || resendVerificationMutation.isPending,
         }}
         footer={
-          <Button type="submit" className="w-full" disabled={formState.isSubmitting}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={formState.isSubmitting || resendVerificationMutation.isPending}
+          >
             {t('auth.actions.resendVerification')}
           </Button>
         }
