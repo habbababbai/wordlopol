@@ -52,6 +52,7 @@ describe('e2e: auth flow', () => {
       .expect(200);
 
     expect(verifyAccessToken(loginRes.body.accessToken).userId).toEqual(expect.any(String));
+    expect(loginRes.body.refreshToken).toBeUndefined();
     expect(loginRes.body.user).toEqual({
       id: expect.any(String),
       email: 'e2e-player@example.com',
@@ -63,6 +64,7 @@ describe('e2e: auth flow', () => {
     const refreshRes = await agent.post('/auth/refresh').expect(200);
 
     expect(refreshRes.body.accessToken).toEqual(expect.any(String));
+    expect(refreshRes.body.refreshToken).toBeUndefined();
     expect(refreshRes.headers['set-cookie']?.[0]).toContain('refresh_token=');
   });
 });

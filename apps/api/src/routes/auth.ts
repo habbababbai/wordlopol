@@ -97,7 +97,7 @@ authRouter.post(
   asyncHandler(async (req, res) => {
     const session = await login(req.body);
     setRefreshCookie(res, session.refreshToken);
-    res.json(session);
+    res.json({ accessToken: session.accessToken, user: session.user });
   }),
 );
 
@@ -112,7 +112,7 @@ authRouter.post(
 
     const session = await refreshSession(refreshToken);
     setRefreshCookie(res, session.refreshToken);
-    res.json(session);
+    res.json({ accessToken: session.accessToken });
   }),
 );
 

@@ -24,15 +24,18 @@ import type {
   ChangeDisplayNameResponseDto,
   DevMessageResponseDto,
   LoginRequestDto,
-  LoginSessionDto,
+  LoginResponseDto,
   MessageResponseDto,
-  RefreshSessionDto,
+  RefreshResponseDto,
   RegisterRequestDto,
 } from '@wordlopol/shared';
 
 const BCRYPT_ROUNDS = 12;
 const EMAIL_VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
 const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
+
+type LoginResult = LoginResponseDto & { refreshToken: string };
+type RefreshResult = RefreshResponseDto & { refreshToken: string };
 
 export async function register(data: RegisterRequestDto): Promise<DevMessageResponseDto> {
   const existing = await prisma.user.findUnique({ where: { email: data.email } });
@@ -134,7 +137,7 @@ export async function verifyEmail(token: string): Promise<MessageResponseDto> {
   return { message: 'Email changed' };
 }
 
-export async function login(data: LoginRequestDto): Promise<LoginSessionDto> {
+export async function login(data: LoginRequestDto): Promise<LoginResult> {
   const user = await prisma.user.findUnique({ where: { email: data.email } });
 
   if (!user || !(await bcrypt.compare(data.password, user.passwordHash))) {
@@ -151,7 +154,7 @@ export async function login(data: LoginRequestDto): Promise<LoginSessionDto> {
   return { accessToken, refreshToken, user: toUserProfile(user) };
 }
 
-export async function refreshSession(refreshToken: string): Promise<RefreshSessionDto> {
+export async function refreshSession(refreshToken: string): Promise<RefreshResult> {
   const result = await rotateRefreshToken(refreshToken);
 
   if (!result) {
