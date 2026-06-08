@@ -16,12 +16,6 @@ repo
 - [ ] `pnpm test:all` (if API/web/shared code changed)
 - [ ] Manual checks:
 
-## Changelog
-
-- [ ] **Repo / CI / docs** — edit root [CHANGELOG.md](../CHANGELOG.md) in this PR
-- [ ] **App release** — do **not** edit `apps/*/CHANGELOG.md`; merge to `main`, then run **Changelog — API/Web** from Actions and merge the Release PR
-- [ ] **Docs only** — no changelog entry required
-
 ---
 
 **PR title** (squash merge message): `type(scope): lowercase subject`

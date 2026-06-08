@@ -58,7 +58,7 @@ Same format as commits: `feat(web): add login page`
 
 ### Description
 
-Use [`.github/pull_request_template.md`](../.github/pull_request_template.md). Fill Summary, Scope, Test plan, and Changelog. **CodeRabbit does not edit the description** — reviews appear as inline comments under **Files changed**.
+Use [`.github/pull_request_template.md`](../.github/pull_request_template.md). Fill Summary, Scope, and Test plan. **CodeRabbit does not edit the description** — reviews appear as inline comments under **Files changed**.
 
 ### Scope
 
