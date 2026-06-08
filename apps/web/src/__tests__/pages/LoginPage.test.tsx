@@ -62,6 +62,26 @@ describe('LoginPage', () => {
     });
   });
 
+  it.each([
+    { route: '/login', label: 'missing returnTo' },
+    { route: '/login?returnTo=%2F%2Fevil.com', label: 'protocol-relative URL' },
+    { route: '/login?returnTo=%2F%5Cevil.com', label: 'backslash bypass' },
+    { route: '/login?returnTo=https%3A%2F%2Fevil.com', label: 'external URL' },
+  ])('defaults to / when returnTo is invalid ($label)', async ({ route }) => {
+    const user = userEvent.setup();
+    loginMock.mockResolvedValueOnce(undefined);
+
+    renderWithProviders(<LoginPage />, { route });
+
+    await user.type(screen.getByLabelText('E-mail'), 'player@example.com');
+    await user.type(screen.getByLabelText('Hasło'), 'secure-password');
+    await user.click(screen.getByRole('button', { name: 'Zaloguj się' }));
+
+    await waitFor(() => {
+      expect(navigateMock).toHaveBeenCalledWith('/');
+    });
+  });
+
   it('shows API error message', async () => {
     const user = userEvent.setup();
     loginMock.mockRejectedValueOnce(new ApiError(401, 'Invalid credentials'));

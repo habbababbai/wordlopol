@@ -16,7 +16,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let active = true;
 
     void (async () => {
-      const profile = isPublicAuthPath(pathname) ? null : await tryRestoreSession();
+      const profile =
+        isPublicAuthPath(pathname) || user !== null ? null : await tryRestoreSession();
       if (active && profile) {
         setUser(profile);
       }
@@ -28,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false;
     };
-  }, [pathname]);
+  }, [pathname, user]);
 
   const login = useCallback(async (email: string, password: string) => {
     const { user: nextUser } = await api.login({ email, password });

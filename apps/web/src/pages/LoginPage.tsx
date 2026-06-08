@@ -13,6 +13,7 @@ import { getApiErrorMessage } from '../lib/api-error-message';
 import type { LoginFormValues } from '../lib/auth-form-types';
 import { loginSchema } from '../lib/auth-schemas';
 import { getFormFieldError, translateFieldError } from '../lib/field-error';
+import { resolveReturnTo } from '../lib/return-to';
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -31,8 +32,7 @@ export function LoginPage() {
 
     try {
       await login(values.email, values.password);
-      const returnTo = searchParams.get('returnTo');
-      void navigate(returnTo && returnTo.startsWith('/') ? returnTo : '/');
+      void navigate(resolveReturnTo(searchParams.get('returnTo')));
     } catch (err) {
       setApiError(getApiErrorMessage(err, t('common.errors.generic')));
     }
