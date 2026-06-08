@@ -15,16 +15,16 @@ const queryClient = new QueryClient();
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ThemeProvider>
-          <ToastProvider>
-            <BrowserRouter>
+      <ThemeProvider>
+        <ToastProvider>
+          <BrowserRouter>
+            <AuthProvider>
               <App />
               <Toaster />
-            </BrowserRouter>
-          </ToastProvider>
-        </ThemeProvider>
-      </AuthProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </ToastProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   </StrictMode>,
 );

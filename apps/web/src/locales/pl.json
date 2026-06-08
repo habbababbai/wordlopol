@@ -63,6 +63,66 @@
     "enableLight": "Włącz tryb jasny",
     "enableDark": "Włącz tryb ciemny"
   },
+  "auth": {
+    "fields": {
+      "email": "E-mail",
+      "password": "Hasło",
+      "confirmPassword": "Potwierdź hasło",
+      "displayName": "Nazwa wyświetlana",
+      "newPassword": "Nowe hasło"
+    },
+    "actions": {
+      "login": "Zaloguj się",
+      "register": "Zarejestruj się",
+      "forgotPassword": "Przypomnij hasło",
+      "resetPassword": "Ustaw nowe hasło",
+      "resendVerification": "Wyślij ponownie",
+      "verifyEmail": "Potwierdź e-mail"
+    },
+    "links": {
+      "toLogin": "Masz już konto? Zaloguj się",
+      "toRegister": "Nie masz konta? Zarejestruj się",
+      "forgotPassword": "Zapomniałeś hasła?",
+      "backToLogin": "Wróć do logowania"
+    },
+    "errors": {
+      "required": "To pole jest wymagane",
+      "invalidEmail": "Podaj prawidłowy adres e-mail",
+      "passwordMismatch": "Hasła nie są identyczne",
+      "passwordTooShort": "Hasło musi mieć co najmniej 8 znaków",
+      "missingToken": "Brak tokenu w linku"
+    },
+    "login": {
+      "title": "Logowanie",
+      "description": "Zaloguj się, aby grać bez ograniczeń i śledzić statystyki."
+    },
+    "register": {
+      "title": "Rejestracja",
+      "description": "Utwórz konto, aby grać w trybie nieskończonym.",
+      "successTitle": "Sprawdź skrzynkę e-mail",
+      "successDescription": "Wysłaliśmy link weryfikacyjny. Potwierdź adres, aby dokończyć rejestrację.",
+      "devVerifyLink": "Link deweloperski do weryfikacji"
+    },
+    "verifyEmail": {
+      "title": "Weryfikacja e-mail",
+      "description": "Potwierdzamy Twój adres e-mail.",
+      "verifying": "Trwa weryfikacja…",
+      "success": "E-mail został potwierdzony. Możesz się zalogować.",
+      "error": "Link weryfikacyjny jest nieprawidłowy lub wygasł.",
+      "resendTitle": "Wyślij ponownie link weryfikacyjny",
+      "resendSuccess": "Jeśli konto istnieje, wysłaliśmy nowy link weryfikacyjny."
+    },
+    "forgotPassword": {
+      "title": "Przypomnij hasło",
+      "description": "Podaj e-mail powiązany z kontem. Wyślemy link do resetu hasła.",
+      "success": "Jeśli konto istnieje, wysłaliśmy instrukcje resetu hasła."
+    },
+    "resetPassword": {
+      "title": "Nowe hasło",
+      "description": "Ustaw nowe hasło do swojego konta.",
+      "success": "Hasło zostało zmienione. Za chwilę przekierujemy do logowania."
+    }
+  },
   "pages": {
     "daily": {
       "title": "Wyzwanie dnia",
