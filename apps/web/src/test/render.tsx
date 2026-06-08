@@ -3,6 +3,7 @@ import { render, type RenderOptions, type RenderResult } from '@testing-library/
 import type { ReactElement, ReactNode } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 
+import { AuthProvider } from '@/context/AuthProvider';
 import { ThemeProvider } from '@/context/ThemeProvider';
 
 type RenderWithProvidersOptions = {
@@ -22,9 +23,11 @@ export function renderWithProviders(
   function Wrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
+          </ThemeProvider>
+        </AuthProvider>
       </QueryClientProvider>
     );
   }
