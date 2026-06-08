@@ -2,9 +2,8 @@ import { screen } from '@testing-library/react';
 import { Route, Routes } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 
+import { AppLayout } from '@/components/layout/AppLayout';
 import { renderWithProviders } from '@/test/render';
-
-import { AppLayout } from './AppLayout';
 
 describe('AppLayout', () => {
   it('renders nav links for main routes', () => {

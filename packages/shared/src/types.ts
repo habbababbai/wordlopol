@@ -57,3 +57,12 @@ export interface AuthResponseDto {
   accessToken: string;
   user: UserProfileDto;
 }
+
+export interface DailyGuessRequestDto {
+  guess: string;
+  guessNumber?: number;
+}
+
+export interface InfiniteGuessRequestDto {
+  guess: string;
+}

@@ -5,20 +5,6 @@ import type { UserProfileDto } from '@wordlopol/shared';
 import { api, tryRestoreSession } from '../api/client';
 import { AuthContext } from './auth-context';
 
-function toUserProfile(profile: {
-  id: string;
-  email: string;
-  displayName: string;
-  emailVerified: boolean;
-}): UserProfileDto {
-  return {
-    id: profile.id,
-    email: profile.email,
-    displayName: profile.displayName,
-    emailVerified: profile.emailVerified,
-  };
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfileDto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -29,7 +15,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void (async () => {
       const profile = await tryRestoreSession();
       if (!cancelled && profile) {
-        setUser(toUserProfile(profile));
+        setUser(profile);
       }
       if (!cancelled) {
         setIsLoading(false);

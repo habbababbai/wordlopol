@@ -20,17 +20,21 @@ import { withDevToken } from '../lib/dev-auth-tokens.js';
 import { HttpError } from '../lib/http-error.js';
 import { isUniqueConstraintError } from '../lib/prisma-errors.js';
 import { toUserProfile } from '../lib/user-profile.js';
-import type { UserProfileDto } from '@wordlopol/shared';
+import type {
+  ChangeDisplayNameResponseDto,
+  DevMessageResponseDto,
+  LoginRequestDto,
+  LoginSessionDto,
+  MessageResponseDto,
+  RefreshSessionDto,
+  RegisterRequestDto,
+} from '@wordlopol/shared';
 
 const BCRYPT_ROUNDS = 12;
 const EMAIL_VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
 const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
 
-export async function register(data: {
-  email: string;
-  password: string;
-  displayName: string;
-}): Promise<{ message: string }> {
+export async function register(data: RegisterRequestDto): Promise<DevMessageResponseDto> {
   const existing = await prisma.user.findUnique({ where: { email: data.email } });
 
   if (existing) {
@@ -79,7 +83,7 @@ export async function register(data: {
   );
 }
 
-export async function verifyEmail(token: string): Promise<{ message: string }> {
+export async function verifyEmail(token: string): Promise<MessageResponseDto> {
   const record = await prisma.emailVerificationToken.findUnique({
     where: { tokenHash: hashToken(token) },
   });
@@ -131,10 +135,7 @@ export async function verifyEmail(token: string): Promise<{ message: string }> {
   throw new HttpError(400, 'Invalid or expired verification token');
 }
 
-export async function login(data: {
-  email: string;
-  password: string;
-}): Promise<{ accessToken: string; refreshToken: string; user: UserProfileDto }> {
+export async function login(data: LoginRequestDto): Promise<LoginSessionDto> {
   const user = await prisma.user.findUnique({ where: { email: data.email } });
 
   if (!user || !(await bcrypt.compare(data.password, user.passwordHash))) {
@@ -151,9 +152,7 @@ export async function login(data: {
   return { accessToken, refreshToken, user: toUserProfile(user) };
 }
 
-export async function refreshSession(
-  refreshToken: string,
-): Promise<{ accessToken: string; refreshToken: string }> {
+export async function refreshSession(refreshToken: string): Promise<RefreshSessionDto> {
   const result = await rotateRefreshToken(refreshToken);
 
   if (!result) {
@@ -176,9 +175,7 @@ export async function logoutAll(userId: string): Promise<void> {
   await revokeAllRefreshTokens(userId);
 }
 
-export async function resendVerification(
-  email: string,
-): Promise<{ message: string; devToken?: string }> {
+export async function resendVerification(email: string): Promise<DevMessageResponseDto> {
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (user && !user.emailVerifiedAt) {
@@ -210,9 +207,7 @@ export async function resendVerification(
   return { message: 'If the email exists and is unverified, a verification link was sent' };
 }
 
-export async function forgotPassword(
-  email: string,
-): Promise<{ message: string; devToken?: string }> {
+export async function forgotPassword(email: string): Promise<DevMessageResponseDto> {
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (user) {
@@ -244,7 +239,7 @@ export async function forgotPassword(
 export async function resetPassword(
   token: string,
   newPassword: string,
-): Promise<{ message: string }> {
+): Promise<MessageResponseDto> {
   const record = await prisma.passwordResetToken.findUnique({
     where: { tokenHash: hashToken(token) },
   });
@@ -269,7 +264,7 @@ export async function changePassword(
   userId: string,
   currentPassword: string,
   newPassword: string,
-): Promise<{ message: string }> {
+): Promise<MessageResponseDto> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
 
   if (!user || !(await bcrypt.compare(currentPassword, user.passwordHash))) {
@@ -290,7 +285,7 @@ export async function changePassword(
 export async function requestEmailChange(
   userId: string,
   newEmail: string,
-): Promise<{ message: string }> {
+): Promise<DevMessageResponseDto> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
 
   if (!user) {
@@ -316,7 +311,7 @@ export async function requestEmailChange(
 export async function changeDisplayName(
   userId: string,
   displayName: string,
-): Promise<{ user: UserProfileDto }> {
+): Promise<ChangeDisplayNameResponseDto> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
 
   if (!user) {
@@ -335,10 +330,7 @@ export async function changeDisplayName(
   return { user: toUserProfile(updated) };
 }
 
-export async function deleteAccount(
-  userId: string,
-  password: string,
-): Promise<{ message: string }> {
+export async function deleteAccount(userId: string, password: string): Promise<MessageResponseDto> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
 
   if (!user || !(await bcrypt.compare(password, user.passwordHash))) {

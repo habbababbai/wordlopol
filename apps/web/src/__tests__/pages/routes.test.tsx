@@ -2,17 +2,16 @@ import { screen } from '@testing-library/react';
 import type { ComponentType } from 'react';
 import { describe, expect, it } from 'vitest';
 
+import { DailyPage } from '@/pages/DailyPage';
+import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
+import { InfinitePage } from '@/pages/InfinitePage';
+import { LoginPage } from '@/pages/LoginPage';
+import { ProfilePage } from '@/pages/ProfilePage';
+import { RegisterPage } from '@/pages/RegisterPage';
+import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
+import { SettingsPage } from '@/pages/SettingsPage';
+import { VerifyEmailPage } from '@/pages/VerifyEmailPage';
 import { renderWithProviders } from '@/test/render';
-
-import { DailyPage } from './DailyPage';
-import { ForgotPasswordPage } from './ForgotPasswordPage';
-import { InfinitePage } from './InfinitePage';
-import { LoginPage } from './LoginPage';
-import { ProfilePage } from './ProfilePage';
-import { RegisterPage } from './RegisterPage';
-import { ResetPasswordPage } from './ResetPasswordPage';
-import { SettingsPage } from './SettingsPage';
-import { VerifyEmailPage } from './VerifyEmailPage';
 
 const stubPages: { title: string; Page: ComponentType }[] = [
   { title: 'Wyzwanie dnia', Page: DailyPage },

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { MAX_GUESSES } from '@wordlopol/shared';
+import { MAX_GUESSES, type DailyGuessRequestDto } from '@wordlopol/shared';
 
 import { asyncHandler } from '../lib/async-handler.js';
 import { validateBody } from '../lib/validate-body.js';
@@ -10,7 +10,7 @@ import { getTodayChallenge, submitDailyGuess } from '../services/daily.js';
 const guessSchema = z.object({
   guess: z.string().trim().min(1),
   guessNumber: z.number().int().min(1).max(MAX_GUESSES).optional(),
-});
+}) satisfies z.ZodType<DailyGuessRequestDto>;
 
 export const dailyRouter: Router = Router();
 

@@ -1,16 +1,19 @@
-import type { AuthResponseDto, UserProfileResponseDto } from '@wordlopol/shared';
-
-import { ApiError } from './errors';
 import type {
-  DevTokenResponseDto,
-  EmailOnlyRequest,
-  LoginRequest,
+  ApiErrorResponseDto,
+  AuthResponseDto,
+  DevMessageResponseDto,
+  EmailOnlyRequestDto,
+  HealthResponseDto,
+  LoginRequestDto,
   MessageResponseDto,
   RefreshResponseDto,
-  RegisterRequest,
-  ResetPasswordRequest,
-  VerifyEmailRequest,
-} from './types';
+  RegisterRequestDto,
+  ResetPasswordRequestDto,
+  UserProfileResponseDto,
+  VerifyEmailRequestDto,
+} from '@wordlopol/shared';
+
+import { ApiError } from './errors';
 import { clearAccessToken, getAccessToken, setAccessToken } from './token';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? '/api';
@@ -36,7 +39,7 @@ export function redirectToLogin(): void {
 
 async function parseErrorMessage(res: Response): Promise<string> {
   try {
-    const data = (await res.json()) as { error?: string };
+    const data = (await res.json()) as ApiErrorResponseDto;
     return data.error ?? 'Request failed';
   } catch {
     return 'Request failed';
@@ -130,9 +133,9 @@ export async function tryRestoreSession(): Promise<UserProfileResponseDto | null
 }
 
 export const api = {
-  getHealth: () => request<{ status: string }>('/health'),
+  getHealth: () => request<HealthResponseDto>('/health'),
 
-  login: async (body: LoginRequest) => {
+  login: async (body: LoginRequestDto) => {
     const data = await request<AuthResponseDto>('/auth/login', { method: 'POST', body });
     setAccessToken(data.accessToken);
     return data;
@@ -157,27 +160,27 @@ export const api = {
 
   getProfile: () => request<UserProfileResponseDto>('/user/profile'),
 
-  register: (body: RegisterRequest) =>
-    request<MessageResponseDto & DevTokenResponseDto>('/auth/register', {
+  register: (body: RegisterRequestDto) =>
+    request<DevMessageResponseDto>('/auth/register', {
       method: 'POST',
       body,
     }),
 
-  verifyEmail: (body: VerifyEmailRequest) =>
+  verifyEmail: (body: VerifyEmailRequestDto) =>
     request<MessageResponseDto>('/auth/verify-email', { method: 'POST', body }),
 
-  resendVerification: (body: EmailOnlyRequest) =>
-    request<MessageResponseDto & DevTokenResponseDto>('/auth/resend-verification', {
+  resendVerification: (body: EmailOnlyRequestDto) =>
+    request<DevMessageResponseDto>('/auth/resend-verification', {
       method: 'POST',
       body,
     }),
 
-  forgotPassword: (body: EmailOnlyRequest) =>
-    request<MessageResponseDto & DevTokenResponseDto>('/auth/forgot-password', {
+  forgotPassword: (body: EmailOnlyRequestDto) =>
+    request<DevMessageResponseDto>('/auth/forgot-password', {
       method: 'POST',
       body,
     }),
 
-  resetPassword: (body: ResetPasswordRequest) =>
+  resetPassword: (body: ResetPasswordRequestDto) =>
     request<MessageResponseDto>('/auth/reset-password', { method: 'POST', body }),
 };
