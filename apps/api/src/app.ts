@@ -4,6 +4,7 @@ import express, { type Express } from 'express';
 import helmet from 'helmet';
 import { env } from './config/env.js';
 import { prisma } from './lib/prisma.js';
+import { errorHandler } from './middleware/error-handler.js';
 import { authRouter } from './routes/auth.js';
 import { dailyRouter } from './routes/daily.js';
 import { infiniteRouter } from './routes/infinite.js';
@@ -39,6 +40,8 @@ export function createApp(): Express {
       res.status(503).json({ status: 'degraded', database: 'disconnected' });
     }
   });
+
+  app.use(errorHandler);
 
   return app;
 }

@@ -1,7 +1,18 @@
 import { Router } from 'express';
 import { z } from 'zod';
+
+import { asyncHandler } from '../lib/async-handler.js';
+import { HttpError } from '../lib/http-error.js';
+import { validateBody } from '../lib/validate-body.js';
+import { clearRefreshCookie, REFRESH_COOKIE_NAME, setRefreshCookie } from '../lib/tokens.js';
+import { authenticate } from '../middleware/authenticate.js';
 import {
-  AuthError,
+  forgotPasswordRateLimit,
+  loginRateLimit,
+  registerRateLimit,
+  resendVerificationRateLimit,
+} from '../middleware/auth-rate-limit.js';
+import {
   changeDisplayName,
   changePassword,
   deleteAccount,
@@ -16,14 +27,6 @@ import {
   resetPassword,
   verifyEmail,
 } from '../services/auth.js';
-import { clearRefreshCookie, REFRESH_COOKIE_NAME, setRefreshCookie } from '../lib/tokens.js';
-import { authenticate } from '../middleware/authenticate.js';
-import {
-  forgotPasswordRateLimit,
-  loginRateLimit,
-  registerRateLimit,
-  resendVerificationRateLimit,
-} from '../middleware/auth-rate-limit.js';
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -66,45 +69,23 @@ const deleteAccountSchema = z.object({
   password: z.string().min(1),
 });
 
-function handleAuthRoute(
-  handler: (req: import('express').Request, res: import('express').Response) => Promise<void>,
-) {
-  return async (req: import('express').Request, res: import('express').Response) => {
-    try {
-      await handler(req, res);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ error: 'Invalid request' });
-        return;
-      }
-
-      if (error instanceof AuthError) {
-        res.status(error.statusCode).json({ error: error.message });
-        return;
-      }
-
-      throw error;
-    }
-  };
-}
-
 export const authRouter: Router = Router();
 
 authRouter.post(
   '/register',
   registerRateLimit,
-  handleAuthRoute(async (req, res) => {
-    const body = registerSchema.parse(req.body);
-    const result = await register(body);
+  validateBody(registerSchema),
+  asyncHandler(async (req, res) => {
+    const result = await register(req.body);
     res.status(201).json(result);
   }),
 );
 
 authRouter.post(
   '/verify-email',
-  handleAuthRoute(async (req, res) => {
-    const { token } = verifyEmailSchema.parse(req.body);
-    const result = await verifyEmail(token);
+  validateBody(verifyEmailSchema),
+  asyncHandler(async (req, res) => {
+    const result = await verifyEmail(req.body.token);
     res.json(result);
   }),
 );
@@ -112,9 +93,9 @@ authRouter.post(
 authRouter.post(
   '/login',
   loginRateLimit,
-  handleAuthRoute(async (req, res) => {
-    const body = loginSchema.parse(req.body);
-    const { accessToken, refreshToken, user } = await login(body);
+  validateBody(loginSchema),
+  asyncHandler(async (req, res) => {
+    const { accessToken, refreshToken, user } = await login(req.body);
     setRefreshCookie(res, refreshToken);
     res.json({ accessToken, user });
   }),
@@ -122,11 +103,11 @@ authRouter.post(
 
 authRouter.post(
   '/refresh',
-  handleAuthRoute(async (req, res) => {
+  asyncHandler(async (req, res) => {
     const refreshToken = req.cookies[REFRESH_COOKIE_NAME] as string | undefined;
 
     if (!refreshToken) {
-      throw new AuthError(401, 'Missing refresh token');
+      throw new HttpError(401, 'Missing refresh token');
     }
 
     const { accessToken, refreshToken: newRefreshToken } = await refreshSession(refreshToken);
@@ -137,7 +118,7 @@ authRouter.post(
 
 authRouter.post(
   '/logout',
-  handleAuthRoute(async (req, res) => {
+  asyncHandler(async (req, res) => {
     const refreshToken = req.cookies[REFRESH_COOKIE_NAME] as string | undefined;
     await logout(refreshToken);
     clearRefreshCookie(res);
@@ -148,7 +129,7 @@ authRouter.post(
 authRouter.post(
   '/logout-all',
   authenticate,
-  handleAuthRoute(async (req, res) => {
+  asyncHandler(async (req, res) => {
     await logoutAll(req.userId!);
     clearRefreshCookie(res);
     res.json({ message: 'Logged out from all devices' });
@@ -158,9 +139,9 @@ authRouter.post(
 authRouter.post(
   '/forgot-password',
   forgotPasswordRateLimit,
-  handleAuthRoute(async (req, res) => {
-    const { email } = emailOnlySchema.parse(req.body);
-    const result = await forgotPassword(email);
+  validateBody(emailOnlySchema),
+  asyncHandler(async (req, res) => {
+    const result = await forgotPassword(req.body.email);
     res.json(result);
   }),
 );
@@ -168,18 +149,18 @@ authRouter.post(
 authRouter.post(
   '/resend-verification',
   resendVerificationRateLimit,
-  handleAuthRoute(async (req, res) => {
-    const { email } = emailOnlySchema.parse(req.body);
-    const result = await resendVerification(email);
+  validateBody(emailOnlySchema),
+  asyncHandler(async (req, res) => {
+    const result = await resendVerification(req.body.email);
     res.json(result);
   }),
 );
 
 authRouter.post(
   '/reset-password',
-  handleAuthRoute(async (req, res) => {
-    const body = resetPasswordSchema.parse(req.body);
-    const result = await resetPassword(body.token, body.password);
+  validateBody(resetPasswordSchema),
+  asyncHandler(async (req, res) => {
+    const result = await resetPassword(req.body.token, req.body.password);
     res.json(result);
   }),
 );
@@ -187,9 +168,13 @@ authRouter.post(
 authRouter.patch(
   '/change-password',
   authenticate,
-  handleAuthRoute(async (req, res) => {
-    const body = changePasswordSchema.parse(req.body);
-    const result = await changePassword(req.userId!, body.currentPassword, body.newPassword);
+  validateBody(changePasswordSchema),
+  asyncHandler(async (req, res) => {
+    const result = await changePassword(
+      req.userId!,
+      req.body.currentPassword,
+      req.body.newPassword,
+    );
     clearRefreshCookie(res);
     res.json(result);
   }),
@@ -198,9 +183,9 @@ authRouter.patch(
 authRouter.patch(
   '/change-email',
   authenticate,
-  handleAuthRoute(async (req, res) => {
-    const { newEmail } = changeEmailSchema.parse(req.body);
-    const result = await requestEmailChange(req.userId!, newEmail);
+  validateBody(changeEmailSchema),
+  asyncHandler(async (req, res) => {
+    const result = await requestEmailChange(req.userId!, req.body.newEmail);
     res.json(result);
   }),
 );
@@ -208,9 +193,9 @@ authRouter.patch(
 authRouter.patch(
   '/change-display-name',
   authenticate,
-  handleAuthRoute(async (req, res) => {
-    const { displayName } = changeDisplayNameSchema.parse(req.body);
-    const result = await changeDisplayName(req.userId!, displayName);
+  validateBody(changeDisplayNameSchema),
+  asyncHandler(async (req, res) => {
+    const result = await changeDisplayName(req.userId!, req.body.displayName);
     res.json(result);
   }),
 );
@@ -218,9 +203,9 @@ authRouter.patch(
 authRouter.delete(
   '/account',
   authenticate,
-  handleAuthRoute(async (req, res) => {
-    const { password } = deleteAccountSchema.parse(req.body);
-    const result = await deleteAccount(req.userId!, password);
+  validateBody(deleteAccountSchema),
+  asyncHandler(async (req, res) => {
+    const result = await deleteAccount(req.userId!, req.body.password);
     clearRefreshCookie(res);
     res.json(result);
   }),

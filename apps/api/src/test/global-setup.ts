@@ -41,12 +41,31 @@ async function ensureTestDatabase(): Promise<void> {
   }
 }
 
-export default async function globalSetup(): Promise<void> {
-  await ensureTestDatabase();
+function isConnectionRefused(error: unknown): boolean {
+  if (error instanceof AggregateError) {
+    return error.errors.some((cause) => (cause as NodeJS.ErrnoException).code === 'ECONNREFUSED');
+  }
 
-  execSync('pnpm exec prisma migrate deploy', {
-    cwd: apiRoot,
-    env: { ...process.env, DATABASE_URL: TEST_DATABASE_URL },
-    stdio: 'inherit',
-  });
+  return (error as NodeJS.ErrnoException).code === 'ECONNREFUSED';
+}
+
+export default async function globalSetup(): Promise<void> {
+  try {
+    await ensureTestDatabase();
+
+    execSync('pnpm exec prisma migrate deploy', {
+      cwd: apiRoot,
+      env: { ...process.env, DATABASE_URL: TEST_DATABASE_URL },
+      stdio: 'inherit',
+    });
+  } catch (error) {
+    if (isConnectionRefused(error)) {
+      throw new Error(
+        'Test database unavailable at localhost:5433. Run `docker compose up -d` from the repo root.',
+        { cause: error },
+      );
+    }
+
+    throw error;
+  }
 }
