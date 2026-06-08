@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -17,11 +17,29 @@ import { getFormFieldError, translateFieldError } from '../lib/field-error';
 
 type VerifyStatus = 'idle' | 'verifying' | 'success' | 'error';
 
+const verifyRequests = new Map<string, Promise<void>>();
+
+function verifyEmailOnce(token: string): Promise<void> {
+  const existing = verifyRequests.get(token);
+  if (existing) {
+    return existing;
+  }
+
+  const request = api
+    .verifyEmail({ token })
+    .then(() => undefined)
+    .finally(() => {
+      verifyRequests.delete(token);
+    });
+
+  verifyRequests.set(token, request);
+  return request;
+}
+
 export function VerifyEmailPage() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
-  const verifyStarted = useRef(false);
 
   const [verifyStatus, setVerifyStatus] = useState<VerifyStatus>(token ? 'verifying' : 'idle');
   const [resendSuccess, setResendSuccess] = useState(false);
@@ -33,28 +51,27 @@ export function VerifyEmailPage() {
   });
 
   useEffect(() => {
-    if (!token || verifyStarted.current) {
+    if (!token) {
       return;
     }
 
-    verifyStarted.current = true;
-    let cancelled = false;
+    let active = true;
 
     void (async () => {
       try {
-        await api.verifyEmail({ token });
-        if (!cancelled) {
+        await verifyEmailOnce(token);
+        if (active) {
           setVerifyStatus('success');
         }
       } catch {
-        if (!cancelled) {
+        if (active) {
           setVerifyStatus('error');
         }
       }
     })();
 
     return () => {
-      cancelled = true;
+      active = false;
     };
   }, [token]);
 

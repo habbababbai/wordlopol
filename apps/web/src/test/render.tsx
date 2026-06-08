@@ -23,11 +23,11 @@ export function renderWithProviders(
   function Wrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <ThemeProvider>
-            <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
-          </ThemeProvider>
-        </AuthProvider>
+        <MemoryRouter initialEntries={[route]}>
+          <AuthProvider>
+            <ThemeProvider>{children}</ThemeProvider>
+          </AuthProvider>
+        </MemoryRouter>
       </QueryClientProvider>
     );
   }

@@ -1,31 +1,34 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 
 import type { UserProfileDto } from '@wordlopol/shared';
 
 import { api, tryRestoreSession } from '../api/client';
+import { isPublicAuthPath } from '../lib/public-auth-paths';
 import { AuthContext } from './auth-context';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation();
   const [user, setUser] = useState<UserProfileDto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let cancelled = false;
+    let active = true;
 
     void (async () => {
-      const profile = await tryRestoreSession();
-      if (!cancelled && profile) {
+      const profile = isPublicAuthPath(pathname) ? null : await tryRestoreSession();
+      if (active && profile) {
         setUser(profile);
       }
-      if (!cancelled) {
+      if (active) {
         setIsLoading(false);
       }
     })();
 
     return () => {
-      cancelled = true;
+      active = false;
     };
-  }, []);
+  }, [pathname]);
 
   const login = useCallback(async (email: string, password: string) => {
     const { user: nextUser } = await api.login({ email, password });
