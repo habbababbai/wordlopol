@@ -121,6 +121,10 @@
       "title": "Nowe hasło",
       "description": "Ustaw nowe hasło do swojego konta.",
       "success": "Hasło zostało zmienione. Za chwilę przekierujemy do logowania."
+    },
+    "guards": {
+      "emailNotVerified": "Potwierdź adres e-mail, aby korzystać z tej funkcji.",
+      "verifyEmailLink": "Przejdź do weryfikacji e-mail"
     }
   },
   "pages": {
