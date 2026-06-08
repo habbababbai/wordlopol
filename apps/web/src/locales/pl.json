@@ -138,7 +138,24 @@
     },
     "profile": {
       "title": "Profil",
-      "description": "Statystyki gracza — wkrótce."
+      "loading": "Ładowanie profilu…",
+      "errorTitle": "Nie udało się wczytać profilu",
+      "errorMessage": "Sprawdź połączenie i spróbuj ponownie.",
+      "retry": "Spróbuj ponownie",
+      "emailVerified": "Zweryfikowany",
+      "emailNotVerified": "Niezweryfikowany",
+      "stats": {
+        "title": "Statystyki",
+        "played": "Rozegrane",
+        "won": "Wygrane",
+        "winRate": "Skuteczność",
+        "daily": {
+          "title": "Tryb dzienny"
+        },
+        "infinite": {
+          "title": "Tryb nieskończony"
+        }
+      }
     },
     "login": {
       "title": "Logowanie",
