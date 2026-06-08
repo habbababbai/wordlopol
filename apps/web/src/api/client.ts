@@ -1,12 +1,9 @@
 import type {
-  ApiErrorResponseDto,
-  AuthResponseDto,
   DevMessageResponseDto,
   EmailOnlyRequestDto,
   HealthResponseDto,
   LoginRequestDto,
   MessageResponseDto,
-  RefreshResponseDto,
   RegisterRequestDto,
   ResetPasswordRequestDto,
   UserProfileResponseDto,
@@ -14,6 +11,7 @@ import type {
 } from '@wordlopol/shared';
 
 import { ApiError } from './errors';
+import { parseApiErrorMessage, parseAuthResponse, parseRefreshResponse } from './parse-response';
 import { clearAccessToken, getAccessToken, setAccessToken } from './token';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? '/api';
@@ -39,8 +37,8 @@ export function redirectToLogin(): void {
 
 async function parseErrorMessage(res: Response): Promise<string> {
   try {
-    const data = (await res.json()) as ApiErrorResponseDto;
-    return data.error ?? 'Request failed';
+    const data: unknown = await res.json();
+    return parseApiErrorMessage(data);
   } catch {
     return 'Request failed';
   }
@@ -58,9 +56,10 @@ async function refreshAccessToken(): Promise<string> {
         throw new ApiError(res.status, await parseErrorMessage(res));
       }
 
-      const data = (await res.json()) as RefreshResponseDto;
-      setAccessToken(data.accessToken);
-      return data.accessToken;
+      const data: unknown = await res.json();
+      const session = parseRefreshResponse(data);
+      setAccessToken(session.accessToken);
+      return session.accessToken;
     })().finally(() => {
       refreshPromise = null;
     });
@@ -120,11 +119,12 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
 export async function tryRestoreSession(): Promise<UserProfileResponseDto | null> {
   try {
-    const data = await request<RefreshResponseDto>('/auth/refresh', {
+    const data: unknown = await request('/auth/refresh', {
       method: 'POST',
       skipRefresh: true,
     });
-    setAccessToken(data.accessToken);
+    const session = parseRefreshResponse(data);
+    setAccessToken(session.accessToken);
     return await request<UserProfileResponseDto>('/user/profile');
   } catch {
     clearAccessToken();
@@ -136,9 +136,10 @@ export const api = {
   getHealth: () => request<HealthResponseDto>('/health'),
 
   login: async (body: LoginRequestDto) => {
-    const data = await request<AuthResponseDto>('/auth/login', { method: 'POST', body });
-    setAccessToken(data.accessToken);
-    return data;
+    const data: unknown = await request('/auth/login', { method: 'POST', body });
+    const session = parseAuthResponse(data);
+    setAccessToken(session.accessToken);
+    return session;
   },
 
   logout: async () => {
@@ -150,12 +151,13 @@ export const api = {
   },
 
   refresh: async () => {
-    const data = await request<RefreshResponseDto>('/auth/refresh', {
+    const data: unknown = await request('/auth/refresh', {
       method: 'POST',
       skipRefresh: true,
     });
-    setAccessToken(data.accessToken);
-    return data;
+    const session = parseRefreshResponse(data);
+    setAccessToken(session.accessToken);
+    return session;
   },
 
   getProfile: () => request<UserProfileResponseDto>('/user/profile'),
