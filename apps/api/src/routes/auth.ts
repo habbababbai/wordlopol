@@ -7,10 +7,13 @@ import { validateBody } from '../lib/validate-body.js';
 import { clearRefreshCookie, REFRESH_COOKIE_NAME, setRefreshCookie } from '../lib/tokens.js';
 import { authenticate } from '../middleware/authenticate.js';
 import {
+  authenticatedRateLimit,
   forgotPasswordRateLimit,
   loginRateLimit,
+  refreshRateLimit,
   registerRateLimit,
   resendVerificationRateLimit,
+  verifyEmailRateLimit,
 } from '../middleware/auth-rate-limit.js';
 import {
   changeDisplayName,
@@ -83,6 +86,7 @@ authRouter.post(
 
 authRouter.post(
   '/verify-email',
+  verifyEmailRateLimit,
   validateBody(verifyEmailSchema),
   asyncHandler(async (req, res) => {
     const result = await verifyEmail(req.body.token);
@@ -103,6 +107,7 @@ authRouter.post(
 
 authRouter.post(
   '/refresh',
+  refreshRateLimit,
   asyncHandler(async (req, res) => {
     const refreshToken = req.cookies[REFRESH_COOKIE_NAME] as string | undefined;
 
@@ -128,6 +133,7 @@ authRouter.post(
 
 authRouter.post(
   '/logout-all',
+  authenticatedRateLimit,
   authenticate,
   asyncHandler(async (req, res) => {
     await logoutAll(req.userId!);
@@ -167,6 +173,7 @@ authRouter.post(
 
 authRouter.patch(
   '/change-password',
+  authenticatedRateLimit,
   authenticate,
   validateBody(changePasswordSchema),
   asyncHandler(async (req, res) => {
@@ -182,6 +189,7 @@ authRouter.patch(
 
 authRouter.patch(
   '/change-email',
+  authenticatedRateLimit,
   authenticate,
   validateBody(changeEmailSchema),
   asyncHandler(async (req, res) => {
@@ -192,6 +200,7 @@ authRouter.patch(
 
 authRouter.patch(
   '/change-display-name',
+  authenticatedRateLimit,
   authenticate,
   validateBody(changeDisplayNameSchema),
   asyncHandler(async (req, res) => {
@@ -202,6 +211,7 @@ authRouter.patch(
 
 authRouter.delete(
   '/account',
+  authenticatedRateLimit,
   authenticate,
   validateBody(deleteAccountSchema),
   asyncHandler(async (req, res) => {
