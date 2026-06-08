@@ -7,6 +7,9 @@ config({ path: resolve(process.cwd(), '.env') });
 
 const DEV_JWT_PLACEHOLDER = 'dev-only-placeholder-secret-min-32-chars!!';
 
+const nodeEnv = process.env.NODE_ENV ?? 'development';
+const defaultRefreshCookiePath = nodeEnv === 'test' ? '/auth' : '/api/auth';
+
 const envSchema = z
   .object({
     DATABASE_URL: z.string().default('postgresql://wordlopol:wordlopol@localhost:5433/wordlopol'),
@@ -19,6 +22,7 @@ const envSchema = z
     TZ: z.string().default('Europe/Warsaw'),
     PORT: z.coerce.number().default(3001),
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+    REFRESH_COOKIE_PATH: z.string().default(defaultRefreshCookiePath),
   })
   .superRefine((data, ctx) => {
     if (data.NODE_ENV !== 'production') {
@@ -45,5 +49,5 @@ const envSchema = z
 
 export const env = envSchema.parse({
   ...process.env,
-  NODE_ENV: process.env.NODE_ENV ?? 'development',
+  NODE_ENV: nodeEnv,
 });
