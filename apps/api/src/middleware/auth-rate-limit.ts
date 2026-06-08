@@ -18,3 +18,7 @@ export const registerRateLimit = createAuthRateLimiter(5);
 export const loginRateLimit = createAuthRateLimiter(10);
 export const forgotPasswordRateLimit = createAuthRateLimiter(5);
 export const resendVerificationRateLimit = createAuthRateLimiter(5);
+export const verifyEmailRateLimit = createAuthRateLimiter(20);
+export const refreshRateLimit = createAuthRateLimiter(60);
+export const authenticatedRateLimit = createAuthRateLimiter(120);
+export const dailyGuessRateLimit = createAuthRateLimiter(120);

@@ -56,6 +56,7 @@ describe('auth register verify login', () => {
       .expect(200);
 
     expect(loginRes.body.accessToken).toEqual(expect.any(String));
+    expect(loginRes.body.refreshToken).toBeUndefined();
     expect(loginRes.body.user).toEqual({
       id: expect.any(String),
       email: 'player@example.com',

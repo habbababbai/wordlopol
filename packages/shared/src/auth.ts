@@ -58,18 +58,11 @@ export interface DeleteAccountRequestDto {
 
 export interface RefreshResponseDto {
   accessToken: string;
-  refreshToken: string;
 }
 
-export interface LoginSessionDto {
+export interface LoginResponseDto {
   accessToken: string;
-  refreshToken: string;
   user: UserProfileDto;
-}
-
-export interface RefreshSessionDto {
-  accessToken: string;
-  refreshToken: string;
 }
 
 export interface ChangeDisplayNameResponseDto {

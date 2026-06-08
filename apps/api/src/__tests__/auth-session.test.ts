@@ -23,6 +23,7 @@ describe('auth session endpoints', () => {
     const refreshRes = await agent.post('/auth/refresh').expect(200);
 
     expect(refreshRes.body.accessToken).toEqual(expect.any(String));
+    expect(refreshRes.body.refreshToken).toBeUndefined();
     expect(refreshRes.headers['set-cookie']?.[0]).toContain('refresh_token=');
   });
 

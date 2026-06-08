@@ -4,6 +4,7 @@ import type { InfiniteGuessRequestDto } from '@wordlopol/shared';
 
 import { asyncHandler } from '../lib/async-handler.js';
 import { validateBody } from '../lib/validate-body.js';
+import { authenticatedRateLimit } from '../middleware/auth-rate-limit.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { requireVerified } from '../middleware/require-verified.js';
 import { getNextWord, submitInfiniteGuess } from '../services/infinite.js';
@@ -16,6 +17,7 @@ export const infiniteRouter: Router = Router();
 
 infiniteRouter.get(
   '/next',
+  authenticatedRateLimit,
   authenticate,
   requireVerified,
   asyncHandler(async (req, res) => {
@@ -26,6 +28,7 @@ infiniteRouter.get(
 
 infiniteRouter.post(
   '/guess',
+  authenticatedRateLimit,
   authenticate,
   requireVerified,
   validateBody(guessSchema),

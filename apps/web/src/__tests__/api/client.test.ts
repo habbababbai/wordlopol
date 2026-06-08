@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { clearAccessToken, getAccessToken, setAccessToken } from '@/api/token';
+import { clearCsrfToken } from '@/api/csrf';
 import { api, redirectToLogin } from '@/api/client';
 
 const API_BASE = '/api';
@@ -18,6 +19,7 @@ describe('api client', () => {
 
   beforeEach(() => {
     clearAccessToken();
+    clearCsrfToken();
     fetchMock.mockReset();
     assignMock.mockReset();
     vi.stubGlobal('fetch', fetchMock);
@@ -48,15 +50,17 @@ describe('api client', () => {
     setAccessToken('expired-token');
     fetchMock
       .mockResolvedValueOnce(jsonResponse({ error: 'Unauthorized' }, 401))
-      .mockResolvedValueOnce(jsonResponse({ accessToken: 'new-token', refreshToken: 'new-rt' }))
+      .mockResolvedValueOnce(jsonResponse({ csrfToken: 'csrf-token' }))
+      .mockResolvedValueOnce(jsonResponse({ accessToken: 'new-token', csrfToken: 'csrf-token' }))
       .mockResolvedValueOnce(jsonResponse({ status: 'ok' }));
 
     const result = await api.getHealth();
 
     expect(result).toEqual({ status: 'ok' });
-    expect(fetchMock).toHaveBeenCalledTimes(3);
-    expect(fetchMock.mock.calls[1]?.[0]).toBe(`${API_BASE}/auth/refresh`);
-    const retryInit = fetchMock.mock.calls[2]?.[1] as RequestInit;
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(`${API_BASE}/auth/csrf`);
+    expect(fetchMock.mock.calls[2]?.[0]).toBe(`${API_BASE}/auth/refresh`);
+    const retryInit = fetchMock.mock.calls[3]?.[1] as RequestInit;
     expect(retryInit.headers).toMatchObject({ Authorization: 'Bearer new-token' });
   });
 
@@ -65,7 +69,8 @@ describe('api client', () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse({ error: 'Unauthorized' }, 401))
       .mockResolvedValueOnce(jsonResponse({ error: 'Unauthorized' }, 401))
-      .mockResolvedValueOnce(jsonResponse({ accessToken: 'new-token', refreshToken: 'new-rt' }))
+      .mockResolvedValueOnce(jsonResponse({ csrfToken: 'csrf-token' }))
+      .mockResolvedValueOnce(jsonResponse({ accessToken: 'new-token', csrfToken: 'csrf-token' }))
       .mockResolvedValueOnce(jsonResponse({ status: 'ok' }))
       .mockResolvedValueOnce(jsonResponse({ id: '123', email: 'user@example.com' }));
 
@@ -73,7 +78,7 @@ describe('api client', () => {
 
     expect(result1).toEqual({ status: 'ok' });
     expect(result2).toEqual({ id: '123', email: 'user@example.com' });
-    expect(fetchMock).toHaveBeenCalledTimes(5);
+    expect(fetchMock).toHaveBeenCalledTimes(6);
 
     const refreshCalls = fetchMock.mock.calls.filter(
       (call) => call[0] === `${API_BASE}/auth/refresh`,

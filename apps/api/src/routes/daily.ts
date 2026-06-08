@@ -4,6 +4,7 @@ import { MAX_GUESSES, type DailyGuessRequestDto } from '@wordlopol/shared';
 
 import { asyncHandler } from '../lib/async-handler.js';
 import { validateBody } from '../lib/validate-body.js';
+import { dailyGuessRateLimit } from '../middleware/auth-rate-limit.js';
 import { optionalAuth } from '../middleware/optional-auth.js';
 import { getTodayChallenge, submitDailyGuess } from '../services/daily.js';
 
@@ -24,6 +25,7 @@ dailyRouter.get(
 
 dailyRouter.post(
   '/guess',
+  dailyGuessRateLimit,
   optionalAuth,
   validateBody(guessSchema),
   asyncHandler(async (req, res) => {

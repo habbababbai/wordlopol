@@ -11,6 +11,13 @@ import type {
 } from '@wordlopol/shared';
 
 import { ApiError } from './errors';
+import {
+  applyCsrfFromResponse,
+  clearCsrfToken,
+  CSRF_HEADER_NAME,
+  ensureCsrfToken,
+  getCsrfToken,
+} from './csrf';
 import { parseApiErrorMessage, parseAuthResponse, parseRefreshResponse } from './parse-response';
 import { clearAccessToken, getAccessToken, setAccessToken } from './token';
 
@@ -47,9 +54,18 @@ async function parseErrorMessage(res: Response): Promise<string> {
 async function refreshAccessToken(): Promise<string> {
   if (!refreshPromise) {
     refreshPromise = (async () => {
+      await ensureCsrfToken(API_BASE);
+
+      const headers: Record<string, string> = {};
+      const csrfToken = getCsrfToken();
+      if (csrfToken) {
+        headers[CSRF_HEADER_NAME] = csrfToken;
+      }
+
       const res = await fetch(`${API_BASE}/auth/refresh`, {
         method: 'POST',
         credentials: 'include',
+        headers,
       });
 
       if (!res.ok) {
@@ -58,6 +74,7 @@ async function refreshAccessToken(): Promise<string> {
 
       const data: unknown = await res.json();
       const session = parseRefreshResponse(data);
+      applyCsrfFromResponse(data);
       setAccessToken(session.accessToken);
       return session.accessToken;
     })().finally(() => {
@@ -86,6 +103,11 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   const token = getAccessToken();
   if (token) {
     headers.Authorization = `Bearer ${token}`;
+  }
+
+  const csrfToken = getCsrfToken();
+  if (csrfToken && method !== 'GET' && method !== 'HEAD') {
+    headers[CSRF_HEADER_NAME] = csrfToken;
   }
 
   const res = await fetch(`${API_BASE}${path}`, {
@@ -119,15 +141,19 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
 export async function tryRestoreSession(): Promise<UserProfileResponseDto | null> {
   try {
+    await ensureCsrfToken(API_BASE);
+
     const data: unknown = await request('/auth/refresh', {
       method: 'POST',
       skipRefresh: true,
     });
     const session = parseRefreshResponse(data);
+    applyCsrfFromResponse(data);
     setAccessToken(session.accessToken);
     return await request<UserProfileResponseDto>('/user/profile');
   } catch {
     clearAccessToken();
+    clearCsrfToken();
     return null;
   }
 }
@@ -138,6 +164,7 @@ export const api = {
   login: async (body: LoginRequestDto) => {
     const data: unknown = await request('/auth/login', { method: 'POST', body });
     const session = parseAuthResponse(data);
+    applyCsrfFromResponse(data);
     setAccessToken(session.accessToken);
     return session;
   },
@@ -147,15 +174,19 @@ export const api = {
       await request<MessageResponseDto>('/auth/logout', { method: 'POST', skipRefresh: true });
     } finally {
       clearAccessToken();
+      clearCsrfToken();
     }
   },
 
   refresh: async () => {
+    await ensureCsrfToken(API_BASE);
+
     const data: unknown = await request('/auth/refresh', {
       method: 'POST',
       skipRefresh: true,
     });
     const session = parseRefreshResponse(data);
+    applyCsrfFromResponse(data);
     setAccessToken(session.accessToken);
     return session;
   },

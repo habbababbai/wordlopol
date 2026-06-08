@@ -1,0 +1,5 @@
+name: wordlopol CodeQL config
+
+paths-ignore:
+  - '**/__tests__/**'
+  - '**/__e2e__/**'

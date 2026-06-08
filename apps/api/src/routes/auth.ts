@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import cookieParser from 'cookie-parser';
 import { z } from 'zod';
 
 import { asyncHandler } from '../lib/async-handler.js';
@@ -7,11 +8,15 @@ import { validateBody } from '../lib/validate-body.js';
 import { clearRefreshCookie, REFRESH_COOKIE_NAME, setRefreshCookie } from '../lib/tokens.js';
 import { authenticate } from '../middleware/authenticate.js';
 import {
+  authenticatedRateLimit,
   forgotPasswordRateLimit,
   loginRateLimit,
+  refreshRateLimit,
   registerRateLimit,
   resendVerificationRateLimit,
+  verifyEmailRateLimit,
 } from '../middleware/auth-rate-limit.js';
+import { csrfProtection, generateCsrfToken } from '../middleware/csrf.js';
 import {
   changeDisplayName,
   changePassword,
@@ -71,6 +76,17 @@ const deleteAccountSchema = z.object({
 
 export const authRouter: Router = Router();
 
+authRouter.use(cookieParser());
+authRouter.use(csrfProtection);
+
+authRouter.get(
+  '/csrf',
+  asyncHandler(async (req, res) => {
+    const csrfToken = generateCsrfToken(req, res);
+    res.json({ csrfToken });
+  }),
+);
+
 authRouter.post(
   '/register',
   registerRateLimit,
@@ -83,6 +99,7 @@ authRouter.post(
 
 authRouter.post(
   '/verify-email',
+  verifyEmailRateLimit,
   validateBody(verifyEmailSchema),
   asyncHandler(async (req, res) => {
     const result = await verifyEmail(req.body.token);
@@ -97,12 +114,14 @@ authRouter.post(
   asyncHandler(async (req, res) => {
     const session = await login(req.body);
     setRefreshCookie(res, session.refreshToken);
-    res.json(session);
+    const csrfToken = generateCsrfToken(req, res, { overwrite: true });
+    res.json({ accessToken: session.accessToken, user: session.user, csrfToken });
   }),
 );
 
 authRouter.post(
   '/refresh',
+  refreshRateLimit,
   asyncHandler(async (req, res) => {
     const refreshToken = req.cookies[REFRESH_COOKIE_NAME] as string | undefined;
 
@@ -112,7 +131,8 @@ authRouter.post(
 
     const session = await refreshSession(refreshToken);
     setRefreshCookie(res, session.refreshToken);
-    res.json(session);
+    const csrfToken = generateCsrfToken(req, res, { overwrite: true });
+    res.json({ accessToken: session.accessToken, csrfToken });
   }),
 );
 
@@ -128,6 +148,7 @@ authRouter.post(
 
 authRouter.post(
   '/logout-all',
+  authenticatedRateLimit,
   authenticate,
   asyncHandler(async (req, res) => {
     await logoutAll(req.userId!);
@@ -167,6 +188,7 @@ authRouter.post(
 
 authRouter.patch(
   '/change-password',
+  authenticatedRateLimit,
   authenticate,
   validateBody(changePasswordSchema),
   asyncHandler(async (req, res) => {
@@ -182,6 +204,7 @@ authRouter.patch(
 
 authRouter.patch(
   '/change-email',
+  authenticatedRateLimit,
   authenticate,
   validateBody(changeEmailSchema),
   asyncHandler(async (req, res) => {
@@ -192,6 +215,7 @@ authRouter.patch(
 
 authRouter.patch(
   '/change-display-name',
+  authenticatedRateLimit,
   authenticate,
   validateBody(changeDisplayNameSchema),
   asyncHandler(async (req, res) => {
@@ -202,6 +226,7 @@ authRouter.patch(
 
 authRouter.delete(
   '/account',
+  authenticatedRateLimit,
   authenticate,
   validateBody(deleteAccountSchema),
   asyncHandler(async (req, res) => {
