@@ -55,5 +55,15 @@ export interface UserProfileResponseDto extends UserProfileDto {
 
 export interface AuthResponseDto {
   accessToken: string;
+  refreshToken: string;
   user: UserProfileDto;
+}
+
+export interface DailyGuessRequestDto {
+  guess: string;
+  guessNumber?: number;
+}
+
+export interface InfiniteGuessRequestDto {
+  guess: string;
 }

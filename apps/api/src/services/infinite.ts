@@ -3,32 +3,17 @@ import {
   MAX_GUESSES,
   WORD_LENGTH,
   buildCyclePickOrder,
-  evaluateGuess,
   pickPoolWordIndexForDate,
   type GuessResultDto,
   type InfiniteWordDto,
 } from '@wordlopol/shared';
+
 import { dateKeyToUtcDate, getCalendarDateKey } from '../lib/daily-date.js';
+import { assertGuessInDictionary, normalizeGuessLength, scoreGuess } from '../lib/guess.js';
+import { HttpError } from '../lib/http-error.js';
 import { prisma } from '../lib/prisma.js';
-
-function isUniqueConstraintError(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    (error as { code: unknown }).code === 'P2002'
-  );
-}
-
-export class InfiniteError extends Error {
-  readonly statusCode: number;
-
-  constructor(statusCode: number, message: string) {
-    super(message);
-    this.name = 'InfiniteError';
-    this.statusCode = statusCode;
-  }
-}
+import { isUniqueConstraintError } from '../lib/prisma-errors.js';
+import { isWordInDictionary } from '../lib/word-dictionary.js';
 
 type PoolEntry = Awaited<ReturnType<typeof getOrCreateDailyPool>>[number];
 
@@ -77,7 +62,7 @@ export async function getOrCreateDailyPool(dateKey: string) {
 
   const words = await loadFiveLetterWords();
   if (words.length === 0) {
-    throw new InfiniteError(503, 'Dictionary not loaded');
+    throw new HttpError(503, 'Dictionary not loaded');
   }
 
   const poolSize = Math.min(INFINITE_POOL_SIZE, words.length);
@@ -99,7 +84,7 @@ export async function getOrCreateDailyPool(dateKey: string) {
     }
 
     if (wordId === undefined) {
-      throw new InfiniteError(503, 'Dictionary not loaded');
+      throw new HttpError(503, 'Dictionary not loaded');
     }
 
     selectedWordIds.add(wordId);
@@ -162,12 +147,12 @@ async function pickNextPoolEntry(
   }
 
   if (nextOrder === null) {
-    throw new InfiniteError(503, 'Dictionary not loaded');
+    throw new HttpError(503, 'Dictionary not loaded');
   }
 
   const entry = pool.find((poolEntry) => poolEntry.order === nextOrder);
   if (!entry) {
-    throw new InfiniteError(503, 'Dictionary not loaded');
+    throw new HttpError(503, 'Dictionary not loaded');
   }
 
   return { entry, cycleNumber: activeCycle };
@@ -260,7 +245,7 @@ export async function completeInfiniteWord(
       });
     } catch (error) {
       if (isUniqueConstraintError(error)) {
-        throw new InfiniteError(409, 'Word already completed');
+        throw new HttpError(409, 'Word already completed');
       }
       throw error;
     }
@@ -325,7 +310,7 @@ async function claimInfiniteGuessSlot(
   });
 
   if (updated.count !== 1) {
-    throw new InfiniteError(409, 'Concurrent guess conflict');
+    throw new HttpError(409, 'Concurrent guess conflict');
   }
 }
 
@@ -333,18 +318,8 @@ export async function submitInfiniteGuess(
   userId: string,
   rawGuess: string,
 ): Promise<GuessResultDto> {
-  const guess = rawGuess.trim().toLowerCase();
-
-  if (guess.length !== WORD_LENGTH) {
-    throw new InfiniteError(400, `Guess must be ${WORD_LENGTH} letters`);
-  }
-
-  const dictionaryWord = await prisma.word.findUnique({
-    where: { text: guess },
-  });
-  if (!dictionaryWord) {
-    throw new InfiniteError(400, 'Not in dictionary');
-  }
+  const guess = normalizeGuessLength(rawGuess);
+  await assertGuessInDictionary(guess, isWordInDictionary);
 
   const dateKey = getCalendarDateKey();
   const date = dateKeyToUtcDate(dateKey);
@@ -354,16 +329,15 @@ export async function submitInfiniteGuess(
   });
 
   if (!playerDay?.currentWordId || !playerDay.word) {
-    throw new InfiniteError(400, 'No word in progress');
+    throw new HttpError(400, 'No word in progress');
   }
 
   if (playerDay.guessCount >= MAX_GUESSES) {
-    throw new InfiniteError(400, 'Game already finished');
+    throw new HttpError(400, 'Game already finished');
   }
 
   const answer = playerDay.word.text;
-  const results = evaluateGuess(guess, answer);
-  const won = results.every((result) => result === 'correct');
+  const { results, won } = scoreGuess(guess, answer);
   const guessNumber = playerDay.guessCount + 1;
   const finished = won || guessNumber === MAX_GUESSES;
 

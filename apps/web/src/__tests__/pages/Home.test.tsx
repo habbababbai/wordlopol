@@ -1,9 +1,8 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
+import { Home } from '@/pages/Home';
 import { renderWithProviders } from '@/test/render';
-
-import { Home } from './Home';
 
 describe('Home', () => {
   it('renders hero, feature cards, and how-to-play section', () => {

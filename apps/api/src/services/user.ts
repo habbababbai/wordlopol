@@ -1,16 +1,8 @@
 import type { UserProfileResponseDto } from '@wordlopol/shared';
-import { toUserProfile, toUserStats } from '../lib/user-profile.js';
+
+import { HttpError } from '../lib/http-error.js';
 import { prisma } from '../lib/prisma.js';
-
-export class UserError extends Error {
-  readonly statusCode: number;
-
-  constructor(statusCode: number, message: string) {
-    super(message);
-    this.name = 'UserError';
-    this.statusCode = statusCode;
-  }
-}
+import { toUserProfile, toUserStats } from '../lib/user-profile.js';
 
 export async function getUserProfile(userId: string): Promise<UserProfileResponseDto> {
   const user = await prisma.user.findUnique({
@@ -19,7 +11,7 @@ export async function getUserProfile(userId: string): Promise<UserProfileRespons
   });
 
   if (!user) {
-    throw new UserError(404, 'User not found');
+    throw new HttpError(404, 'User not found');
   }
 
   return {

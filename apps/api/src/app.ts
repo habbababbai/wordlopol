@@ -2,8 +2,11 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { type Express } from 'express';
 import helmet from 'helmet';
+import type { HealthDegradedResponseDto, HealthOkResponseDto } from '@wordlopol/shared';
+
 import { env } from './config/env.js';
 import { prisma } from './lib/prisma.js';
+import { errorHandler } from './middleware/error-handler.js';
 import { authRouter } from './routes/auth.js';
 import { dailyRouter } from './routes/daily.js';
 import { infiniteRouter } from './routes/infinite.js';
@@ -34,11 +37,19 @@ export function createApp(): Express {
     try {
       await prisma.$queryRaw`SELECT 1`;
       const wordCount = await prisma.word.count();
-      res.json({ status: 'ok', database: 'connected', wordCount });
+      const body: HealthOkResponseDto = {
+        status: 'ok',
+        database: 'connected',
+        wordCount,
+      };
+      res.json(body);
     } catch {
-      res.status(503).json({ status: 'degraded', database: 'disconnected' });
+      const body: HealthDegradedResponseDto = { status: 'degraded', database: 'disconnected' };
+      res.status(503).json(body);
     }
   });
+
+  app.use(errorHandler);
 
   return app;
 }

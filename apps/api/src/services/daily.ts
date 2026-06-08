@@ -1,32 +1,17 @@
 import {
   MAX_GUESSES,
   WORD_LENGTH,
-  evaluateGuess,
   pickWordIndexForDate,
   type DailyChallengeDto,
   type GuessResultDto,
 } from '@wordlopol/shared';
+
 import { dateKeyToUtcDate, getCalendarDateKey } from '../lib/daily-date.js';
+import { assertGuessInDictionary, normalizeGuessLength, scoreGuess } from '../lib/guess.js';
+import { HttpError } from '../lib/http-error.js';
 import { prisma } from '../lib/prisma.js';
-
-function isUniqueConstraintError(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    (error as { code: unknown }).code === 'P2002'
-  );
-}
-
-export class DailyError extends Error {
-  readonly statusCode: number;
-
-  constructor(statusCode: number, message: string) {
-    super(message);
-    this.name = 'DailyError';
-    this.statusCode = statusCode;
-  }
-}
+import { isUniqueConstraintError } from '../lib/prisma-errors.js';
+import { isWordInDictionary } from '../lib/word-dictionary.js';
 
 export async function getOrCreateDailyChallenge(dateKey: string) {
   const date = dateKeyToUtcDate(dateKey);
@@ -44,7 +29,7 @@ export async function getOrCreateDailyChallenge(dateKey: string) {
     where: { length: WORD_LENGTH },
   });
   if (wordCount === 0) {
-    throw new DailyError(503, 'Dictionary not loaded');
+    throw new HttpError(503, 'Dictionary not loaded');
   }
 
   const index = pickWordIndexForDate(dateKey, wordCount);
@@ -55,7 +40,7 @@ export async function getOrCreateDailyChallenge(dateKey: string) {
   });
 
   if (!word) {
-    throw new DailyError(503, 'Dictionary not loaded');
+    throw new HttpError(503, 'Dictionary not loaded');
   }
 
   try {
@@ -109,7 +94,7 @@ async function recordDailyCompletionInTx(
     });
   } catch (error) {
     if (isUniqueConstraintError(error)) {
-      throw new DailyError(409, 'Already played today');
+      throw new HttpError(409, 'Already played today');
     }
     throw error;
   }
@@ -132,34 +117,23 @@ export async function submitDailyGuess(
   rawGuess: string,
   options: SubmitDailyGuessOptions = {},
 ): Promise<GuessResultDto> {
-  const guess = rawGuess.trim().toLowerCase();
-
-  if (guess.length !== WORD_LENGTH) {
-    throw new DailyError(400, `Guess must be ${WORD_LENGTH} letters`);
-  }
+  const guess = normalizeGuessLength(rawGuess);
+  await assertGuessInDictionary(guess, isWordInDictionary);
 
   const dateKey = getCalendarDateKey();
   const date = dateKeyToUtcDate(dateKey);
   const challenge = await getOrCreateDailyChallenge(dateKey);
 
-  const dictionaryWord = await prisma.word.findUnique({
-    where: { text: guess },
-  });
-  if (!dictionaryWord) {
-    throw new DailyError(400, 'Not in dictionary');
-  }
-
   const answer = challenge.word.text;
-  const results = evaluateGuess(guess, answer);
-  const won = results.every((result) => result === 'correct');
+  const { results, won } = scoreGuess(guess, answer);
   const { userId } = options;
 
   if (!userId) {
     if (options.guessNumber == null) {
-      throw new DailyError(400, 'guessNumber is required for guest play');
+      throw new HttpError(400, 'guessNumber is required for guest play');
     }
     if (options.guessNumber < 1 || options.guessNumber > MAX_GUESSES) {
-      throw new DailyError(400, `guessNumber must be between 1 and ${MAX_GUESSES}`);
+      throw new HttpError(400, `guessNumber must be between 1 and ${MAX_GUESSES}`);
     }
     const guessNumber = options.guessNumber;
     const finished = won || guessNumber === MAX_GUESSES;
@@ -182,7 +156,7 @@ export async function submitDailyGuess(
       },
     });
     if (existingResult) {
-      throw new DailyError(409, 'Already played today');
+      throw new HttpError(409, 'Already played today');
     }
 
     const playerDay = await tx.dailyPlayerDay.upsert({
@@ -192,7 +166,7 @@ export async function submitDailyGuess(
     });
 
     if (playerDay.guessCount >= MAX_GUESSES) {
-      throw new DailyError(400, 'Game already finished');
+      throw new HttpError(400, 'Game already finished');
     }
 
     const guessNumber = playerDay.guessCount + 1;
@@ -203,7 +177,7 @@ export async function submitDailyGuess(
       data: { guessCount: guessNumber },
     });
     if (claimed.count !== 1) {
-      throw new DailyError(409, 'Concurrent guess conflict');
+      throw new HttpError(409, 'Concurrent guess conflict');
     }
 
     if (finished) {

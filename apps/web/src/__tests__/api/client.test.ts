@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { clearAccessToken, getAccessToken, setAccessToken } from './token';
-import { api, redirectToLogin } from './client';
+import { clearAccessToken, getAccessToken, setAccessToken } from '@/api/token';
+import { api, redirectToLogin } from '@/api/client';
 
 const API_BASE = '/api';
 

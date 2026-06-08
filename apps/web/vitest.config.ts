@@ -14,14 +14,14 @@ export default defineConfig({
     name: 'web',
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    include: ['src/**/*.test.{ts,tsx}'],
+    include: ['src/__tests__/**/*.test.{ts,tsx}'],
     passWithNoTests: false,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
       reportsDirectory: './coverage',
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/**/*.test.{ts,tsx}', 'src/test/**', 'src/main.tsx', 'src/vite-env.d.ts'],
+      exclude: ['src/__tests__/**', 'src/test/**', 'src/main.tsx', 'src/vite-env.d.ts'],
     },
   },
 });
