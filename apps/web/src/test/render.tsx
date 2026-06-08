@@ -4,7 +4,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 
 import { createQueryClient } from '@/api/create-query-client';
-import { AuthProvider } from '@/context/AuthProvider';
+import { SessionBootstrap } from '@/components/auth/SessionBootstrap';
 import { ThemeProvider } from '@/context/ThemeProvider';
 
 type RenderWithProvidersOptions = {
@@ -21,9 +21,8 @@ export function renderWithProviders(
     return (
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={[route]}>
-          <AuthProvider>
-            <ThemeProvider>{children}</ThemeProvider>
-          </AuthProvider>
+          <SessionBootstrap />
+          <ThemeProvider>{children}</ThemeProvider>
         </MemoryRouter>
       </QueryClientProvider>
     );

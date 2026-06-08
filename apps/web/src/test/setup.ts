@@ -2,8 +2,10 @@ import '@testing-library/jest-dom/vitest';
 import { afterEach, beforeEach, vi } from 'vitest';
 
 import '@/i18n';
+import { resetAuthUiStore } from '@/stores/auth-ui-store';
 
 beforeEach(() => {
+  resetAuthUiStore();
   vi.stubGlobal(
     'fetch',
     vi.fn((input: RequestInfo | URL) => {
