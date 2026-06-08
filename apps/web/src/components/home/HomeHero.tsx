@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 
+import { loginPathWithReturnTo } from '../../lib/return-to';
 import { GameTile, type TileState } from '../GameTile';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -11,6 +13,10 @@ const DEMO_TILES: { letter: string; state: TileState }[] = [
   { letter: 'W', state: 'correct' },
   { letter: 'O', state: 'absent' },
 ];
+
+type HomeHeroProps = {
+  isLoggedIn?: boolean;
+};
 
 function CalendarIcon() {
   return (
@@ -38,8 +44,9 @@ function ArrowRightIcon() {
   );
 }
 
-export function HomeHero() {
+export function HomeHero({ isLoggedIn = false }: HomeHeroProps) {
   const { t } = useTranslation();
+  const infiniteHref = isLoggedIn ? '/infinite' : loginPathWithReturnTo('/infinite');
 
   return (
     <section className="flex w-full flex-col items-center gap-8 text-center">
@@ -73,29 +80,36 @@ export function HomeHero() {
 
       <div className="mx-auto flex w-full max-w-sm flex-col gap-3 sm:flex-row">
         <Button
+          asChild
           size="lg"
           className="w-full flex-1 px-6 py-3.5 sm:grid sm:grid-cols-[1rem_1fr_1rem] sm:items-center sm:justify-items-center"
         >
-          <span className="justify-self-start">
-            <CalendarIcon />
-          </span>
-          <span className="flex-1 text-center sm:flex-none">{t('home.playToday')}</span>
-          <span className="ml-auto justify-self-end sm:ml-0">
-            <ArrowRightIcon />
-          </span>
+          <Link to="/daily">
+            <span className="justify-self-start">
+              <CalendarIcon />
+            </span>
+            <span className="flex-1 text-center sm:flex-none">{t('home.playToday')}</span>
+            <span className="ml-auto justify-self-end sm:ml-0">
+              <ArrowRightIcon />
+            </span>
+          </Link>
         </Button>
-        <Button variant="outline" size="lg" className="w-full flex-1 px-6 py-3.5">
-          <InfinityIcon />
-          {t('home.playInfinite')}
+        <Button asChild variant="outline" size="lg" className="w-full flex-1 px-6 py-3.5">
+          <Link to={infiniteHref}>
+            <InfinityIcon />
+            {t('home.playInfinite')}
+          </Link>
         </Button>
       </div>
 
-      <p className="max-w-sm px-2 text-sm text-muted-foreground">
-        <button type="button" className="cursor-pointer font-medium text-primary">
-          {t('home.registerCta')}
-        </button>{' '}
-        {t('home.guestPrompt')}
-      </p>
+      {!isLoggedIn && (
+        <p className="max-w-sm px-2 text-sm text-muted-foreground">
+          <Link to="/register" className="font-medium text-primary hover:underline">
+            {t('home.registerCta')}
+          </Link>{' '}
+          {t('home.guestPrompt')}
+        </p>
+      )}
     </section>
   );
 }

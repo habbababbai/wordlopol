@@ -1,3 +1,7 @@
+export function loginPathWithReturnTo(returnTo: string): string {
+  return `/login?returnTo=${encodeURIComponent(returnTo)}`;
+}
+
 export function resolveReturnTo(returnTo: string | null): string {
   if (
     !returnTo ||
