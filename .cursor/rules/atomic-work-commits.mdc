@@ -19,13 +19,13 @@ When a plan or user specifies **commit-by-commit**, **atomic**, or **step-by-ste
 
 - **Never push** unless the user asks
 - **Never commit** unless the user asks (propose message; they commit, or they ask you to)
-- One commit message per step; follow [COMMIT_CONVENTIONS.md](../../COMMIT_CONVENTIONS.md)
+- One commit message per step; follow [docs/CONTRIBUTING.md](../../docs/CONTRIBUTING.md)
 - If work was done in one batch, **split into atomic commits** when user asks — stage per commit, don't rewrite unless they prefer revert
 
 ## Conflicting instructions
 
 If one message says "don't stop until done" and another says "commit by commit" — **ask which workflow wins** or follow the more specific/recent instruction. When in doubt, prefer atomic commits for backend plans.
 
-## Plans
+## Scoped work
 
-When implementing from `plans/*.md`, respect the commit breakdown in the plan. Mark one todo/commit in progress at a time.
+When the user scopes work to a milestone or PR, finish that scope only before continuing.

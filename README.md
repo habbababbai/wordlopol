@@ -4,18 +4,9 @@ Polish Wordle-style word game. Guess 5-letter Polish words — diacritics matter
 
 ## Contributing
 
-- **Commits & PRs**: follow [COMMIT_CONVENTIONS.md](./COMMIT_CONVENTIONS.md) — scoped messages like `feat(api): ...`, `fix(web): ...`
-- **Branches**: `feat/api-add-auth`, `fix/web-keyboard`, `chore/repo-ci-setup`
-- **Local hooks** (Husky):
-  - `pre-commit` — Prettier + ESLint on staged files
-  - `commit-msg` — commit message format (Commitlint)
-  - `pre-push` — branch name + Prettier check
-- **PR checks** (GitHub Actions): branch name, PR title, then full CI or light docs-only CI — see [pull_request_template.md](./.github/pull_request_template.md)
-- **Changelogs**: root [CHANGELOG.md](./CHANGELOG.md) (manual) + per-app via release-please — [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md)
-- **CodeRabbit**: inline code review only; **never edits PR description** — [docs/CODERABBIT.md](./docs/CODERABBIT.md)
-- **Supply chain**: pnpm 11 policies, audit CI, Renovate, action pinning — [docs/SUPPLY_CHAIN.md](./docs/SUPPLY_CHAIN.md)
-- **Manual**: `pnpm validate` runs branch + format + lint + typecheck
-- **Plans**: implementation steps live in [`plans/`](./plans/)
+See [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md) — commits (`feat(api): ...`), branches, PRs, releases, Husky hooks, and CI.
+
+Quick checks: `pnpm validate` · `pnpm test:all` (Postgres on 5433). **v1.0 status:** [docs/V1.md](./docs/V1.md).
 
 ## Monorepo structure
 
@@ -28,9 +19,8 @@ wordlopol/
 │   ├── shared/       # Game logic & shared types
 │   ├── eslint-config/
 │   └── tsconfig/
-├── data/
-│   └── words.txt     # Polish word list (you provide)
-└── plans/            # Step-by-step implementation guides
+└── data/
+    └── words.txt     # Polish word list (you provide)
 ```
 
 Future: `apps/mobile/` (React Native + Expo).
@@ -104,34 +94,13 @@ Auth flows (verify email, password reset, change email) use [Resend](https://res
 
 ## Docs
 
-| Document                                                       | Description                                         |
-| -------------------------------------------------------------- | --------------------------------------------------- |
-| [CHANGELOG.md](./CHANGELOG.md)                                 | Repo-level changelog (CI, tooling, docs)            |
-| [COMMIT_CONVENTIONS.md](./COMMIT_CONVENTIONS.md)               | Commit scopes, PR structure, Husky/Commitlint setup |
-| [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md) | App releases, version bumps, release-please         |
-| [docs/CODERABBIT.md](./docs/CODERABBIT.md)                     | CodeRabbit setup and skip rules                     |
-| [apps/api/README.md](./apps/api/README.md)                     | API app overview                                    |
-| [apps/api/docs/API.md](./apps/api/docs/API.md)                 | API endpoints, Postman checklist, testing           |
-| [plans/](./plans/)                                             | Step-by-step implementation guides                  |
-
-### Implementation plans
-
-1. [Initial repo setup](./plans/01-initial-repo-setup.md)
-2. [Architecture](./plans/02-architecture.md)
-3. [Backend implementation](./plans/03-backend-implementation.md)
-4. [Frontend implementation](./plans/04-frontend-implementation.md)
-5. [Future features](./plans/05-future-features.md)
-
-## Roadmap
-
-| Phase  | Scope                                                                             |
-| ------ | --------------------------------------------------------------------------------- |
-| **v1** | Daily word (guests + registered), infinite mode (registered), auth, profile stats |
-| **v2** | Timed mode (5 min, max words)                                                     |
-| **v3** | Multiplayer lobbies (up to 4 players)                                             |
-| **v4** | React Native + Expo app                                                           |
-
-No leaderboards — stats visible only on your own profile.
+| Document                                       | Description                     |
+| ---------------------------------------------- | ------------------------------- |
+| [docs/V1.md](./docs/V1.md)                     | v1.0 done vs remaining          |
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | System design                   |
+| [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md) | Commits, PRs, releases, CI      |
+| [apps/api/docs/API.md](./apps/api/docs/API.md) | API endpoints, Postman, testing |
+| [CHANGELOG.md](./CHANGELOG.md)                 | Repo-level changelog            |
 
 ## Tech stack
 
@@ -142,4 +111,4 @@ No leaderboards — stats visible only on your own profile.
 - **Email**: Resend (verify, reset, change email)
 - **Tooling**: ESLint, Prettier, Husky, GitHub Actions
 
-See [Architecture — token security & logout](./plans/02-architecture.md#token-security) for auth design details.
+See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for system overview and auth summary.

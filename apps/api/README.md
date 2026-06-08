@@ -72,8 +72,8 @@ User-facing API changes are recorded in [CHANGELOG.md](./CHANGELOG.md).
 
 - **Do not edit** this file in feature PRs — run **Changelog — API** from Actions, then merge the Release PR.
 - Version bumps follow PR title: `fix(api):` patch · `feat(api):` minor · `feat(api)!:` major
-- See [docs/CHANGELOG_AUTOMATION.md](../../docs/CHANGELOG_AUTOMATION.md)
+- See [docs/CONTRIBUTING.md](../../docs/CONTRIBUTING.md#releases-and-changelogs)
 
 ## Conventions
 
-Commits and PRs: [COMMIT_CONVENTIONS.md](../../COMMIT_CONVENTIONS.md) — scope `api`, branch `feat/api-description`.
+Commits and PRs: [docs/CONTRIBUTING.md](../../docs/CONTRIBUTING.md) — scope `api`, branch `feat/api-description`.
