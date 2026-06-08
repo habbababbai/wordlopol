@@ -4,18 +4,9 @@ Polish Wordle-style word game. Guess 5-letter Polish words — diacritics matter
 
 ## Contributing
 
-- **Commits & PRs**: follow [COMMIT_CONVENTIONS.md](./COMMIT_CONVENTIONS.md) — scoped messages like `feat(api): ...`, `fix(web): ...`
-- **Branches**: `feat/api-add-auth`, `fix/web-keyboard`, `chore/repo-ci-setup`
-- **Local hooks** (Husky):
-  - `pre-commit` — Prettier + ESLint on staged files
-  - `commit-msg` — commit message format (Commitlint)
-  - `pre-push` — branch name + Prettier check
-- **PR checks** (GitHub Actions): branch name, PR title, then full CI or light docs-only CI — see [pull_request_template.md](./.github/pull_request_template.md)
-- **Changelogs**: root [CHANGELOG.md](./CHANGELOG.md) (manual) + per-app via release-please — [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md)
-- **CodeRabbit**: inline code review only; **never edits PR description** — [docs/CODERABBIT.md](./docs/CODERABBIT.md)
-- **Supply chain**: pnpm 11 policies, audit CI, Renovate, action pinning — [docs/SUPPLY_CHAIN.md](./docs/SUPPLY_CHAIN.md)
-- **Manual**: `pnpm validate` runs branch + format + lint + typecheck
-- **Plans**: implementation steps live in [`plans/`](./plans/)
+See [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md) — commits (`feat(api): ...`), branches, PRs, releases, Husky hooks, and CI.
+
+Quick checks: `pnpm validate` · `pnpm test:all` (Postgres on 5433). Active plan: [plans/04-frontend-implementation.md](./plans/04-frontend-implementation.md).
 
 ## Monorepo structure
 
@@ -104,23 +95,14 @@ Auth flows (verify email, password reset, change email) use [Resend](https://res
 
 ## Docs
 
-| Document                                                       | Description                                         |
-| -------------------------------------------------------------- | --------------------------------------------------- |
-| [CHANGELOG.md](./CHANGELOG.md)                                 | Repo-level changelog (CI, tooling, docs)            |
-| [COMMIT_CONVENTIONS.md](./COMMIT_CONVENTIONS.md)               | Commit scopes, PR structure, Husky/Commitlint setup |
-| [docs/CHANGELOG_AUTOMATION.md](./docs/CHANGELOG_AUTOMATION.md) | App releases, version bumps, release-please         |
-| [docs/CODERABBIT.md](./docs/CODERABBIT.md)                     | CodeRabbit setup and skip rules                     |
-| [apps/api/README.md](./apps/api/README.md)                     | API app overview                                    |
-| [apps/api/docs/API.md](./apps/api/docs/API.md)                 | API endpoints, Postman checklist, testing           |
-| [plans/](./plans/)                                             | Step-by-step implementation guides                  |
-
-### Implementation plans
-
-1. [Initial repo setup](./plans/01-initial-repo-setup.md)
-2. [Architecture](./plans/02-architecture.md)
-3. [Backend implementation](./plans/03-backend-implementation.md)
-4. [Frontend implementation](./plans/04-frontend-implementation.md)
-5. [Future features](./plans/05-future-features.md)
+| Document                                                                     | Description                     |
+| ---------------------------------------------------------------------------- | ------------------------------- |
+| [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md)                               | Commits, PRs, releases, CI      |
+| [CHANGELOG.md](./CHANGELOG.md)                                               | Repo-level changelog            |
+| [apps/api/docs/API.md](./apps/api/docs/API.md)                               | API endpoints, Postman, testing |
+| [plans/02-architecture.md](./plans/02-architecture.md)                       | System design reference         |
+| [plans/04-frontend-implementation.md](./plans/04-frontend-implementation.md) | Active frontend plan            |
+| [plans/05-future-features.md](./plans/05-future-features.md)                 | Timed mode, multiplayer, mobile |
 
 ## Roadmap
 

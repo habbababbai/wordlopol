@@ -12,7 +12,7 @@ Step-by-step guides for building Wordlopol, a Polish Wordle-style game.
 | 4   | [04-frontend-implementation.md](./04-frontend-implementation.md) | Phase 3 — React app, game UI               |
 | 5   | [05-future-features.md](./05-future-features.md)                 | Timed mode, multiplayer, mobile            |
 
-**Also see** (repo root): [COMMIT_CONVENTIONS.md](../COMMIT_CONVENTIONS.md) — commit scopes and PR guidelines.
+**Also see**: [docs/CONTRIBUTING.md](../docs/CONTRIBUTING.md) — commits, PRs, and releases.
 
 ## Current phase
 

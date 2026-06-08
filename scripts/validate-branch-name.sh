@@ -28,6 +28,6 @@ if [[ ! "$BRANCH" =~ $PATTERN ]]; then
   echo "Types:  feat fix docs style refactor test chore ci build perf revert"
   echo "Scopes: api web mobile shared tooling data repo"
   echo ""
-  echo "See COMMIT_CONVENTIONS.md for details."
+  echo "See docs/CONTRIBUTING.md for details."
   exit 1
 fi
