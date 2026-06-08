@@ -80,7 +80,9 @@ describe('ResetPasswordPage', () => {
         password: 'secure-password',
       });
       expect(
-        screen.getByText('Hasło zostało zmienione. Za chwilę przekierujemy do logowania.'),
+        screen.getByText('Hasło zostało zmienione. Za chwilę przekierujemy do logowania.', {
+          selector: '[data-slot="card-description"]',
+        }),
       ).toBeInTheDocument();
     });
 
