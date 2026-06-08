@@ -1,14 +1,7 @@
 name: Changelog — API
 
-# Runs when commits land on main (includes PR merges). Does NOT run on feature-branch pushes.
+# Manual only — run from Actions when ready to open/update the API Release PR.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'apps/api/**'
-      - 'data/**'
-      - '.github/workflows/changelog-api.yml'
-      - '.github/release-please/api-*.json'
   workflow_dispatch:
 
 permissions:

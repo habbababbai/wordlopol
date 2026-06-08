@@ -37,7 +37,7 @@ repo
 
 <!-- Where to record this change -->
 
-- [ ] **App release** — do **not** edit `apps/*/CHANGELOG.md`; release-please opens a Release PR after merge
+- [ ] **App release** — do **not** edit `apps/*/CHANGELOG.md`; run **Changelog — API/Web** from Actions, then merge the Release PR
 - [ ] **Repo / CI / docs** — edit root [CHANGELOG.md](../CHANGELOG.md) in this PR
 - [ ] **Docs only** — no changelog entry required
 

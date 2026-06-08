@@ -1,13 +1,7 @@
 name: Changelog — Web
 
-# Runs when commits land on main (includes PR merges). Does NOT run on feature-branch pushes.
+# Manual only — run from Actions when ready to open/update the Web Release PR.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'apps/web/**'
-      - '.github/workflows/changelog-web.yml'
-      - '.github/release-please/web-*.json'
   workflow_dispatch:
 
 permissions:

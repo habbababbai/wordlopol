@@ -29,17 +29,19 @@ Only **feat**, **fix**, and **perf** appear in app changelogs. Other types are h
 
 ## Workflows
 
-| Workflow                                                    | Trigger                                            | Tag          |
-| ----------------------------------------------------------- | -------------------------------------------------- | ------------ |
-| [changelog-api.yml](../.github/workflows/changelog-api.yml) | Push to `main` touching `apps/api/**` or `data/**` | `api-vX.Y.Z` |
-| [changelog-web.yml](../.github/workflows/changelog-web.yml) | Push to `main` touching `apps/web/**`              | `web-vX.Y.Z` |
+| Workflow                                                    | Trigger          | Tag          |
+| ----------------------------------------------------------- | ---------------- | ------------ |
+| [changelog-api.yml](../.github/workflows/changelog-api.yml) | Manual (Actions) | `api-vX.Y.Z` |
+| [changelog-web.yml](../.github/workflows/changelog-web.yml) | Manual (Actions) | `web-vX.Y.Z` |
 
-`packages/shared/**` does not trigger either workflow. Run **Changelog — API** manually if a release only touches shared code.
+Run **Changelog — API** or **Changelog — Web** from **Actions → Run workflow** when you want to open or update a Release PR. Batch merges first, then run once per app.
+
+`packages/shared/**` and `data/**` do not auto-run either workflow. Run **Changelog — API** manually if a release only touches shared or data paths.
 
 ## Two-step release flow (API / Web)
 
-1. Merge feature PR to `main` (e.g. `feat(api): add auth` or `fix(web): self-host fonts`).
-2. **Changelog — API** or **Changelog — Web** runs → release-please opens/updates a **Release PR** (`release-please--branches--main--components--{api|web}`).
+1. Merge feature PR(s) to `main` (e.g. `feat(api): add auth` or `fix(web): self-host fonts`).
+2. Run **Changelog — API** or **Changelog — Web** manually → release-please opens/updates a **Release PR** (`release-please--branches--main--components--{api|web}`).
 3. Merge the Release PR → `apps/{api|web}/CHANGELOG.md` updated, git tag `{api|web}-vX.Y.Z` created.
 
 Release PRs get **light CI** (Prettier only) and **no CodeRabbit** review.
@@ -78,4 +80,4 @@ Used for docs-only PRs (auto-applied when only markdown changes) and optional ma
 | Release PR CI fails Prettier on changelog | `ci-release-pr` skips app changelogs; bot formats them in `changelog-*` workflows                                                                                                                                                                                                                                                                     |
 | CodeRabbit on Release PR                  | Should be skipped via `autorelease: pending` label                                                                                                                                                                                                                                                                                                    |
 | Web Release PR lists unrelated commits    | release-please keys off files under `apps/web/**`, not `(web)` scope; old commits that touched `apps/web/CHANGELOG.md` or `package.json` get picked up on the first run when no `web-v*` tag exists. Close the bad Release PR, set/adjust `bootstrap-sha` in [web-config.json](../.github/release-please/web-config.json), re-run **Changelog — Web** |
-| Web Release PR missing after merge        | Check Actions; run **Changelog — Web** manually if the push trigger did not fire                                                                                                                                                                                                                                                                      |
+| No Release PR after merges                | Run **Changelog — API** or **Changelog — Web** manually from Actions                                                                                                                                                                                                                                                                                  |
