@@ -60,6 +60,27 @@ describe('api client', () => {
     expect(retryInit.headers).toMatchObject({ Authorization: 'Bearer new-token' });
   });
 
+  it('deduplicates concurrent refresh calls', async () => {
+    setAccessToken('expired-token');
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse({ error: 'Unauthorized' }, 401))
+      .mockResolvedValueOnce(jsonResponse({ error: 'Unauthorized' }, 401))
+      .mockResolvedValueOnce(jsonResponse({ accessToken: 'new-token' }))
+      .mockResolvedValueOnce(jsonResponse({ status: 'ok' }))
+      .mockResolvedValueOnce(jsonResponse({ id: '123', email: 'user@example.com' }));
+
+    const [result1, result2] = await Promise.all([api.getHealth(), api.getProfile()]);
+
+    expect(result1).toEqual({ status: 'ok' });
+    expect(result2).toEqual({ id: '123', email: 'user@example.com' });
+    expect(fetchMock).toHaveBeenCalledTimes(5);
+
+    const refreshCalls = fetchMock.mock.calls.filter(
+      (call) => call[0] === `${API_BASE}/auth/refresh`,
+    );
+    expect(refreshCalls).toHaveLength(1);
+  });
+
   it('redirects to login when refresh fails', async () => {
     setAccessToken('expired-token');
     fetchMock

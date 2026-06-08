@@ -146,8 +146,14 @@ export const api = {
     }
   },
 
-  refresh: () =>
-    request<RefreshResponseDto>('/auth/refresh', { method: 'POST', skipRefresh: true }),
+  refresh: async () => {
+    const data = await request<RefreshResponseDto>('/auth/refresh', {
+      method: 'POST',
+      skipRefresh: true,
+    });
+    setAccessToken(data.accessToken);
+    return data;
+  },
 
   getProfile: () => request<UserProfileResponseDto>('/user/profile'),
 
