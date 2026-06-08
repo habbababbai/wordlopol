@@ -19,14 +19,13 @@ describe('parseApiErrorMessage', () => {
 
 describe('parseRefreshResponse', () => {
   it('parses valid refresh body', () => {
-    expect(parseRefreshResponse({ accessToken: 'at', refreshToken: 'rt' })).toEqual({
+    expect(parseRefreshResponse({ accessToken: 'at' })).toEqual({
       accessToken: 'at',
-      refreshToken: 'rt',
     });
   });
 
   it('throws for invalid body', () => {
-    expect(() => parseRefreshResponse({ accessToken: 'at' })).toThrow('Invalid refresh response');
+    expect(() => parseRefreshResponse({ refreshToken: 'rt' })).toThrow('Invalid refresh response');
   });
 });
 
@@ -35,7 +34,6 @@ describe('parseAuthResponse', () => {
     expect(
       parseAuthResponse({
         accessToken: 'at',
-        refreshToken: 'rt',
         user: {
           id: '1',
           email: 'a@b.com',
@@ -45,7 +43,6 @@ describe('parseAuthResponse', () => {
       }),
     ).toEqual({
       accessToken: 'at',
-      refreshToken: 'rt',
       user: {
         id: '1',
         email: 'a@b.com',

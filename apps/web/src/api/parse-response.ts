@@ -4,12 +4,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 export type ParsedRefreshResponse = {
   accessToken: string;
-  refreshToken: string;
 };
 
 export type ParsedAuthResponse = {
   accessToken: string;
-  refreshToken: string;
   user: {
     id: string;
     email: string;
@@ -27,14 +25,9 @@ export function parseApiErrorMessage(data: unknown): string {
 }
 
 export function parseRefreshResponse(data: unknown): ParsedRefreshResponse {
-  if (
-    isRecord(data) &&
-    typeof data.accessToken === 'string' &&
-    typeof data.refreshToken === 'string'
-  ) {
+  if (isRecord(data) && typeof data.accessToken === 'string') {
     return {
       accessToken: data.accessToken,
-      refreshToken: data.refreshToken,
     };
   }
 
@@ -59,7 +52,6 @@ export function parseAuthResponse(data: unknown): ParsedAuthResponse {
 
   return {
     accessToken: data.accessToken,
-    refreshToken: typeof data.refreshToken === 'string' ? data.refreshToken : '',
     user: {
       id: user.id,
       email: user.email,

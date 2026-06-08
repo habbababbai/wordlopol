@@ -48,7 +48,7 @@ describe('api client', () => {
     setAccessToken('expired-token');
     fetchMock
       .mockResolvedValueOnce(jsonResponse({ error: 'Unauthorized' }, 401))
-      .mockResolvedValueOnce(jsonResponse({ accessToken: 'new-token', refreshToken: 'new-rt' }))
+      .mockResolvedValueOnce(jsonResponse({ accessToken: 'new-token' }))
       .mockResolvedValueOnce(jsonResponse({ status: 'ok' }));
 
     const result = await api.getHealth();
@@ -65,7 +65,7 @@ describe('api client', () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse({ error: 'Unauthorized' }, 401))
       .mockResolvedValueOnce(jsonResponse({ error: 'Unauthorized' }, 401))
-      .mockResolvedValueOnce(jsonResponse({ accessToken: 'new-token', refreshToken: 'new-rt' }))
+      .mockResolvedValueOnce(jsonResponse({ accessToken: 'new-token' }))
       .mockResolvedValueOnce(jsonResponse({ status: 'ok' }))
       .mockResolvedValueOnce(jsonResponse({ id: '123', email: 'user@example.com' }));
 
