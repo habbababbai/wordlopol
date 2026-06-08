@@ -1,13 +1,177 @@
+import type { AuthResponseDto, UserProfileResponseDto } from '@wordlopol/shared';
+
+import { ApiError } from './errors';
+import type {
+  DevTokenResponseDto,
+  EmailOnlyRequest,
+  LoginRequest,
+  MessageResponseDto,
+  RefreshResponseDto,
+  RegisterRequest,
+  ResetPasswordRequest,
+  VerifyEmailRequest,
+} from './types';
+import { clearAccessToken, getAccessToken, setAccessToken } from './token';
+
 const API_BASE = import.meta.env.VITE_API_URL ?? '/api';
 
-async function request<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`);
-  if (!res.ok) {
-    throw new Error(`API error: ${res.status}`);
+const NO_REFRESH_PATHS = new Set([
+  '/auth/login',
+  '/auth/register',
+  '/auth/refresh',
+  '/auth/logout',
+  '/auth/verify-email',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/auth/resend-verification',
+]);
+
+let refreshPromise: Promise<string> | null = null;
+
+export function redirectToLogin(): void {
+  const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
+  const loginPath = returnTo && returnTo !== '%2F' ? `/login?returnTo=${returnTo}` : '/login';
+  window.location.assign(loginPath);
+}
+
+async function parseErrorMessage(res: Response): Promise<string> {
+  try {
+    const data = (await res.json()) as { error?: string };
+    return data.error ?? 'Request failed';
+  } catch {
+    return 'Request failed';
   }
+}
+
+async function refreshAccessToken(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      const res = await fetch(`${API_BASE}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        throw new ApiError(res.status, await parseErrorMessage(res));
+      }
+
+      const data = (await res.json()) as RefreshResponseDto;
+      setAccessToken(data.accessToken);
+      return data.accessToken;
+    })().finally(() => {
+      refreshPromise = null;
+    });
+  }
+
+  return refreshPromise;
+}
+
+type RequestOptions = {
+  method?: string;
+  body?: unknown;
+  retried?: boolean;
+  skipRefresh?: boolean;
+};
+
+async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const { method = 'GET', body, retried = false, skipRefresh = false } = options;
+
+  const headers: Record<string, string> = {};
+  if (body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  const token = getAccessToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers,
+    credentials: 'include',
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+
+  if (res.status === 401 && !skipRefresh && !retried && !NO_REFRESH_PATHS.has(path)) {
+    try {
+      await refreshAccessToken();
+      return request<T>(path, { method, body, retried: true, skipRefresh });
+    } catch {
+      clearAccessToken();
+      redirectToLogin();
+      throw new ApiError(401, 'Session expired');
+    }
+  }
+
+  if (!res.ok) {
+    throw new ApiError(res.status, await parseErrorMessage(res));
+  }
+
+  if (res.status === 204) {
+    return undefined as T;
+  }
+
   return res.json() as Promise<T>;
+}
+
+export async function tryRestoreSession(): Promise<UserProfileResponseDto | null> {
+  try {
+    const data = await request<RefreshResponseDto>('/auth/refresh', {
+      method: 'POST',
+      skipRefresh: true,
+    });
+    setAccessToken(data.accessToken);
+    return await request<UserProfileResponseDto>('/user/profile');
+  } catch {
+    clearAccessToken();
+    return null;
+  }
 }
 
 export const api = {
   getHealth: () => request<{ status: string }>('/health'),
+
+  login: async (body: LoginRequest) => {
+    const data = await request<AuthResponseDto>('/auth/login', { method: 'POST', body });
+    setAccessToken(data.accessToken);
+    return data;
+  },
+
+  logout: async () => {
+    try {
+      await request<MessageResponseDto>('/auth/logout', { method: 'POST', skipRefresh: true });
+    } finally {
+      clearAccessToken();
+    }
+  },
+
+  refresh: () =>
+    request<RefreshResponseDto>('/auth/refresh', { method: 'POST', skipRefresh: true }),
+
+  getProfile: () => request<UserProfileResponseDto>('/user/profile'),
+
+  register: (body: RegisterRequest) =>
+    request<MessageResponseDto & DevTokenResponseDto>('/auth/register', {
+      method: 'POST',
+      body,
+    }),
+
+  verifyEmail: (body: VerifyEmailRequest) =>
+    request<MessageResponseDto>('/auth/verify-email', { method: 'POST', body }),
+
+  resendVerification: (body: EmailOnlyRequest) =>
+    request<MessageResponseDto & DevTokenResponseDto>('/auth/resend-verification', {
+      method: 'POST',
+      body,
+    }),
+
+  forgotPassword: (body: EmailOnlyRequest) =>
+    request<MessageResponseDto & DevTokenResponseDto>('/auth/forgot-password', {
+      method: 'POST',
+      body,
+    }),
+
+  resetPassword: (body: ResetPasswordRequest) =>
+    request<MessageResponseDto>('/auth/reset-password', { method: 'POST', body }),
 };
