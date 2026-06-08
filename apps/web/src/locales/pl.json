@@ -86,6 +86,8 @@
       "backToLogin": "Wróć do logowania"
     },
     "errors": {
+      "required": "To pole jest wymagane",
+      "invalidEmail": "Podaj prawidłowy adres e-mail",
       "passwordMismatch": "Hasła nie są identyczne",
       "passwordTooShort": "Hasło musi mieć co najmniej 8 znaków",
       "missingToken": "Brak tokenu w linku"
