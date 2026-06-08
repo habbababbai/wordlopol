@@ -95,9 +95,9 @@ authRouter.post(
   loginRateLimit,
   validateBody(loginSchema),
   asyncHandler(async (req, res) => {
-    const { accessToken, refreshToken, user } = await login(req.body);
-    setRefreshCookie(res, refreshToken);
-    res.json({ accessToken, user });
+    const session = await login(req.body);
+    setRefreshCookie(res, session.refreshToken);
+    res.json(session);
   }),
 );
 
@@ -110,9 +110,9 @@ authRouter.post(
       throw new HttpError(401, 'Missing refresh token');
     }
 
-    const { accessToken, refreshToken: newRefreshToken } = await refreshSession(refreshToken);
-    setRefreshCookie(res, newRefreshToken);
-    res.json({ accessToken });
+    const session = await refreshSession(refreshToken);
+    setRefreshCookie(res, session.refreshToken);
+    res.json(session);
   }),
 );
 

@@ -9,6 +9,11 @@ export function errorHandler(
   res: Response,
   next: NextFunction,
 ): void {
+  if (res.headersSent) {
+    next(error);
+    return;
+  }
+
   if (error instanceof z.ZodError) {
     res.status(400).json({ error: 'Invalid request' });
     return;
@@ -16,11 +21,6 @@ export function errorHandler(
 
   if (error instanceof HttpError) {
     res.status(error.statusCode).json({ error: error.message });
-    return;
-  }
-
-  if (res.headersSent) {
-    next(error);
     return;
   }
 

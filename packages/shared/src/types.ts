@@ -55,6 +55,7 @@ export interface UserProfileResponseDto extends UserProfileDto {
 
 export interface AuthResponseDto {
   accessToken: string;
+  refreshToken: string;
   user: UserProfileDto;
 }
 

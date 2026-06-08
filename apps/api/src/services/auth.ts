@@ -102,37 +102,36 @@ export async function verifyEmail(token: string): Promise<MessageResponseDto> {
     return { message: 'Email verified' };
   }
 
+  let emailChange: { userId: string; newEmail: string };
   try {
-    const { userId, newEmail } = verifyEmailChangeToken(token);
-    const taken = await prisma.user.findUnique({ where: { email: newEmail } });
+    emailChange = verifyEmailChangeToken(token);
+  } catch {
+    throw new HttpError(400, 'Invalid or expired verification token');
+  }
 
-    if (taken) {
+  const { userId, newEmail } = emailChange;
+  const taken = await prisma.user.findUnique({ where: { email: newEmail } });
+
+  if (taken) {
+    throw new HttpError(409, 'Email already registered');
+  }
+
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { email: newEmail, emailVerifiedAt: new Date() },
+    });
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
       throw new HttpError(409, 'Email already registered');
     }
 
-    try {
-      await prisma.user.update({
-        where: { id: userId },
-        data: { email: newEmail, emailVerifiedAt: new Date() },
-      });
-    } catch (error) {
-      if (isUniqueConstraintError(error)) {
-        throw new HttpError(409, 'Email already registered');
-      }
-
-      throw error;
-    }
-
-    await revokeAllRefreshTokens(userId);
-
-    return { message: 'Email changed' };
-  } catch (error) {
-    if (error instanceof HttpError) {
-      throw error;
-    }
+    throw error;
   }
 
-  throw new HttpError(400, 'Invalid or expired verification token');
+  await revokeAllRefreshTokens(userId);
+
+  return { message: 'Email changed' };
 }
 
 export async function login(data: LoginRequestDto): Promise<LoginSessionDto> {
