@@ -31,6 +31,7 @@ export function useLoginMutation() {
     mutationFn: ({ email, password }: LoginVariables) => api.login({ email, password }),
     onSuccess: (session) => {
       queryClient.setQueryData(authKeys.session(), sessionFromLoginUser(session.user));
+      void queryClient.invalidateQueries({ queryKey: authKeys.profile() });
     },
   });
 }
