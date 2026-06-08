@@ -4,6 +4,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 
 import { useLogoutMutation } from '@/hooks/mutations/use-logout-mutation';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/useToast';
 
 import { cn } from '../../lib/utils';
 import { ThemeToggle } from '../ThemeToggle';
@@ -105,16 +106,22 @@ function AuthNavItems({
 export function AppLayout() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const logoutMutation = useLogoutMutation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const closeMobile = () => setMobileOpen(false);
 
   const handleLogout = () => {
-    void logoutMutation.mutateAsync().then(() => {
-      closeMobile();
-      void navigate('/');
-    });
+    void (async () => {
+      try {
+        await logoutMutation.mutateAsync();
+        closeMobile();
+        void navigate('/');
+      } catch {
+        toast({ message: t('nav.logoutError'), variant: 'error' });
+      }
+    })();
   };
 
   return (

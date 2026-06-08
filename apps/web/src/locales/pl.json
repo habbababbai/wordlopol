@@ -14,6 +14,7 @@
     "profile": "Profil",
     "login": "Zaloguj",
     "logout": "Wyloguj",
+    "logoutError": "Nie udało się wylogować. Spróbuj ponownie.",
     "accountSettings": "Ustawienia konta",
     "openMenu": "Otwórz menu",
     "closeMenu": "Zamknij menu"

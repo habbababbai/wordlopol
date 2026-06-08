@@ -7,11 +7,20 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { renderWithProviders } from '@/test/render';
 
 const mutateAsyncMock = vi.fn();
+const toastMock = vi.fn();
 
 vi.mock('@/hooks/mutations/use-logout-mutation', () => ({
   useLogoutMutation: () => ({
     mutateAsync: mutateAsyncMock,
     isPending: false,
+  }),
+}));
+
+vi.mock('@/hooks/useToast', () => ({
+  useToast: () => ({
+    toast: toastMock,
+    toasts: [],
+    dismiss: vi.fn(),
   }),
 }));
 
@@ -41,6 +50,7 @@ describe('AppLayout', () => {
 
   beforeEach(() => {
     mutateAsyncMock.mockReset();
+    toastMock.mockReset();
     useAuthMock.mockReturnValue({
       user: null,
       isAuthenticated: false,
@@ -90,5 +100,40 @@ describe('AppLayout', () => {
     expect(screen.queryByRole('link', { name: 'Zaloguj' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Wyloguj' }));
     expect(mutateAsyncMock).toHaveBeenCalledTimes(1);
+    expect(toastMock).not.toHaveBeenCalled();
+  });
+
+  it('shows toast when logout fails', async () => {
+    const user = userEvent.setup();
+    mutateAsyncMock.mockRejectedValueOnce(new Error('Logout failed'));
+    useAuthMock.mockReturnValue({
+      user: {
+        id: 'user-1',
+        email: 'player@example.com',
+        displayName: 'Player',
+        emailVerified: true,
+        stats: {
+          dailyPlayed: 0,
+          dailyWon: 0,
+          infinitePlayed: 0,
+          infiniteWon: 0,
+          bestTimedWords: null,
+          bestTimedMs: null,
+          bestTimedWord: null,
+        },
+      },
+      isAuthenticated: true,
+      isLoading: false,
+    });
+
+    renderAppLayout();
+
+    await user.click(screen.getByRole('button', { name: 'Wyloguj' }));
+
+    expect(mutateAsyncMock).toHaveBeenCalledTimes(1);
+    expect(toastMock).toHaveBeenCalledWith({
+      message: 'Nie udało się wylogować. Spróbuj ponownie.',
+      variant: 'error',
+    });
   });
 });
