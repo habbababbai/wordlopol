@@ -22,7 +22,6 @@ reviews:
   path_filters:
     - '!**/*.md'
     - '!docs/**'
-    - '!plans/**'
     - '!**/CHANGELOG.md'
     - '!.github/release-please/**'
   path_instructions:

@@ -25,7 +25,7 @@ docs(repo): update contributing guide
 | `shared`  | `packages/shared/**`                                |
 | `tooling` | `packages/eslint-config/**`, `packages/tsconfig/**` |
 | `data`    | `data/**`                                           |
-| `repo`    | root config, `docs/**`, `plans/**`, CI              |
+| `repo`    | root config, `docs/**`, CI                          |
 
 Pick the scope that owns the main intent. Mention other areas in the body if needed.
 
@@ -118,6 +118,7 @@ Release PRs get light CI (Prettier only) and no CodeRabbit review.
 
 Also: `validate-release-files` blocks manual app changelog edits; `dependency-review` on PRs.
 
-## Plans
+## Project docs
 
-Active implementation guide: [plans/04-frontend-implementation.md](../plans/04-frontend-implementation.md). Architecture reference: [plans/02-architecture.md](../plans/02-architecture.md).
+- [V1.md](./V1.md) — what is done and what remains for v1.0
+- [ARCHITECTURE.md](./ARCHITECTURE.md) — system design

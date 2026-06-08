@@ -6,7 +6,7 @@ Polish Wordle-style word game. Guess 5-letter Polish words — diacritics matter
 
 See [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md) — commits (`feat(api): ...`), branches, PRs, releases, Husky hooks, and CI.
 
-Quick checks: `pnpm validate` · `pnpm test:all` (Postgres on 5433). Active plan: [plans/04-frontend-implementation.md](./plans/04-frontend-implementation.md).
+Quick checks: `pnpm validate` · `pnpm test:all` (Postgres on 5433). **v1.0 status:** [docs/V1.md](./docs/V1.md).
 
 ## Monorepo structure
 
@@ -19,9 +19,8 @@ wordlopol/
 │   ├── shared/       # Game logic & shared types
 │   ├── eslint-config/
 │   └── tsconfig/
-├── data/
-│   └── words.txt     # Polish word list (you provide)
-└── plans/            # Step-by-step implementation guides
+└── data/
+    └── words.txt     # Polish word list (you provide)
 ```
 
 Future: `apps/mobile/` (React Native + Expo).
@@ -95,25 +94,13 @@ Auth flows (verify email, password reset, change email) use [Resend](https://res
 
 ## Docs
 
-| Document                                                                     | Description                     |
-| ---------------------------------------------------------------------------- | ------------------------------- |
-| [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md)                               | Commits, PRs, releases, CI      |
-| [CHANGELOG.md](./CHANGELOG.md)                                               | Repo-level changelog            |
-| [apps/api/docs/API.md](./apps/api/docs/API.md)                               | API endpoints, Postman, testing |
-| [plans/02-architecture.md](./plans/02-architecture.md)                       | System design reference         |
-| [plans/04-frontend-implementation.md](./plans/04-frontend-implementation.md) | Active frontend plan            |
-| [plans/05-future-features.md](./plans/05-future-features.md)                 | Timed mode, multiplayer, mobile |
-
-## Roadmap
-
-| Phase  | Scope                                                                             |
-| ------ | --------------------------------------------------------------------------------- |
-| **v1** | Daily word (guests + registered), infinite mode (registered), auth, profile stats |
-| **v2** | Timed mode (5 min, max words)                                                     |
-| **v3** | Multiplayer lobbies (up to 4 players)                                             |
-| **v4** | React Native + Expo app                                                           |
-
-No leaderboards — stats visible only on your own profile.
+| Document                                       | Description                     |
+| ---------------------------------------------- | ------------------------------- |
+| [docs/V1.md](./docs/V1.md)                     | v1.0 done vs remaining          |
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | System design                   |
+| [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md) | Commits, PRs, releases, CI      |
+| [apps/api/docs/API.md](./apps/api/docs/API.md) | API endpoints, Postman, testing |
+| [CHANGELOG.md](./CHANGELOG.md)                 | Repo-level changelog            |
 
 ## Tech stack
 
@@ -124,4 +111,4 @@ No leaderboards — stats visible only on your own profile.
 - **Email**: Resend (verify, reset, change email)
 - **Tooling**: ESLint, Prettier, Husky, GitHub Actions
 
-See [Architecture — token security & logout](./plans/02-architecture.md#token-security) for auth design details.
+See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for system overview and auth summary.
