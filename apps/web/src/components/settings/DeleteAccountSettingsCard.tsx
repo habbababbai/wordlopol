@@ -14,6 +14,8 @@ import type { DeleteAccountFormValues } from '@/lib/auth-form-types';
 import { deleteAccountSchema } from '@/lib/auth-schemas';
 import { getFormFieldError, translateFieldError } from '@/lib/field-error';
 
+const CONFIRM_DELETION_ERROR_ID = 'settings-confirm-deletion-error';
+
 export function DeleteAccountSettingsCard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -64,6 +66,12 @@ export function DeleteAccountSettingsCard() {
     }
   });
 
+  const confirmDeletionError = translateFieldError(
+    getFormFieldError(formState.errors, 'confirmDeletion'),
+    t,
+  );
+  const { ref: confirmDeletionRef, ...confirmDeletionRegister } = register('confirmDeletion');
+
   return (
     <Card className="border-destructive/40">
       <CardHeader>
@@ -97,13 +105,16 @@ export function DeleteAccountSettingsCard() {
               <input
                 type="checkbox"
                 className="mt-0.5 size-4 rounded border-border"
-                {...register('confirmDeletion')}
+                ref={confirmDeletionRef}
+                {...confirmDeletionRegister}
+                aria-invalid={Boolean(confirmDeletionError)}
+                aria-describedby={confirmDeletionError ? CONFIRM_DELETION_ERROR_ID : undefined}
               />
               <span>{t('pages.settings.deleteAccount.confirmCheckbox')}</span>
             </label>
-            {formState.errors.confirmDeletion && (
-              <p role="alert" className="text-sm text-destructive">
-                {translateFieldError(getFormFieldError(formState.errors, 'confirmDeletion'), t)}
+            {confirmDeletionError && (
+              <p id={CONFIRM_DELETION_ERROR_ID} role="alert" className="text-sm text-destructive">
+                {confirmDeletionError}
               </p>
             )}
 
