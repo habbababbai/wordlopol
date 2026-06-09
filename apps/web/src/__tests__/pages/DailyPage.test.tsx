@@ -72,7 +72,7 @@ describe('DailyPage', () => {
 
     renderWithProviders(<DailyPage />);
 
-    expect(screen.getByText('Wyzwanie na 2026-06-09')).toBeInTheDocument();
+    expect(screen.getByText('Wyzwanie na 9 czerwca 2026')).toBeInTheDocument();
     expect(screen.getByRole('grid', { name: 'Plansza gry' })).toBeInTheDocument();
     expect(screen.getByText('Odgadnij słowo na 5 liter (6 prób)')).toBeInTheDocument();
   });

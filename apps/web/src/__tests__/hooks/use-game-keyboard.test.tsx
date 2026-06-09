@@ -3,8 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useGameKeyboard } from '@/hooks/useGameKeyboard';
 
-function dispatchKeyDown(key: string, target: EventTarget = document.body): KeyboardEvent {
-  const event = new KeyboardEvent('keydown', { key, bubbles: true });
+function dispatchKeyDown(
+  key: string,
+  target: EventTarget = document.body,
+  init: KeyboardEventInit = {},
+): KeyboardEvent {
+  const event = new KeyboardEvent('keydown', { key, bubbles: true, ...init });
   Object.defineProperty(event, 'target', { value: target });
   window.dispatchEvent(event);
   return event;
@@ -58,6 +62,17 @@ describe('useGameKeyboard', () => {
     dispatchKeyDown('a');
 
     expect(onInput).not.toHaveBeenCalled();
+  });
+
+  it('ignores modified shortcut keys', () => {
+    ({ unmount } = renderHook(() => useGameKeyboard(onInput)));
+
+    dispatchKeyDown('c');
+    dispatchKeyDown('c', document.body, { ctrlKey: true });
+    dispatchKeyDown('r', document.body, { metaKey: true });
+
+    expect(onInput).toHaveBeenCalledTimes(1);
+    expect(onInput).toHaveBeenCalledWith('C');
   });
 
   it('ignores keydown when focus is in an input', () => {

@@ -36,6 +36,11 @@ export function useGameKeyboard(
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isEditableTarget(event.target)) return;
 
+      const isAltGraph = event.getModifierState?.('AltGraph') ?? false;
+      if (event.metaKey || (event.ctrlKey && !isAltGraph) || (event.altKey && !isAltGraph)) {
+        return;
+      }
+
       const mapped = mapKeyboardEventKey(event.key);
       if (!mapped) return;
 

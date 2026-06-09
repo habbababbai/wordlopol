@@ -177,4 +177,21 @@ describe('DailyGamePlay', () => {
       expect(mutateAsyncMock).toHaveBeenCalledWith({ guess: 'maksa' });
     });
   });
+
+  it('reinitializes when challenge date changes', () => {
+    saveDailyAlreadyPlayed(challenge.date);
+
+    const { container, rerender } = renderWithProviders(<DailyGamePlay challenge={challenge} />);
+
+    expect(within(container).getByText('Już rozwiązałeś dzisiejsze wyzwanie.')).toBeInTheDocument();
+
+    const nextChallenge = { ...challenge, date: '2026-06-10' };
+    rerender(<DailyGamePlay key={nextChallenge.date} challenge={nextChallenge} />);
+
+    expect(
+      within(container).queryByText('Już rozwiązałeś dzisiejsze wyzwanie.'),
+    ).not.toBeInTheDocument();
+    expect(within(container).getByRole('grid', { name: 'Plansza gry' })).toBeInTheDocument();
+    expect(within(container).getByRole('button', { name: 'Wpisz literę A' })).not.toBeDisabled();
+  });
 });

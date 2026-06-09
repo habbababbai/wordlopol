@@ -101,4 +101,41 @@ describe('daily-finished-store', () => {
     expect(loadDailyFinished('2026-06-09')).toBeNull();
     expect(useDailyFinishedStore.getState().entry).toBeNull();
   });
+
+  it('rejects completed entry with invalid row results', () => {
+    saveDailyFinished({
+      date: '2026-06-09',
+      status: 'completed',
+      rows: [
+        {
+          letters: 'abcde',
+          results: [
+            'invalid',
+            'present',
+            'absent',
+            'correct',
+            'absent',
+          ] as unknown as GameBoardRow['results'],
+        },
+      ],
+      won: false,
+      answer: 'abcde',
+    });
+
+    expect(loadDailyFinished('2026-06-09')).toBeNull();
+    expect(useDailyFinishedStore.getState().entry).toBeNull();
+  });
+
+  it('rejects completed entry when results length mismatches letters', () => {
+    saveDailyFinished({
+      date: '2026-06-09',
+      status: 'completed',
+      rows: [{ letters: 'abcde', results: ['correct', 'correct'] }],
+      won: false,
+      answer: 'abcde',
+    });
+
+    expect(loadDailyFinished('2026-06-09')).toBeNull();
+    expect(useDailyFinishedStore.getState().entry).toBeNull();
+  });
 });

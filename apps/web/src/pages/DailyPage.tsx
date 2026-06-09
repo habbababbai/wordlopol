@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { DailyGamePlay } from '@/components/game/DailyGamePlay';
 import { ErrorCard, GameBoardSkeleton, Spinner } from '@/components/ui/loader';
 import { useDailyTodayQuery } from '@/hooks/queries/use-daily-today-query';
+import { formatCalendarDate } from '@/lib/format-calendar-date';
 
 export function DailyPage() {
   const { t } = useTranslation();
@@ -37,15 +38,17 @@ export function DailyPage() {
     );
   }
 
+  const localizedDate = formatCalendarDate(challenge.date);
+
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-8 px-4 py-8 sm:py-12">
       <header className="flex flex-col items-center gap-2 text-center">
         <h1 className="text-2xl font-bold text-foreground">{t('pages.daily.title')}</h1>
         <p className="text-sm text-muted-foreground">
-          {t('pages.daily.dateLabel', { date: challenge.date })}
+          {t('pages.daily.dateLabel', { date: localizedDate })}
         </p>
       </header>
-      <DailyGamePlay challenge={challenge} />
+      <DailyGamePlay key={challenge.date} challenge={challenge} />
     </div>
   );
 }

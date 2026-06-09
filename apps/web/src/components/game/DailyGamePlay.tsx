@@ -230,7 +230,9 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
 
   return (
     <div className="flex flex-col items-center gap-6">
-      <p className="text-center text-sm text-muted-foreground">{statusMessage}</p>
+      <p role="status" aria-live="polite" className="text-center text-sm text-muted-foreground">
+        {statusMessage}
+      </p>
       {mode !== 'alreadyPlayed' && (
         <GameBoard rows={rows} activeRowIndex={activeRowIndex} shakingRowIndex={shakingRowIndex} />
       )}

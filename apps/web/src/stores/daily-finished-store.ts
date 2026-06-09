@@ -3,6 +3,8 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 import type { GameBoardRow } from '@/components/game/GameBoard';
 
+const VALID_RESULTS = new Set<string>(['absent', 'present', 'correct']);
+
 export type DailyFinishedCompletedCache = {
   date: string;
   status: 'completed';
@@ -33,13 +35,19 @@ function isDailyFinishedCache(value: unknown): value is DailyFinishedCache {
   if (typeof record.won !== 'boolean') return false;
   if (typeof record.answer !== 'string') return false;
 
-  return record.rows.every(
-    (row) =>
-      row &&
-      typeof row === 'object' &&
-      typeof (row as GameBoardRow).letters === 'string' &&
-      ((row as GameBoardRow).results === undefined || Array.isArray((row as GameBoardRow).results)),
-  );
+  return record.rows.every((row) => {
+    if (!row || typeof row !== 'object') return false;
+
+    const gameRow = row as GameBoardRow;
+    if (typeof gameRow.letters !== 'string') return false;
+    if (gameRow.results === undefined) return true;
+
+    return (
+      Array.isArray(gameRow.results) &&
+      gameRow.results.length === gameRow.letters.length &&
+      gameRow.results.every((result) => typeof result === 'string' && VALID_RESULTS.has(result))
+    );
+  });
 }
 
 type DailyFinishedStore = {
