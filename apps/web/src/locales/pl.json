@@ -133,7 +133,11 @@
   "pages": {
     "daily": {
       "title": "Wyzwanie dnia",
-      "description": "Gra dzienna — wkrótce.",
+      "loading": "Ładowanie wyzwania…",
+      "errorTitle": "Nie udało się wczytać wyzwania",
+      "errorMessage": "Sprawdź połączenie i spróbuj ponownie.",
+      "retry": "Spróbuj ponownie",
+      "dateLabel": "Wyzwanie na {{date}}",
       "play": {
         "hint": "Odgadnij słowo na {{wordLength}} liter ({{maxGuesses}} prób)",
         "won": "Wygrana! Słowo: {{answer}}",

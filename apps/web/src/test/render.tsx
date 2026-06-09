@@ -6,6 +6,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { createQueryClient } from '@/api/create-query-client';
 import { SessionBootstrap } from '@/components/auth/SessionBootstrap';
 import { ThemeProvider } from '@/context/ThemeProvider';
+import { ToastProvider } from '@/context/ToastProvider';
 
 type RenderWithProvidersOptions = {
   route?: string;
@@ -22,7 +23,9 @@ export function renderWithProviders(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={[route]}>
           <SessionBootstrap />
-          <ThemeProvider>{children}</ThemeProvider>
+          <ThemeProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </ThemeProvider>
         </MemoryRouter>
       </QueryClientProvider>
     );
