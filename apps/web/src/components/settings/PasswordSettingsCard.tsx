@@ -35,12 +35,12 @@ export function PasswordSettingsCard() {
       return;
     }
 
-    const timer = window.setTimeout(() => {
+    const timer = setTimeout(() => {
       void navigate('/login');
     }, SETTINGS_REDIRECT_DELAY_MS);
 
     return () => {
-      window.clearTimeout(timer);
+      clearTimeout(timer);
     };
   }, [success, navigate]);
 
