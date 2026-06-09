@@ -92,7 +92,8 @@
       "invalidEmail": "Podaj prawidłowy adres e-mail",
       "passwordMismatch": "Hasła nie są identyczne",
       "passwordTooShort": "Hasło musi mieć co najmniej 8 znaków",
-      "missingToken": "Brak tokenu w linku"
+      "missingToken": "Brak tokenu w linku",
+      "confirmationRequired": "Potwierdź, że chcesz usunąć konto"
     },
     "login": {
       "title": "Logowanie",
@@ -181,7 +182,45 @@
     },
     "settings": {
       "title": "Ustawienia konta",
-      "description": "Zarządzanie kontem — wkrótce."
+      "description": "Zmień dane konta i ustawienia bezpieczeństwa.",
+      "loading": "Ładowanie ustawień…",
+      "errorTitle": "Nie udało się wczytać ustawień",
+      "errorMessage": "Sprawdź połączenie i spróbuj ponownie.",
+      "retry": "Spróbuj ponownie",
+      "displayName": {
+        "title": "Nazwa wyświetlana",
+        "description": "Ta nazwa jest widoczna na profilu.",
+        "success": "Nazwa wyświetlana została zaktualizowana."
+      },
+      "email": {
+        "title": "Adres e-mail",
+        "description": "Zmiana adresu wymaga potwierdzenia linkiem wysłanym na nowy e-mail.",
+        "currentLabel": "Obecny adres e-mail",
+        "newLabel": "Nowy adres e-mail",
+        "success": "Wysłaliśmy link weryfikacyjny na nowy adres e-mail. Konto zostanie zaktualizowane po potwierdzeniu."
+      },
+      "password": {
+        "title": "Hasło",
+        "description": "Po zmianie hasła zostaniesz wylogowany ze wszystkich urządzeń.",
+        "currentLabel": "Obecne hasło",
+        "success": "Hasło zostało zmienione. Za chwilę przekierujemy do logowania."
+      },
+      "deleteAccount": {
+        "title": "Strefa niebezpieczna",
+        "description": "Usunięcie konta jest trwałe. Stracisz dostęp do statystyk i historii gier.",
+        "warning": "Tej operacji nie można cofnąć.",
+        "start": "Usuń moje konto",
+        "confirmCheckbox": "Rozumiem, że to trwale usuwa moje konto i wszystkie dane",
+        "passwordLabel": "Potwierdź hasłem",
+        "submit": "Usuń konto na stałe",
+        "cancel": "Anuluj",
+        "success": "Konto zostało usunięte."
+      },
+      "actions": {
+        "saveDisplayName": "Zapisz nazwę",
+        "changeEmail": "Zmień e-mail",
+        "changePassword": "Zmień hasło"
+      }
     }
   }
 }

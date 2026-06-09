@@ -1,4 +1,9 @@
 import type {
+  ChangeDisplayNameRequestDto,
+  ChangeDisplayNameResponseDto,
+  ChangeEmailRequestDto,
+  ChangePasswordRequestDto,
+  DeleteAccountRequestDto,
   DevMessageResponseDto,
   EmailOnlyRequestDto,
   HealthResponseDto,
@@ -216,4 +221,28 @@ export const api = {
 
   resetPassword: (body: ResetPasswordRequestDto) =>
     request<MessageResponseDto>('/auth/reset-password', { method: 'POST', body }),
+
+  changeDisplayName: (body: ChangeDisplayNameRequestDto) =>
+    request<ChangeDisplayNameResponseDto>('/auth/change-display-name', {
+      method: 'PATCH',
+      body,
+    }),
+
+  changeEmail: (body: ChangeEmailRequestDto) =>
+    request<DevMessageResponseDto>('/auth/change-email', {
+      method: 'PATCH',
+      body,
+    }),
+
+  changePassword: (body: ChangePasswordRequestDto) =>
+    request<MessageResponseDto>('/auth/change-password', {
+      method: 'PATCH',
+      body,
+    }),
+
+  deleteAccount: (body: DeleteAccountRequestDto) =>
+    request<MessageResponseDto>('/auth/account', {
+      method: 'DELETE',
+      body,
+    }),
 };
