@@ -1,52 +1,13 @@
 import { evaluateGuess, MAX_GUESSES, WORD_LENGTH } from '@wordlopol/shared';
 import { useCallback, useMemo, useState, useRef } from 'react';
 
+import { createEmptyRows, buildKeyStates, isGameFinished, isGameWon } from '@/lib/game-board';
+
 import { Button } from '../ui/button';
 import { GameBoard, type GameBoardRow } from './GameBoard';
-import { PolishKeyboard, type KeyState } from './PolishKeyboard';
+import { PolishKeyboard } from './PolishKeyboard';
 
 const DEMO_ANSWER = 'ŚNIEG';
-
-const keyStateRank: Record<KeyState, number> = {
-  unused: 0,
-  absent: 1,
-  present: 2,
-  correct: 3,
-};
-
-function createEmptyRows(): GameBoardRow[] {
-  return Array.from({ length: MAX_GUESSES }, () => ({ letters: '' }));
-}
-
-function buildKeyStates(rows: GameBoardRow[]): Partial<Record<string, KeyState>> {
-  const states: Partial<Record<string, KeyState>> = {};
-
-  for (const row of rows) {
-    if (!row.results) continue;
-
-    for (let index = 0; index < row.letters.length; index++) {
-      const letter = row.letters[index]?.toUpperCase();
-      const result = row.results[index];
-      if (!letter || !result) continue;
-
-      const previous = states[letter] ?? 'unused';
-      if (keyStateRank[result] > keyStateRank[previous]) {
-        states[letter] = result;
-      }
-    }
-  }
-
-  return states;
-}
-
-function isGameWon(rows: GameBoardRow[]): boolean {
-  return rows.some((row) => row.results?.every((result) => result === 'correct'));
-}
-
-function isGameFinished(rows: GameBoardRow[], activeRowIndex: number): boolean {
-  if (isGameWon(rows)) return true;
-  return activeRowIndex >= MAX_GUESSES;
-}
 
 export function GamePlayDemo() {
   const [rows, setRows] = useState<GameBoardRow[]>(createEmptyRows);
