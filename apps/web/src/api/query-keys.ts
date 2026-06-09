@@ -3,3 +3,8 @@ export const authKeys = {
   session: () => [...authKeys.all, 'session'] as const,
   profile: () => [...authKeys.all, 'profile'] as const,
 };
+
+export const gameKeys = {
+  all: ['game'] as const,
+  dailyToday: () => [...gameKeys.all, 'daily', 'today'] as const,
+};
