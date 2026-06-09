@@ -133,7 +133,16 @@
   "pages": {
     "daily": {
       "title": "Wyzwanie dnia",
-      "description": "Gra dzienna — wkrótce."
+      "description": "Gra dzienna — wkrótce.",
+      "play": {
+        "hint": "Odgadnij słowo na {{wordLength}} liter ({{maxGuesses}} prób)",
+        "won": "Wygrana! Słowo: {{answer}}",
+        "lost": "Koniec gry. Słowo: {{answer}}",
+        "alreadyPlayed": "Już rozwiązałeś dzisiejsze wyzwanie.",
+        "invalidWord": "Słowo nie znajduje się w słowniku.",
+        "viewProfile": "Zobacz statystyki",
+        "submitting": "Sprawdzam…"
+      }
     },
     "infinite": {
       "title": "Tryb nieskończony",
