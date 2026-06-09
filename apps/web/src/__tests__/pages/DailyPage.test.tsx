@@ -1,6 +1,6 @@
-import { screen } from '@testing-library/react';
+import { cleanup, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DailyPage } from '@/pages/DailyPage';
 import { renderWithProviders } from '@/test/render';
@@ -22,6 +22,10 @@ const challengeFixture = {
 };
 
 describe('DailyPage', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   beforeEach(() => {
     useDailyTodayQueryMock.mockReset();
     refetchMock.mockReset();

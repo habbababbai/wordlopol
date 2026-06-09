@@ -8,6 +8,7 @@ import { ApiError } from '@/api/errors';
 import { authKeys } from '@/api/query-keys';
 import { useDailyGuessMutation } from '@/hooks/mutations/use-daily-guess-mutation';
 import { useAuth } from '@/hooks/useAuth';
+import { useGameKeyboard } from '@/hooks/useGameKeyboard';
 import { useToast } from '@/hooks/useToast';
 import { buildKeyStates, createEmptyRows } from '@/lib/game-board';
 import { getApiErrorMessage } from '@/lib/api-error-message';
@@ -208,6 +209,8 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
     },
     [activeRowIndex, challenge.wordLength, locked, submitGuess],
   );
+
+  useGameKeyboard(handleInput, { enabled: !locked });
 
   const statusMessage = (() => {
     if (guessMutation.isPending) {
