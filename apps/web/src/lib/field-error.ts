@@ -5,6 +5,7 @@ const FIELD_ERROR_KEYS = {
   invalidEmail: 'auth.errors.invalidEmail',
   passwordMismatch: 'auth.errors.passwordMismatch',
   passwordTooShort: 'auth.errors.passwordTooShort',
+  confirmationRequired: 'auth.errors.confirmationRequired',
 } as const;
 
 type FieldErrorKey = keyof typeof FIELD_ERROR_KEYS;
