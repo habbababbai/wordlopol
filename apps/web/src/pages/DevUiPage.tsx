@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { GamePlayDemo } from '../components/game/GamePlayDemo';
 import { GameTile } from '../components/GameTile';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { Badge } from '../components/ui/badge';
@@ -98,6 +99,12 @@ export function DevUiPage() {
               <GameTile key={letter} letter={letter} state="correct" delay={index * 0.1} />
             ))}
           </div>
+        </div>
+      </Section>
+
+      <Section title="Gra">
+        <div className="rounded-xl border border-border bg-card p-6">
+          <GamePlayDemo />
         </div>
       </Section>
 
