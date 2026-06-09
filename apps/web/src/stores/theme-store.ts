@@ -13,15 +13,32 @@ type ThemeStore = {
 
 const legacyAwareStorage: StateStorage = {
   getItem: (name) => {
-    const value = localStorage.getItem(name);
+    let value: string | null = null;
+    try {
+      value = localStorage.getItem(name);
+    } catch {
+      return null;
+    }
     if (!value) return null;
     if (value === 'light' || value === 'dark') {
       return JSON.stringify({ state: { theme: value }, version: 0 });
     }
     return value;
   },
-  setItem: (name, value) => localStorage.setItem(name, value),
-  removeItem: (name) => localStorage.removeItem(name),
+  setItem: (name, value) => {
+    try {
+      localStorage.setItem(name, value);
+    } catch {
+      return;
+    }
+  },
+  removeItem: (name) => {
+    try {
+      localStorage.removeItem(name);
+    } catch {
+      return;
+    }
+  },
 };
 
 export const useThemeStore = create<ThemeStore>()(
