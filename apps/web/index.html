@@ -8,7 +8,22 @@
   <body>
     <script>
       (function () {
-        var theme = localStorage.getItem('wordlopol-theme');
+        var raw = localStorage.getItem('wordlopol-theme');
+        var theme = 'dark';
+        if (raw === 'light' || raw === 'dark') {
+          theme = raw;
+        } else if (raw) {
+          try {
+            var parsed = JSON.parse(raw);
+            if (
+              parsed &&
+              parsed.state &&
+              (parsed.state.theme === 'light' || parsed.state.theme === 'dark')
+            ) {
+              theme = parsed.state.theme;
+            }
+          } catch (e) {}
+        }
         var isDark = theme !== 'light';
         document.documentElement.classList.toggle('dark', isDark);
         document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';

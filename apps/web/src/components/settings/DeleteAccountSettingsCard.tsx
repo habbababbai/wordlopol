@@ -40,12 +40,12 @@ export function DeleteAccountSettingsCard() {
       return;
     }
 
-    const timer = window.setTimeout(() => {
+    const timer = setTimeout(() => {
       void navigate('/');
     }, SETTINGS_REDIRECT_DELAY_MS);
 
     return () => {
-      window.clearTimeout(timer);
+      clearTimeout(timer);
     };
   }, [success, navigate]);
 

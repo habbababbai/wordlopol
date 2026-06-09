@@ -48,9 +48,9 @@ export function useGameKeyboard(
       onInput(mapped);
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    addEventListener('keydown', handleKeyDown);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      removeEventListener('keydown', handleKeyDown);
     };
   }, [enabled, onInput]);
 }
