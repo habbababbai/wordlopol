@@ -2,7 +2,6 @@ import { screen } from '@testing-library/react';
 import type { ComponentType } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { DailyPage } from '@/pages/DailyPage';
 import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
 import { InfinitePage } from '@/pages/InfinitePage';
 import { LoginPage } from '@/pages/LoginPage';
@@ -14,7 +13,6 @@ import { VerifyEmailPage } from '@/pages/VerifyEmailPage';
 import { renderWithProviders } from '@/test/render';
 
 const stubPages: { title: string; Page: ComponentType }[] = [
-  { title: 'Wyzwanie dnia', Page: DailyPage },
   { title: 'Tryb nieskończony', Page: InfinitePage },
   { title: 'Profil', Page: ProfilePage },
   { title: 'Logowanie', Page: LoginPage },

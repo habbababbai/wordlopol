@@ -3,9 +3,12 @@ import type {
   ChangeDisplayNameResponseDto,
   ChangeEmailRequestDto,
   ChangePasswordRequestDto,
+  DailyChallengeDto,
+  DailyGuessRequestDto,
   DeleteAccountRequestDto,
   DevMessageResponseDto,
   EmailOnlyRequestDto,
+  GuessResultDto,
   HealthResponseDto,
   LoginRequestDto,
   MessageResponseDto,
@@ -165,6 +168,11 @@ export async function tryRestoreSession(): Promise<UserProfileResponseDto | null
 
 export const api = {
   getHealth: () => request<HealthResponseDto>('/health'),
+
+  getDailyToday: () => request<DailyChallengeDto>('/daily/today'),
+
+  submitDailyGuess: (body: DailyGuessRequestDto) =>
+    request<GuessResultDto>('/daily/guess', { method: 'POST', body }),
 
   login: async (body: LoginRequestDto) => {
     const data: unknown = await request('/auth/login', { method: 'POST', body });
