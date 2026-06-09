@@ -64,7 +64,7 @@ function KeyboardKeyButton({
       aria-label={getAriaLabel(keyboardKey)}
       onClick={handleClick}
       className={cn(
-        'flex h-12 min-w-8 flex-1 select-none items-center justify-center rounded-[var(--radius-sm)] px-1 text-xs font-bold uppercase transition-colors sm:h-14 sm:min-w-10 sm:text-sm',
+        'flex h-12 min-w-8 flex-1 select-none items-center justify-center rounded-sm px-1 text-xs font-bold uppercase transition-colors sm:h-14 sm:min-w-10 sm:text-sm',
         keyStateClasses[keyState],
         isWide && 'flex-[1.5] text-[10px] sm:text-xs',
         isAction && 'normal-case',

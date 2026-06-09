@@ -46,10 +46,10 @@ describe('GameBoard', () => {
     expect(within(firstRow).getAllByText('A')).toHaveLength(2);
 
     const tiles = within(firstRow).getAllByRole('gridcell');
-    expect(tiles[0]?.firstChild).toHaveClass('bg-[var(--tile-correct)]');
-    expect(tiles[1]?.firstChild).toHaveClass('bg-[var(--tile-present)]');
-    expect(tiles[2]?.firstChild).toHaveClass('bg-[var(--tile-absent)]');
-    expect(tiles[4]?.firstChild).toHaveClass('bg-[var(--tile-correct)]');
+    expect(tiles[0]?.firstChild).toHaveClass('bg-(--tile-correct)');
+    expect(tiles[1]?.firstChild).toHaveClass('bg-(--tile-present)');
+    expect(tiles[2]?.firstChild).toHaveClass('bg-(--tile-absent)');
+    expect(tiles[4]?.firstChild).toHaveClass('bg-(--tile-correct)');
     expect(tiles[0]?.firstChild).toHaveClass('animate-tile-flip');
   });
 

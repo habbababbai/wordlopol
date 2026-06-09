@@ -1,5 +1,5 @@
 import { evaluateGuess, MAX_GUESSES, WORD_LENGTH } from '@wordlopol/shared';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useRef } from 'react';
 
 import { Button } from '../ui/button';
 import { GameBoard, type GameBoardRow } from './GameBoard';
@@ -52,6 +52,7 @@ export function GamePlayDemo() {
   const [rows, setRows] = useState<GameBoardRow[]>(createEmptyRows);
   const [activeRowIndex, setActiveRowIndex] = useState(0);
   const [shakingRowIndex, setShakingRowIndex] = useState<number | null>(null);
+  const shakeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const finished = isGameFinished(rows, activeRowIndex);
   const keyStates = useMemo(() => buildKeyStates(rows), [rows]);
@@ -60,11 +61,21 @@ export function GamePlayDemo() {
     setRows(createEmptyRows());
     setActiveRowIndex(0);
     setShakingRowIndex(null);
+    if (shakeTimeoutRef.current !== null) {
+      clearTimeout(shakeTimeoutRef.current);
+      shakeTimeoutRef.current = null;
+    }
   }, []);
 
   const shakeActiveRow = useCallback(() => {
+    if (shakeTimeoutRef.current !== null) {
+      clearTimeout(shakeTimeoutRef.current);
+    }
     setShakingRowIndex(activeRowIndex);
-    window.setTimeout(() => setShakingRowIndex(null), 400);
+    shakeTimeoutRef.current = setTimeout(() => {
+      setShakingRowIndex(null);
+      shakeTimeoutRef.current = null;
+    }, 400);
   }, [activeRowIndex]);
 
   const submitGuess = useCallback(() => {
