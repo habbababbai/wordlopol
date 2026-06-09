@@ -1,0 +1,1 @@
+export const SETTINGS_REDIRECT_DELAY_MS = 2000;
