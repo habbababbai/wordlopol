@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { clearAccessToken, getAccessToken, setAccessToken } from '@/api/token';
-import { clearCsrfToken } from '@/api/csrf';
+import { clearCsrfToken, CSRF_HEADER_NAME, setCsrfToken } from '@/api/csrf';
 import { api, redirectToLogin } from '@/api/client';
 
 const API_BASE = '/api';
@@ -117,6 +117,92 @@ describe('api client', () => {
       `${API_BASE}/auth/logout`,
       expect.objectContaining({ method: 'POST', credentials: 'include' }),
     );
+  });
+
+  it('changeDisplayName sends PATCH with auth and csrf headers', async () => {
+    setAccessToken('test-token');
+    setCsrfToken('csrf-token');
+    const body = { displayName: 'New Name' };
+    const response = {
+      user: {
+        id: 'user-1',
+        email: 'user@example.com',
+        displayName: 'New Name',
+        emailVerified: true,
+      },
+    };
+    fetchMock.mockResolvedValueOnce(jsonResponse(response));
+
+    const result = await api.changeDisplayName(body);
+
+    expect(result).toEqual(response);
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(`${API_BASE}/auth/change-display-name`);
+    expect(init.method).toBe('PATCH');
+    expect(init.credentials).toBe('include');
+    expect(init.body).toBe(JSON.stringify(body));
+    expect(init.headers).toMatchObject({
+      Authorization: 'Bearer test-token',
+      [CSRF_HEADER_NAME]: 'csrf-token',
+      'Content-Type': 'application/json',
+    });
+  });
+
+  it('changeEmail sends PATCH with auth and csrf headers', async () => {
+    setAccessToken('test-token');
+    setCsrfToken('csrf-token');
+    const body = { newEmail: 'new@example.com' };
+    fetchMock.mockResolvedValueOnce(jsonResponse({ message: 'Verification email sent' }));
+
+    const result = await api.changeEmail(body);
+
+    expect(result).toEqual({ message: 'Verification email sent' });
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(`${API_BASE}/auth/change-email`);
+    expect(init.method).toBe('PATCH');
+    expect(init.body).toBe(JSON.stringify(body));
+    expect(init.headers).toMatchObject({
+      Authorization: 'Bearer test-token',
+      [CSRF_HEADER_NAME]: 'csrf-token',
+    });
+  });
+
+  it('changePassword sends PATCH with auth and csrf headers', async () => {
+    setAccessToken('test-token');
+    setCsrfToken('csrf-token');
+    const body = { currentPassword: 'old-pass', newPassword: 'new-pass-1' };
+    fetchMock.mockResolvedValueOnce(jsonResponse({ message: 'Password changed' }));
+
+    const result = await api.changePassword(body);
+
+    expect(result).toEqual({ message: 'Password changed' });
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(`${API_BASE}/auth/change-password`);
+    expect(init.method).toBe('PATCH');
+    expect(init.body).toBe(JSON.stringify(body));
+    expect(init.headers).toMatchObject({
+      Authorization: 'Bearer test-token',
+      [CSRF_HEADER_NAME]: 'csrf-token',
+    });
+  });
+
+  it('deleteAccount sends DELETE with auth and csrf headers', async () => {
+    setAccessToken('test-token');
+    setCsrfToken('csrf-token');
+    const body = { password: 'my-password' };
+    fetchMock.mockResolvedValueOnce(jsonResponse({ message: 'Account deleted' }));
+
+    const result = await api.deleteAccount(body);
+
+    expect(result).toEqual({ message: 'Account deleted' });
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(`${API_BASE}/auth/account`);
+    expect(init.method).toBe('DELETE');
+    expect(init.body).toBe(JSON.stringify(body));
+    expect(init.headers).toMatchObject({
+      Authorization: 'Bearer test-token',
+      [CSRF_HEADER_NAME]: 'csrf-token',
+    });
   });
 });
 
