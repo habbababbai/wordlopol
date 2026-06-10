@@ -1,6 +1,6 @@
 import type { GuessResultDto, InfiniteWordDto } from '@wordlopol/shared';
 import { useQueryClient } from '@tanstack/react-query';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ApiError } from '@/api/errors';
@@ -49,6 +49,16 @@ export function InfiniteGamePlay({ word, onNextWord }: InfiniteGamePlayProps) {
       shakeTimeoutRef.current = null;
     }, 400);
   }, [activeRowIndex]);
+
+  useEffect(() => {
+    return () => {
+      if (shakeTimeoutRef.current !== null) {
+        clearTimeout(shakeTimeoutRef.current);
+        shakeTimeoutRef.current = null;
+      }
+      setShakingRowIndex(null);
+    };
+  }, []);
 
   const submitGuess = useCallback(async () => {
     if (mode !== 'playing' || guessMutation.isPending) return;
