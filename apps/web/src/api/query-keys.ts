@@ -7,4 +7,5 @@ export const authKeys = {
 export const gameKeys = {
   all: ['game'] as const,
   dailyToday: () => [...gameKeys.all, 'daily', 'today'] as const,
+  infiniteNext: () => [...gameKeys.all, 'infinite', 'next'] as const,
 };

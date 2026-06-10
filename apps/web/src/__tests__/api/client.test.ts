@@ -249,6 +249,76 @@ describe('api client', () => {
     expect(init.body).toBe(JSON.stringify(body));
   });
 
+  it('getInfiniteNext fetches word metadata with Bearer when set', async () => {
+    setAccessToken('test-token');
+    const response = {
+      date: '2026-06-09',
+      wordNumber: 3,
+      poolSize: 300,
+      maxGuesses: 6,
+      wordLength: 5,
+    };
+    fetchMock.mockResolvedValueOnce(jsonResponse(response));
+
+    const result = await api.getInfiniteNext();
+
+    expect(result).toEqual(response);
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(`${API_BASE}/infinite/next`);
+    expect(init.method).toBe('GET');
+    expect(init.credentials).toBe('include');
+    expect(init.headers).toMatchObject({ Authorization: 'Bearer test-token' });
+  });
+
+  it('submitInfiniteGuess sends POST with JSON body and csrf header', async () => {
+    setCsrfToken('csrf-token');
+    const body = { guess: 'mleko' };
+    const response = {
+      results: ['absent', 'present', 'absent', 'absent', 'correct'],
+      won: false,
+      finished: false,
+      guessNumber: 1,
+    };
+    fetchMock.mockResolvedValueOnce(jsonResponse(response));
+
+    const result = await api.submitInfiniteGuess(body);
+
+    expect(result).toEqual(response);
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(`${API_BASE}/infinite/guess`);
+    expect(init.method).toBe('POST');
+    expect(init.body).toBe(JSON.stringify(body));
+    expect(init.headers).toMatchObject({
+      [CSRF_HEADER_NAME]: 'csrf-token',
+      'Content-Type': 'application/json',
+    });
+    expect(init.headers).not.toHaveProperty('Authorization');
+  });
+
+  it('submitInfiniteGuess attaches Bearer token when set', async () => {
+    setAccessToken('test-token');
+    setCsrfToken('csrf-token');
+    const body = { guess: 'mleko' };
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({
+        results: ['correct', 'correct', 'correct', 'correct', 'correct'],
+        won: true,
+        finished: true,
+        guessNumber: 1,
+        answer: 'mleko',
+      }),
+    );
+
+    await api.submitInfiniteGuess(body);
+
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(init.headers).toMatchObject({
+      Authorization: 'Bearer test-token',
+      [CSRF_HEADER_NAME]: 'csrf-token',
+    });
+    expect(init.body).toBe(JSON.stringify(body));
+  });
+
   it('deleteAccount sends DELETE with auth and csrf headers', async () => {
     setAccessToken('test-token');
     setCsrfToken('csrf-token');
