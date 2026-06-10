@@ -3,7 +3,6 @@ import type { ComponentType } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
-import { InfinitePage } from '@/pages/InfinitePage';
 import { LoginPage } from '@/pages/LoginPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { RegisterPage } from '@/pages/RegisterPage';
@@ -13,7 +12,6 @@ import { VerifyEmailPage } from '@/pages/VerifyEmailPage';
 import { renderWithProviders } from '@/test/render';
 
 const stubPages: { title: string; Page: ComponentType }[] = [
-  { title: 'Tryb nieskończony', Page: InfinitePage },
   { title: 'Profil', Page: ProfilePage },
   { title: 'Logowanie', Page: LoginPage },
   { title: 'Rejestracja', Page: RegisterPage },
