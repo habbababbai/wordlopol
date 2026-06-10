@@ -38,6 +38,7 @@ const NO_REFRESH_PATHS = new Set([
   '/auth/register',
   '/auth/refresh',
   '/auth/logout',
+  '/auth/logout-all',
   '/auth/verify-email',
   '/auth/forgot-password',
   '/auth/reset-password',
@@ -192,6 +193,15 @@ export const api = {
   logout: async () => {
     try {
       await request<MessageResponseDto>('/auth/logout', { method: 'POST', skipRefresh: true });
+    } finally {
+      clearAccessToken();
+      clearCsrfToken();
+    }
+  },
+
+  logoutAll: async () => {
+    try {
+      await request<MessageResponseDto>('/auth/logout-all', { method: 'POST', skipRefresh: true });
     } finally {
       clearAccessToken();
       clearCsrfToken();

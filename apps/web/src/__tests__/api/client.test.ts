@@ -119,6 +119,20 @@ describe('api client', () => {
     );
   });
 
+  it('clears token on logoutAll', async () => {
+    setAccessToken('test-token');
+    setCsrfToken('csrf-token');
+    fetchMock.mockResolvedValueOnce(jsonResponse({ message: 'Logged out from all devices' }));
+
+    await api.logoutAll();
+
+    expect(getAccessToken()).toBeNull();
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${API_BASE}/auth/logout-all`,
+      expect.objectContaining({ method: 'POST', credentials: 'include' }),
+    );
+  });
+
   it('changeDisplayName sends PATCH with auth and csrf headers', async () => {
     setAccessToken('test-token');
     setCsrfToken('csrf-token');
