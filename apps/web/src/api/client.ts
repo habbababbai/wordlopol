@@ -10,6 +10,8 @@ import type {
   EmailOnlyRequestDto,
   GuessResultDto,
   HealthResponseDto,
+  InfiniteGuessRequestDto,
+  InfiniteWordDto,
   LoginRequestDto,
   MessageResponseDto,
   RegisterRequestDto,
@@ -173,6 +175,11 @@ export const api = {
 
   submitDailyGuess: (body: DailyGuessRequestDto) =>
     request<GuessResultDto>('/daily/guess', { method: 'POST', body }),
+
+  getInfiniteNext: () => request<InfiniteWordDto>('/infinite/next'),
+
+  submitInfiniteGuess: (body: InfiniteGuessRequestDto) =>
+    request<GuessResultDto>('/infinite/guess', { method: 'POST', body }),
 
   login: async (body: LoginRequestDto) => {
     const data: unknown = await request('/auth/login', { method: 'POST', body });
