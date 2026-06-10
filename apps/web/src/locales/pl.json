@@ -150,7 +150,20 @@
     },
     "infinite": {
       "title": "Tryb nieskończony",
-      "description": "Gra bez limitu — wkrótce (wymaga konta)."
+      "description": "Gra bez limitu — odgaduj kolejne słowa z dzisiejszej puli.",
+      "loading": "Ładowanie słowa…",
+      "errorTitle": "Nie udało się wczytać słowa",
+      "errorMessage": "Sprawdź połączenie i spróbuj ponownie.",
+      "retry": "Spróbuj ponownie",
+      "progressLabel": "Słowo {{wordNumber}} z {{poolSize}}",
+      "play": {
+        "hint": "Odgadnij słowo na {{wordLength}} liter ({{maxGuesses}} prób)",
+        "won": "Wygrana! Słowo: {{answer}}",
+        "lost": "Koniec gry. Słowo: {{answer}}",
+        "invalidWord": "Słowo nie znajduje się w słowniku.",
+        "submitting": "Sprawdzam…",
+        "nextWord": "Następne słowo"
+      }
     },
     "profile": {
       "title": "Profil",
