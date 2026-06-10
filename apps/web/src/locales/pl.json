@@ -231,6 +231,11 @@
         "currentLabel": "Obecne hasło",
         "success": "Hasło zostało zmienione. Za chwilę przekierujemy do logowania."
       },
+      "sessions": {
+        "title": "Sesje",
+        "description": "Wyloguj się ze wszystkich urządzeń, na których jesteś zalogowany.",
+        "success": "Wylogowano ze wszystkich urządzeń. Za chwilę wrócisz na stronę główną."
+      },
       "deleteAccount": {
         "title": "Strefa niebezpieczna",
         "description": "Usunięcie konta jest trwałe. Stracisz dostęp do statystyk i historii gier.",
@@ -245,7 +250,8 @@
       "actions": {
         "saveDisplayName": "Zapisz nazwę",
         "changeEmail": "Zmień e-mail",
-        "changePassword": "Zmień hasło"
+        "changePassword": "Zmień hasło",
+        "logoutAll": "Wyloguj ze wszystkich urządzeń"
       }
     }
   }
