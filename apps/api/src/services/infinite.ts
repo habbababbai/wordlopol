@@ -84,6 +84,11 @@ export async function getOrCreateDailyPool(dateKey: string) {
     }
 
     if (wordId === undefined) {
+      const fallback = words.find((word) => !selectedWordIds.has(word.id));
+      wordId = fallback?.id;
+    }
+
+    if (wordId === undefined) {
       throw new HttpError(503, 'Dictionary not loaded');
     }
 
