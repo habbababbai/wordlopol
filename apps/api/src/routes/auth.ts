@@ -3,6 +3,7 @@ import cookieParser from 'cookie-parser';
 import { z } from 'zod';
 
 import { asyncHandler } from '../lib/async-handler.js';
+import { displayNameSchema, normalizedEmailSchema } from '../lib/auth-schemas.js';
 import { HttpError } from '../lib/http-error.js';
 import { validateBody } from '../lib/validate-body.js';
 import { clearRefreshCookie, REFRESH_COOKIE_NAME, setRefreshCookie } from '../lib/tokens.js';
@@ -34,13 +35,13 @@ import {
 } from '../services/auth.js';
 
 const registerSchema = z.object({
-  email: z.string().email(),
+  email: normalizedEmailSchema,
   password: z.string().min(8),
-  displayName: z.string().trim().min(1).max(50),
+  displayName: displayNameSchema,
 });
 
 const changeDisplayNameSchema = z.object({
-  displayName: z.string().trim().min(1).max(50),
+  displayName: displayNameSchema,
 });
 
 const verifyEmailSchema = z.object({
@@ -48,12 +49,12 @@ const verifyEmailSchema = z.object({
 });
 
 const loginSchema = z.object({
-  email: z.string().email(),
+  email: normalizedEmailSchema,
   password: z.string().min(1),
 });
 
 const emailOnlySchema = z.object({
-  email: z.string().email(),
+  email: normalizedEmailSchema,
 });
 
 const resetPasswordSchema = z.object({
@@ -67,7 +68,7 @@ const changePasswordSchema = z.object({
 });
 
 const changeEmailSchema = z.object({
-  newEmail: z.string().email(),
+  newEmail: normalizedEmailSchema,
 });
 
 const deleteAccountSchema = z.object({

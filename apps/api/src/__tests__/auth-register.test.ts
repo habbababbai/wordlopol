@@ -152,4 +152,58 @@ describe('auth register verify login', () => {
     expect(res.status).toBe(400);
     expect(res.body).toEqual({ error: 'Invalid request' });
   });
+
+  it('rejects registration with invalid displayName characters', async () => {
+    const agent = await createTestAgent();
+
+    const res = await agent.post(apiPath('/auth/register')).send({
+      email: 'invalidname@example.com',
+      password: 'secure-password',
+      displayName: '<script>alert(1)</script>',
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ error: 'Invalid request' });
+  });
+
+  it('normalizes email on registration and login', async () => {
+    const agent = await createTestAgent();
+
+    await agent
+      .post(apiPath('/auth/register'))
+      .send({
+        email: '  Player@Example.COM  ',
+        password: 'secure-password',
+        displayName: 'Player',
+      })
+      .expect(201);
+
+    await agent
+      .post(apiPath('/auth/verify-email'))
+      .send({ token: verificationToken.value })
+      .expect(200);
+
+    const loginRes = await agent
+      .post(apiPath('/auth/login'))
+      .send({
+        email: 'player@example.com',
+        password: 'secure-password',
+      })
+      .expect(200);
+
+    expect(loginRes.body.user.email).toBe('player@example.com');
+  });
+
+  it('accepts Polish characters in displayName', async () => {
+    const agent = await createTestAgent();
+
+    await agent
+      .post(apiPath('/auth/register'))
+      .send({
+        email: 'polish@example.com',
+        password: 'secure-password',
+        displayName: 'Łukasz ąę',
+      })
+      .expect(201);
+  });
 });

@@ -44,14 +44,14 @@ export interface EmailChangeTokenPayload {
 }
 
 export function signEmailChangeToken(userId: string, newEmail: string): string {
-  return jwt.sign({ newEmail, purpose: 'email-change' }, env.JWT_REFRESH_SECRET, {
+  return jwt.sign({ newEmail, purpose: 'email-change' }, env.JWT_EMAIL_CHANGE_SECRET, {
     subject: userId,
     expiresIn: '24h',
   });
 }
 
 export function verifyEmailChangeToken(token: string): EmailChangeTokenPayload {
-  const payload = jwt.verify(token, env.JWT_REFRESH_SECRET);
+  const payload = jwt.verify(token, env.JWT_EMAIL_CHANGE_SECRET);
 
   if (
     typeof payload === 'string' ||
