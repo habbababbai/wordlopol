@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WORD_LENGTH } from '@wordlopol/shared';
 import { signAccessToken } from '../lib/tokens.js';
 import { prisma } from '../lib/prisma.js';
@@ -11,6 +11,17 @@ import {
   resetDatabase,
   seedDictionaryWords,
 } from '../test/helpers.js';
+
+/** Stable date where pool picker succeeds with a 5-word dictionary (see infinite-pool.test.ts). */
+const TEST_DATE_KEY = '2026-06-07';
+
+vi.mock('../lib/daily-date.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../lib/daily-date.js')>();
+  return {
+    ...actual,
+    getCalendarDateKey: () => TEST_DATE_KEY,
+  };
+});
 
 const TEST_POOL_WORDS = ['wążka', 'mleko', 'aabaa', 'aacaa', 'aadaa'];
 
