@@ -240,6 +240,8 @@ Sets `daily_guest_session` cookie for unauthenticated clients (httpOnly, path `/
 
 Guests require the `daily_guest_session` cookie from `GET /v1/daily/today`; the server tracks guess count. Authenticated users send only `{ guess }` as well.
 
+**CSRF:** `POST /v1/daily/guess` requires the `x-csrf-token` header (double-submit cookie). Fetch a token via `GET /v1/auth/csrf` before the first guest guess, or use the token returned on login/refresh for authenticated play.
+
 **POST `/v1/daily/guess` — 200**
 
 ```json

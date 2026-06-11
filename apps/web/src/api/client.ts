@@ -174,8 +174,10 @@ export const api = {
 
   getDailyToday: () => request<DailyChallengeDto>('/daily/today'),
 
-  submitDailyGuess: (body: DailyGuessRequestDto) =>
-    request<GuessResultDto>('/daily/guess', { method: 'POST', body }),
+  submitDailyGuess: async (body: DailyGuessRequestDto) => {
+    await ensureCsrfToken(API_BASE);
+    return request<GuessResultDto>('/daily/guess', { method: 'POST', body });
+  },
 
   getInfiniteNext: () => request<InfiniteWordDto>('/infinite/next'),
 

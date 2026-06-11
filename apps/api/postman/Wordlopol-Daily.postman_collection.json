@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Wordlopol Daily (automated)",
-    "description": "Daily challenge happy path for local development.\n\nSETUP:\n1. Import Wordlopol-Local.postman_environment.json\n2. Select **Wordlopol Local** in the environment dropdown (top-right)\n3. Ensure dictionary is loaded (`pnpm db:import-words`)\n4. Run collection from **00 Health** through **05 Guest guess without session** in order\n\nUses Postman cookie jar — run 01 Daily Today before guest guesses so `daily_guest_session` is set.",
+    "description": "Daily challenge happy path for local development.\n\nSETUP:\n1. Import Wordlopol-Local.postman_environment.json\n2. Select **Wordlopol Local** in the environment dropdown (top-right)\n3. Ensure dictionary is loaded (`pnpm db:import-words`)\n4. Run collection from **00 Health** through **05 Guest guess without session** in order\n\nUses Postman cookie jar — run 01 Daily Today before guest guesses so `daily_guest_session` is set. Run 00b CSRF token before POST requests (sets `csrf_token` for `x-csrf-token` header).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -66,6 +66,28 @@
       }
     },
     {
+      "name": "00b CSRF token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Has csrfToken', () => pm.expect(body.csrfToken).to.be.a('string').and.not.empty);",
+              "pm.environment.set('csrf_token', body.csrfToken);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/auth/csrf"
+      }
+    },
+    {
       "name": "02 Daily Today again",
       "event": [
         {
@@ -126,7 +148,10 @@
       ],
       "request": {
         "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-csrf-token", "value": "{{csrf_token}}" }
+        ],
         "body": {
           "mode": "raw",
           "raw": "{\n  \"guess\": \"mleko\"\n}",
@@ -153,7 +178,10 @@
       ],
       "request": {
         "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-csrf-token", "value": "{{csrf_token}}" }
+        ],
         "body": {
           "mode": "raw",
           "raw": "{\n  \"guess\": \"zzzzz\"\n}",
@@ -187,7 +215,10 @@
       ],
       "request": {
         "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-csrf-token", "value": "{{csrf_token}}" }
+        ],
         "body": {
           "mode": "raw",
           "raw": "{\n  \"guess\": \"mleko\"\n}",
