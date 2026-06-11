@@ -10,6 +10,9 @@ import { cn } from '../../lib/utils';
 import { ThemeToggle } from '../ThemeToggle';
 import { Badge } from '../ui/badge';
 
+const focusVisibleRing =
+  'outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50';
+
 function NavItem({
   to,
   children,
@@ -26,6 +29,7 @@ function NavItem({
       className={({ isActive }) =>
         cn(
           'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+          focusVisibleRing,
           isActive
             ? 'bg-accent text-accent-foreground'
             : 'text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -51,7 +55,10 @@ function NavButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+      className={cn(
+        'rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50',
+        focusVisibleRing,
+      )}
     >
       {children}
     </button>
@@ -150,7 +157,10 @@ export function AppLayout() {
 
             <button
               type="button"
-              className="flex size-9 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-muted md:hidden [&_svg]:size-4"
+              className={cn(
+                'flex size-9 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-muted md:hidden [&_svg]:size-4',
+                focusVisibleRing,
+              )}
               aria-label={mobileOpen ? t('nav.closeMenu') : t('nav.openMenu')}
               aria-controls={MOBILE_NAV_ID}
               aria-expanded={mobileOpen}
