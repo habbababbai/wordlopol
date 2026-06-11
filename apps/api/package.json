@@ -8,6 +8,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "lint": "eslint src/ scripts/",
+    "format": "prettier --write src scripts docs postman \"*.{json,ts,js,md}\"",
+    "format:check": "prettier --check src scripts docs postman \"*.{json,ts,js,md}\"",
     "typecheck": "tsc --noEmit",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",

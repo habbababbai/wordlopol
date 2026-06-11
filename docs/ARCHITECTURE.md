@@ -26,6 +26,18 @@ flowchart TB
 
 Web and API both import types from `@wordlopol/shared` — no duplicate DTO files in apps.
 
+## HTTP API versioning
+
+All application endpoints are under **`/v1`** on the Express server (`/v1/auth`, `/v1/daily`, `/v1/infinite`, `/v1/user`, `/v1/health`).
+
+| Layer            | Example                           |
+| ---------------- | --------------------------------- |
+| Browser (Vite)   | `GET /api/v1/daily/today`         |
+| Express (direct) | `GET /v1/daily/today`             |
+| Infra probe      | `GET /health` (unversioned alias) |
+
+`/api` is the gateway prefix in front of the web app only — not an API version. Package semver (`apps/api` `0.x`) tracks releases, not the HTTP contract.
+
 ## Data model (core)
 
 - **User** — email/password auth, `emailVerifiedAt`, `displayName`

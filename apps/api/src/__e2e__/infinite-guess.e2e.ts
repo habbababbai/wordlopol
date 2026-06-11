@@ -4,6 +4,7 @@ import { signAccessToken } from '../lib/tokens.js';
 import { prisma } from '../lib/prisma.js';
 import { dateKeyToUtcDate, getCalendarDateKey } from '../lib/daily-date.js';
 import {
+  apiPath,
   createVerifiedUserWithPassword,
   pickWrongWord,
   resetDatabase,
@@ -38,7 +39,7 @@ describe('e2e: POST /infinite/guess', () => {
     const token = signAccessToken(user.id);
 
     await request(baseUrl)
-      .get('/infinite/next')
+      .get(apiPath('/infinite/next'))
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
@@ -46,7 +47,7 @@ describe('e2e: POST /infinite/guess', () => {
     const wrongGuess = pickWrongWord(TEST_POOL_WORDS, answer);
 
     const midGame = await request(baseUrl)
-      .post('/infinite/guess')
+      .post(apiPath('/infinite/guess'))
       .set('Authorization', `Bearer ${token}`)
       .send({ guess: wrongGuess })
       .expect(200);
@@ -55,7 +56,7 @@ describe('e2e: POST /infinite/guess', () => {
     expect(midGame.body).not.toHaveProperty('answer');
 
     const win = await request(baseUrl)
-      .post('/infinite/guess')
+      .post(apiPath('/infinite/guess'))
       .set('Authorization', `Bearer ${token}`)
       .send({ guess: answer })
       .expect(200);
@@ -68,7 +69,7 @@ describe('e2e: POST /infinite/guess', () => {
     });
 
     const next = await request(baseUrl)
-      .get('/infinite/next')
+      .get(apiPath('/infinite/next'))
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 

@@ -3,7 +3,7 @@ import { WORD_LENGTH } from '@wordlopol/shared';
 import { prisma } from '../lib/prisma.js';
 import { dateKeyToUtcDate, getCalendarDateKey } from '../lib/daily-date.js';
 import { getOrCreateDailyChallenge } from '../services/daily.js';
-import { createTestAgent, resetDatabase, seedDictionaryWords } from '../test/helpers.js';
+import { apiPath, createTestAgent, resetDatabase, seedDictionaryWords } from '../test/helpers.js';
 
 describe('GET /daily/today', () => {
   beforeEach(async () => {
@@ -15,7 +15,7 @@ describe('GET /daily/today', () => {
 
     const agent = await createTestAgent();
     const dateKey = getCalendarDateKey();
-    const res = await agent.get('/daily/today').expect(200);
+    const res = await agent.get(apiPath('/daily/today')).expect(200);
 
     expect(res.body).toEqual({
       date: dateKey,
@@ -35,8 +35,8 @@ describe('GET /daily/today', () => {
     await seedDictionaryWords(['jabłko', 'wążka', 'krzesło', 'mleko', 'stół']);
 
     const agent = await createTestAgent();
-    const first = await agent.get('/daily/today').expect(200);
-    const second = await agent.get('/daily/today').expect(200);
+    const first = await agent.get(apiPath('/daily/today')).expect(200);
+    const second = await agent.get(apiPath('/daily/today')).expect(200);
 
     expect(second.body).toEqual(first.body);
 
@@ -77,7 +77,7 @@ describe('GET /daily/today', () => {
 
   it('returns 503 when the dictionary is empty', async () => {
     const agent = await createTestAgent();
-    const res = await agent.get('/daily/today').expect(503);
+    const res = await agent.get(apiPath('/daily/today')).expect(503);
 
     expect(res.body).toEqual({ error: 'Dictionary not loaded' });
   });
@@ -88,7 +88,7 @@ describe('GET /daily/today', () => {
     });
 
     const agent = await createTestAgent();
-    const res = await agent.get('/daily/today').expect(503);
+    const res = await agent.get(apiPath('/daily/today')).expect(503);
 
     expect(res.body).toEqual({ error: 'Dictionary not loaded' });
   });

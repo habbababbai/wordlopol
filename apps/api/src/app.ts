@@ -1,15 +1,12 @@
+import { API_PATH_PREFIX } from '@wordlopol/shared';
 import cors from 'cors';
 import express, { type Express } from 'express';
 import helmet from 'helmet';
-import type { HealthDegradedResponseDto, HealthOkResponseDto } from '@wordlopol/shared';
 
 import { env } from './config/env.js';
-import { prisma } from './lib/prisma.js';
+import { healthHandler } from './lib/health-handler.js';
 import { errorHandler } from './middleware/error-handler.js';
-import { authRouter } from './routes/auth.js';
-import { dailyRouter } from './routes/daily.js';
-import { infiniteRouter } from './routes/infinite.js';
-import { userRouter } from './routes/user.js';
+import { v1Router } from './routes/v1/index.js';
 
 export function createApp(): Express {
   const app = express();
@@ -26,26 +23,8 @@ export function createApp(): Express {
     }),
   );
   app.use(express.json());
-  app.use('/auth', authRouter);
-  app.use('/daily', dailyRouter);
-  app.use('/infinite', infiniteRouter);
-  app.use('/user', userRouter);
-
-  app.get('/health', async (_req, res) => {
-    try {
-      await prisma.$queryRaw`SELECT 1`;
-      const wordCount = await prisma.word.count();
-      const body: HealthOkResponseDto = {
-        status: 'ok',
-        database: 'connected',
-        wordCount,
-      };
-      res.json(body);
-    } catch {
-      const body: HealthDegradedResponseDto = { status: 'degraded', database: 'disconnected' };
-      res.status(503).json(body);
-    }
-  });
+  app.use(API_PATH_PREFIX, v1Router);
+  app.get('/health', healthHandler);
 
   app.use(errorHandler);
 

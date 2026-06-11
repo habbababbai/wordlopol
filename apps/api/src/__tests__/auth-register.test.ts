@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { verifyAccessToken } from '../lib/tokens.js';
-import { createTestAgent, resetDatabase } from '../test/helpers.js';
+import { apiPath, createTestAgent, resetDatabase } from '../test/helpers.js';
 
 const verificationToken = vi.hoisted(() => ({ value: '' }));
 
@@ -29,7 +29,7 @@ describe('auth register verify login', () => {
     const agent = await createTestAgent();
 
     const registerRes = await agent
-      .post('/auth/register')
+      .post(apiPath('/auth/register'))
       .send({
         email: 'player@example.com',
         password: 'secure-password',
@@ -42,13 +42,13 @@ describe('auth register verify login', () => {
     expect(verificationToken.value).not.toBe('');
 
     await agent
-      .post('/auth/verify-email')
+      .post(apiPath('/auth/verify-email'))
       .send({ token: verificationToken.value })
       .expect(200)
       .expect({ message: 'Email verified' });
 
     const loginRes = await agent
-      .post('/auth/login')
+      .post(apiPath('/auth/login'))
       .send({
         email: 'player@example.com',
         password: 'secure-password',
@@ -70,13 +70,13 @@ describe('auth register verify login', () => {
   it('rejects login before email verification', async () => {
     const agent = await createTestAgent();
 
-    await agent.post('/auth/register').send({
+    await agent.post(apiPath('/auth/register')).send({
       email: 'unverified@example.com',
       password: 'secure-password',
       displayName: 'Unverified Player',
     });
 
-    const res = await agent.post('/auth/login').send({
+    const res = await agent.post(apiPath('/auth/login')).send({
       email: 'unverified@example.com',
       password: 'secure-password',
     });
@@ -90,12 +90,12 @@ describe('auth register verify login', () => {
     const email = 'resend@example.com';
 
     await agent
-      .post('/auth/register')
+      .post(apiPath('/auth/register'))
       .send({ email, password: 'secure-password', displayName: 'Resend Player' });
     const firstToken = verificationToken.value;
 
     await agent
-      .post('/auth/resend-verification')
+      .post(apiPath('/auth/resend-verification'))
       .send({ email })
       .expect(200)
       .expect({ message: 'If the email exists and is unverified, a verification link was sent' });
@@ -103,7 +103,7 @@ describe('auth register verify login', () => {
     expect(verificationToken.value).not.toBe(firstToken);
 
     await agent
-      .post('/auth/verify-email')
+      .post(apiPath('/auth/verify-email'))
       .send({ token: verificationToken.value })
       .expect(200)
       .expect({ message: 'Email verified' });
@@ -112,13 +112,13 @@ describe('auth register verify login', () => {
   it('rejects duplicate registration', async () => {
     const agent = await createTestAgent();
 
-    await agent.post('/auth/register').send({
+    await agent.post(apiPath('/auth/register')).send({
       email: 'duplicate@example.com',
       password: 'secure-password',
       displayName: 'First Player',
     });
 
-    const res = await agent.post('/auth/register').send({
+    const res = await agent.post(apiPath('/auth/register')).send({
       email: 'duplicate@example.com',
       password: 'another-password',
       displayName: 'Second Player',
@@ -131,7 +131,7 @@ describe('auth register verify login', () => {
   it('rejects registration without displayName', async () => {
     const agent = await createTestAgent();
 
-    const res = await agent.post('/auth/register').send({
+    const res = await agent.post(apiPath('/auth/register')).send({
       email: 'noname@example.com',
       password: 'secure-password',
     });
@@ -143,7 +143,7 @@ describe('auth register verify login', () => {
   it('rejects registration with blank displayName', async () => {
     const agent = await createTestAgent();
 
-    const res = await agent.post('/auth/register').send({
+    const res = await agent.post(apiPath('/auth/register')).send({
       email: 'blankname@example.com',
       password: 'secure-password',
       displayName: '   ',

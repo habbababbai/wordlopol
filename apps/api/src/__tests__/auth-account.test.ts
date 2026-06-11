@@ -1,7 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { prisma } from '../lib/prisma.js';
 import { signAccessToken } from '../lib/tokens.js';
-import { createTestAgent, createVerifiedUserWithPassword, resetDatabase } from '../test/helpers.js';
+import {
+  apiPath,
+  createTestAgent,
+  createVerifiedUserWithPassword,
+  resetDatabase,
+} from '../test/helpers.js';
 
 const passwordResetToken = vi.hoisted(() => ({ value: '' }));
 const emailChangeToken = vi.hoisted(() => ({ value: '' }));
@@ -34,22 +39,22 @@ describe('auth account endpoints', () => {
     const { user, password } = await createVerifiedUserWithPassword('old-password');
     const agent = await createTestAgent();
 
-    await agent.post('/auth/login').send({ email: user.email, password });
+    await agent.post(apiPath('/auth/login')).send({ email: user.email, password });
 
-    await agent.post('/auth/forgot-password').send({ email: user.email }).expect(200);
+    await agent.post(apiPath('/auth/forgot-password')).send({ email: user.email }).expect(200);
 
     expect(passwordResetToken.value).not.toBe('');
 
     await agent
-      .post('/auth/reset-password')
+      .post(apiPath('/auth/reset-password'))
       .send({ token: passwordResetToken.value, password: 'new-password-1' })
       .expect(200)
       .expect({ message: 'Password reset' });
 
-    expect((await agent.post('/auth/refresh')).status).toBe(401);
+    expect((await agent.post(apiPath('/auth/refresh'))).status).toBe(401);
 
     await agent
-      .post('/auth/login')
+      .post(apiPath('/auth/login'))
       .send({ email: user.email, password: 'new-password-1' })
       .expect(200);
   });
@@ -58,16 +63,16 @@ describe('auth account endpoints', () => {
     const { user, password } = await createVerifiedUserWithPassword('old-password');
     const agent = await createTestAgent();
 
-    await agent.post('/auth/login').send({ email: user.email, password });
+    await agent.post(apiPath('/auth/login')).send({ email: user.email, password });
 
     await agent
-      .patch('/auth/change-password')
+      .patch(apiPath('/auth/change-password'))
       .set('Authorization', `Bearer ${signAccessToken(user.id)}`)
       .send({ currentPassword: 'old-password', newPassword: 'new-password-2' })
       .expect(200)
       .expect({ message: 'Password changed' });
 
-    expect((await agent.post('/auth/refresh')).status).toBe(401);
+    expect((await agent.post(apiPath('/auth/refresh'))).status).toBe(401);
   });
 
   it('changes email after verification token is confirmed', async () => {
@@ -76,7 +81,7 @@ describe('auth account endpoints', () => {
     const newEmail = 'new-address@example.com';
 
     await agent
-      .patch('/auth/change-email')
+      .patch(apiPath('/auth/change-email'))
       .set('Authorization', `Bearer ${signAccessToken(user.id)}`)
       .send({ newEmail })
       .expect(200)
@@ -85,7 +90,7 @@ describe('auth account endpoints', () => {
     expect(emailChangeToken.value).not.toBe('');
 
     await agent
-      .post('/auth/verify-email')
+      .post(apiPath('/auth/verify-email'))
       .send({ token: emailChangeToken.value })
       .expect(200)
       .expect({ message: 'Email changed' });
@@ -93,7 +98,7 @@ describe('auth account endpoints', () => {
     const updated = await prisma.user.findUnique({ where: { id: user.id } });
     expect(updated?.email).toBe(newEmail);
 
-    await agent.post('/auth/login').send({ email: newEmail, password }).expect(200);
+    await agent.post(apiPath('/auth/login')).send({ email: newEmail, password }).expect(200);
   });
 
   it('deletes account with password confirmation', async () => {
@@ -101,7 +106,7 @@ describe('auth account endpoints', () => {
     const agent = await createTestAgent();
 
     await agent
-      .delete('/auth/account')
+      .delete(apiPath('/auth/account'))
       .set('Authorization', `Bearer ${signAccessToken(user.id)}`)
       .send({ password })
       .expect(200)
@@ -117,7 +122,7 @@ describe('auth account endpoints', () => {
     const res = await (
       await createTestAgent()
     )
-      .patch('/auth/change-display-name')
+      .patch(apiPath('/auth/change-display-name'))
       .set('Authorization', `Bearer ${signAccessToken(user.id)}`)
       .send({ displayName: 'New Name' })
       .expect(200);
@@ -139,7 +144,7 @@ describe('auth account endpoints', () => {
     const res = await (
       await createTestAgent()
     )
-      .patch('/auth/change-display-name')
+      .patch(apiPath('/auth/change-display-name'))
       .set('Authorization', `Bearer ${signAccessToken(user.id)}`)
       .send({ displayName: 'Test Player' });
 
@@ -153,7 +158,7 @@ describe('auth account endpoints', () => {
     const res = await (
       await createTestAgent()
     )
-      .patch('/auth/change-display-name')
+      .patch(apiPath('/auth/change-display-name'))
       .set('Authorization', `Bearer ${signAccessToken(user.id)}`)
       .send({ displayName: '   ' });
 

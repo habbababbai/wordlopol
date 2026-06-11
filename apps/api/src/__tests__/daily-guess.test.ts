@@ -5,6 +5,7 @@ import { prisma } from '../lib/prisma.js';
 import { dateKeyToUtcDate, getCalendarDateKey } from '../lib/daily-date.js';
 import { getOrCreateDailyChallenge } from '../services/daily.js';
 import {
+  apiPath,
   createTestAgent,
   createVerifiedUserWithPassword,
   pickWrongWord,
@@ -32,7 +33,7 @@ describe('POST /daily/guess', () => {
 
     const agent = await createTestAgent();
     const res = await agent
-      .post('/daily/guess')
+      .post(apiPath('/daily/guess'))
       .send({ guess: wrongGuess, guessNumber: 1 })
       .expect(200);
 
@@ -49,7 +50,7 @@ describe('POST /daily/guess', () => {
 
     const agent = await createTestAgent();
     const res = await agent
-      .post('/daily/guess')
+      .post(apiPath('/daily/guess'))
       .send({ guess: answer, guessNumber: 1 })
       .expect(200);
 
@@ -66,7 +67,7 @@ describe('POST /daily/guess', () => {
     await seedDictionaryWords(TEST_WORDS);
 
     const agent = await createTestAgent();
-    const res = await agent.post('/daily/guess').send({ guess: 'mleko' }).expect(400);
+    const res = await agent.post(apiPath('/daily/guess')).send({ guess: 'mleko' }).expect(400);
 
     expect(res.body).toEqual({ error: 'guessNumber is required for guest play' });
   });
@@ -76,7 +77,7 @@ describe('POST /daily/guess', () => {
 
     const agent = await createTestAgent();
     const res = await agent
-      .post('/daily/guess')
+      .post(apiPath('/daily/guess'))
       .send({ guess: 'zzzzz', guessNumber: 1 })
       .expect(400);
 
@@ -87,7 +88,10 @@ describe('POST /daily/guess', () => {
     await seedDictionaryWords(TEST_WORDS);
 
     const agent = await createTestAgent();
-    const res = await agent.post('/daily/guess').send({ guess: 'ab', guessNumber: 1 }).expect(400);
+    const res = await agent
+      .post(apiPath('/daily/guess'))
+      .send({ guess: 'ab', guessNumber: 1 })
+      .expect(400);
 
     expect(res.body).toEqual({ error: 'Guess must be 5 letters' });
   });
@@ -102,7 +106,7 @@ describe('POST /daily/guess', () => {
     const agent = await createTestAgent();
 
     const first = await agent
-      .post('/daily/guess')
+      .post(apiPath('/daily/guess'))
       .set('Authorization', `Bearer ${token}`)
       .send({ guess: wrongGuess })
       .expect(200);
@@ -111,7 +115,7 @@ describe('POST /daily/guess', () => {
     expect(first.body.finished).toBe(false);
 
     const second = await agent
-      .post('/daily/guess')
+      .post(apiPath('/daily/guess'))
       .set('Authorization', `Bearer ${token}`)
       .send({ guess: answer })
       .expect(200);
@@ -131,7 +135,7 @@ describe('POST /daily/guess', () => {
 
     const agent = await createTestAgent();
     await agent
-      .post('/daily/guess')
+      .post(apiPath('/daily/guess'))
       .set('Authorization', `Bearer ${token}`)
       .send({ guess: answer })
       .expect(200);
@@ -168,13 +172,13 @@ describe('POST /daily/guess', () => {
 
     const agent = await createTestAgent();
     await agent
-      .post('/daily/guess')
+      .post(apiPath('/daily/guess'))
       .set('Authorization', `Bearer ${token}`)
       .send({ guess: answer })
       .expect(200);
 
     const res = await agent
-      .post('/daily/guess')
+      .post(apiPath('/daily/guess'))
       .set('Authorization', `Bearer ${token}`)
       .send({ guess: answer })
       .expect(409);
@@ -194,7 +198,7 @@ describe('POST /daily/guess', () => {
 
     for (let i = 0; i < wrongGuesses.length; i++) {
       const res = await agent
-        .post('/daily/guess')
+        .post(apiPath('/daily/guess'))
         .set('Authorization', `Bearer ${token}`)
         .send({ guess: wrongGuesses[i] })
         .expect(200);

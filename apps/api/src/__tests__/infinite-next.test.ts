@@ -5,6 +5,7 @@ import { prisma } from '../lib/prisma.js';
 import { dateKeyToUtcDate, getCalendarDateKey } from '../lib/daily-date.js';
 import { completeInfiniteWord, getNextWord, getOrCreateDailyPool } from '../services/infinite.js';
 import {
+  apiPath,
   createTestAgent,
   createTestUser,
   createVerifiedUserWithPassword,
@@ -21,7 +22,7 @@ describe('GET /infinite/next', () => {
 
   it('returns 401 without authorization', async () => {
     const agent = await createTestAgent();
-    const res = await agent.get('/infinite/next').expect(401);
+    const res = await agent.get(apiPath('/infinite/next')).expect(401);
 
     expect(res.body).toEqual({ error: 'Unauthorized' });
   });
@@ -32,7 +33,7 @@ describe('GET /infinite/next', () => {
 
     const agent = await createTestAgent();
     const res = await agent
-      .get('/infinite/next')
+      .get(apiPath('/infinite/next'))
       .set('Authorization', `Bearer ${token}`)
       .expect(403);
 
@@ -46,7 +47,7 @@ describe('GET /infinite/next', () => {
 
     const agent = await createTestAgent();
     const res = await agent
-      .get('/infinite/next')
+      .get(apiPath('/infinite/next'))
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
@@ -67,11 +68,11 @@ describe('GET /infinite/next', () => {
 
     const agent = await createTestAgent();
     const first = await agent
-      .get('/infinite/next')
+      .get(apiPath('/infinite/next'))
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
     const second = await agent
-      .get('/infinite/next')
+      .get(apiPath('/infinite/next'))
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
@@ -94,7 +95,7 @@ describe('GET /infinite/next', () => {
 
     const agent = await createTestAgent();
     const res = await agent
-      .get('/infinite/next')
+      .get(apiPath('/infinite/next'))
       .set('Authorization', `Bearer ${token}`)
       .expect(503);
 

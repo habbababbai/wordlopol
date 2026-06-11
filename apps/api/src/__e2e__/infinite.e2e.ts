@@ -4,6 +4,7 @@ import { WORD_LENGTH } from '@wordlopol/shared';
 import { signAccessToken } from '../lib/tokens.js';
 import { getCalendarDateKey } from '../lib/daily-date.js';
 import {
+  apiPath,
   createVerifiedUserWithPassword,
   resetDatabase,
   seedDictionaryWords,
@@ -21,7 +22,7 @@ describe('e2e: GET /infinite/next', () => {
     const token = signAccessToken(user.id);
 
     const res = await request(baseUrl)
-      .get('/infinite/next')
+      .get(apiPath('/infinite/next'))
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 

@@ -2,6 +2,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { prisma } from '../lib/prisma.js';
 import { createTestAgent, resetDatabase } from '../test/helpers.js';
 
+const okBody = {
+  status: 'ok',
+  database: 'connected',
+  apiVersion: 'v1',
+} as const;
+
+const degradedBody = {
+  status: 'degraded',
+  database: 'disconnected',
+  apiVersion: 'v1',
+} as const;
+
 describe('GET /health', () => {
   beforeEach(async () => {
     await resetDatabase();
@@ -11,7 +23,7 @@ describe('GET /health', () => {
     vi.restoreAllMocks();
   });
 
-  it('returns 200 with connected database and word count', async () => {
+  it('returns 200 with connected database and word count on unversioned path', async () => {
     await prisma.word.createMany({
       data: [
         { text: 'jabłko', length: 5 },
@@ -23,8 +35,7 @@ describe('GET /health', () => {
     const res = await agent.get('/health').expect(200);
 
     expect(res.body).toEqual({
-      status: 'ok',
-      database: 'connected',
+      ...okBody,
       wordCount: 2,
     });
   });
@@ -34,8 +45,7 @@ describe('GET /health', () => {
     const res = await agent.get('/health').expect(200);
 
     expect(res.body).toMatchObject({
-      status: 'ok',
-      database: 'connected',
+      ...okBody,
       wordCount: 0,
     });
   });
@@ -46,9 +56,6 @@ describe('GET /health', () => {
     const agent = await createTestAgent();
     const res = await agent.get('/health').expect(503);
 
-    expect(res.body).toEqual({
-      status: 'degraded',
-      database: 'disconnected',
-    });
+    expect(res.body).toEqual(degradedBody);
   });
 });

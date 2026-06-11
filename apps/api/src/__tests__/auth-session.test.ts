@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { signAccessToken } from '../lib/tokens.js';
-import { createTestAgent, createVerifiedUserWithPassword, resetDatabase } from '../test/helpers.js';
+import {
+  apiPath,
+  createTestAgent,
+  createVerifiedUserWithPassword,
+  resetDatabase,
+} from '../test/helpers.js';
 
 describe('auth session endpoints', () => {
   beforeEach(async () => {
@@ -15,12 +20,12 @@ describe('auth session endpoints', () => {
     const { user, password } = await createVerifiedUserWithPassword();
     const agent = await createTestAgent();
 
-    await agent.post('/auth/login').send({
+    await agent.post(apiPath('/auth/login')).send({
       email: user.email,
       password,
     });
 
-    const refreshRes = await agent.post('/auth/refresh').expect(200);
+    const refreshRes = await agent.post(apiPath('/auth/refresh')).expect(200);
 
     expect(refreshRes.body.accessToken).toEqual(expect.any(String));
     expect(refreshRes.body.refreshToken).toBeUndefined();
@@ -31,14 +36,14 @@ describe('auth session endpoints', () => {
     const { user, password } = await createVerifiedUserWithPassword();
     const agent = await createTestAgent();
 
-    await agent.post('/auth/login').send({
+    await agent.post(apiPath('/auth/login')).send({
       email: user.email,
       password,
     });
 
-    await agent.post('/auth/logout').expect(200).expect({ message: 'Logged out' });
+    await agent.post(apiPath('/auth/logout')).expect(200).expect({ message: 'Logged out' });
 
-    const refreshRes = await agent.post('/auth/refresh');
+    const refreshRes = await agent.post(apiPath('/auth/refresh'));
     expect(refreshRes.status).toBe(401);
     expect(refreshRes.body).toEqual({ error: 'Missing refresh token' });
   });
@@ -48,18 +53,18 @@ describe('auth session endpoints', () => {
     const deviceA = await createTestAgent();
     const deviceB = await createTestAgent();
 
-    await deviceA.post('/auth/login').send({ email: user.email, password });
-    await deviceB.post('/auth/login').send({ email: user.email, password });
+    await deviceA.post(apiPath('/auth/login')).send({ email: user.email, password });
+    await deviceB.post(apiPath('/auth/login')).send({ email: user.email, password });
 
     const accessToken = signAccessToken(user.id);
 
     await deviceA
-      .post('/auth/logout-all')
+      .post(apiPath('/auth/logout-all'))
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect({ message: 'Logged out from all devices' });
 
-    expect((await deviceA.post('/auth/refresh')).status).toBe(401);
-    expect((await deviceB.post('/auth/refresh')).status).toBe(401);
+    expect((await deviceA.post(apiPath('/auth/refresh'))).status).toBe(401);
+    expect((await deviceB.post(apiPath('/auth/refresh'))).status).toBe(401);
   });
 });

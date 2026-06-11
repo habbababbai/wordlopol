@@ -7,7 +7,7 @@
   "variable": [
     {
       "key": "base_url",
-      "value": "http://localhost:3001"
+      "value": "http://localhost:3001/v1"
     }
   ],
   "item": [
@@ -27,7 +27,7 @@
               "  pm.expect(pm.response.json().wordCount).to.be.above(0);",
               "});",
               "pm.test('Environment active', () => {",
-              "  pm.expect(pm.environment.get('base_url'), 'Select Wordlopol Local environment (top-right)').to.eql('http://localhost:3001');",
+              "  pm.expect(pm.environment.get('base_url'), 'Select Wordlopol Local environment (top-right)').to.eql('http://localhost:3001/v1');",
               "});"
             ]
           }
