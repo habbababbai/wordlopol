@@ -19,7 +19,7 @@ import type {
   UserProfileResponseDto,
   VerifyEmailRequestDto,
 } from '@wordlopol/shared';
-import { API_PATH_PREFIX } from '@wordlopol/shared';
+import { API_PATH_PREFIX, API_ERROR_MESSAGES } from '@wordlopol/shared';
 
 import { ApiError } from './errors';
 import {
@@ -131,7 +131,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     } catch {
       clearAccessToken();
       redirectToLogin();
-      throw new ApiError(401, 'Session expired');
+      throw new ApiError(401, API_ERROR_MESSAGES.INVALID_REFRESH_TOKEN, 'INVALID_REFRESH_TOKEN');
     }
   }
 

@@ -53,7 +53,12 @@ export function signEmailChangeToken(userId: string, newEmail: string): string {
 }
 
 export function verifyEmailChangeToken(token: string): EmailChangeTokenPayload {
-  const payload = jwt.verify(token, env.JWT_EMAIL_CHANGE_SECRET);
+  let payload: jwt.JwtPayload | string;
+  try {
+    payload = jwt.verify(token, env.JWT_EMAIL_CHANGE_SECRET);
+  } catch {
+    throw new HttpError(401, 'INVALID_EMAIL_CHANGE_TOKEN');
+  }
 
   if (
     typeof payload === 'string' ||
@@ -68,7 +73,12 @@ export function verifyEmailChangeToken(token: string): EmailChangeTokenPayload {
 }
 
 export function verifyAccessToken(token: string): AccessTokenPayload {
-  const payload = jwt.verify(token, env.JWT_ACCESS_SECRET);
+  let payload: jwt.JwtPayload | string;
+  try {
+    payload = jwt.verify(token, env.JWT_ACCESS_SECRET);
+  } catch {
+    throw new HttpError(401, 'INVALID_ACCESS_TOKEN');
+  }
 
   if (typeof payload === 'string' || typeof payload.sub !== 'string') {
     throw new HttpError(401, 'INVALID_ACCESS_TOKEN');
