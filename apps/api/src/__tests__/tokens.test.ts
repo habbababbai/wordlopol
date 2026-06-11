@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Response } from 'express';
 import { prisma } from '../lib/prisma.js';
 import {
   createRefreshToken,
@@ -87,5 +88,64 @@ describe('tokens', () => {
 
     const count = await prisma.refreshToken.count({ where: { userId: user.id } });
     expect(count).toBe(0);
+  });
+
+  it('sets refresh cookie on both dev paths when NODE_ENV is development', async () => {
+    vi.resetModules();
+    vi.doMock('../config/env.js', () => ({
+      env: {
+        NODE_ENV: 'development',
+        REFRESH_COOKIE_PATH: '/api/v1/auth',
+        JWT_ACCESS_SECRET: 'test-access-secret',
+        JWT_REFRESH_SECRET: 'test-refresh-secret',
+        JWT_EMAIL_CHANGE_SECRET: 'test-email-change-secret',
+      },
+    }));
+
+    const { setRefreshCookie: setDevRefreshCookie } = await import('../lib/tokens.js');
+    const cookies: Array<{ name: string; path: string }> = [];
+    const res = {
+      cookie(name: string, _value: string, options: { path?: string }) {
+        cookies.push({ name, path: options.path ?? '' });
+      },
+    } as unknown as Response;
+
+    setDevRefreshCookie(res, 'refresh-token');
+
+    expect(cookies).toEqual([
+      { name: 'refresh_token', path: '/api/v1/auth' },
+      { name: 'refresh_token', path: '/v1/auth' },
+    ]);
+
+    vi.doUnmock('../config/env.js');
+    vi.resetModules();
+  });
+
+  it('clears refresh cookie on both dev paths when NODE_ENV is development', async () => {
+    vi.resetModules();
+    vi.doMock('../config/env.js', () => ({
+      env: {
+        NODE_ENV: 'development',
+        REFRESH_COOKIE_PATH: '/api/v1/auth',
+        JWT_ACCESS_SECRET: 'test-access-secret',
+        JWT_REFRESH_SECRET: 'test-refresh-secret',
+        JWT_EMAIL_CHANGE_SECRET: 'test-email-change-secret',
+      },
+    }));
+
+    const { clearRefreshCookie: clearDevRefreshCookie } = await import('../lib/tokens.js');
+    const cleared: string[] = [];
+    const res = {
+      clearCookie(name: string, options: { path?: string }) {
+        cleared.push(options.path ?? '');
+      },
+    } as unknown as Response;
+
+    clearDevRefreshCookie(res);
+
+    expect(cleared).toEqual(['/api/v1/auth', '/v1/auth']);
+
+    vi.doUnmock('../config/env.js');
+    vi.resetModules();
   });
 });

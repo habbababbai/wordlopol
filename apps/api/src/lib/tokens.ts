@@ -1,7 +1,9 @@
 import { createHash, randomBytes } from 'node:crypto';
+import { API_PATH_PREFIX } from '@wordlopol/shared';
 import type { CookieOptions, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
+import { HttpError } from './http-error.js';
 import { prisma } from './prisma.js';
 
 export const REFRESH_COOKIE_NAME = 'refresh_token';
@@ -44,14 +46,14 @@ export interface EmailChangeTokenPayload {
 }
 
 export function signEmailChangeToken(userId: string, newEmail: string): string {
-  return jwt.sign({ newEmail, purpose: 'email-change' }, env.JWT_REFRESH_SECRET, {
+  return jwt.sign({ newEmail, purpose: 'email-change' }, env.JWT_EMAIL_CHANGE_SECRET, {
     subject: userId,
     expiresIn: '24h',
   });
 }
 
 export function verifyEmailChangeToken(token: string): EmailChangeTokenPayload {
-  const payload = jwt.verify(token, env.JWT_REFRESH_SECRET);
+  const payload = jwt.verify(token, env.JWT_EMAIL_CHANGE_SECRET);
 
   if (
     typeof payload === 'string' ||
@@ -59,7 +61,7 @@ export function verifyEmailChangeToken(token: string): EmailChangeTokenPayload {
     typeof payload.sub !== 'string' ||
     typeof payload.newEmail !== 'string'
   ) {
-    throw new Error('Invalid email change token');
+    throw new HttpError(401, 'Invalid email change token');
   }
 
   return { userId: payload.sub, newEmail: payload.newEmail };
@@ -69,33 +71,52 @@ export function verifyAccessToken(token: string): AccessTokenPayload {
   const payload = jwt.verify(token, env.JWT_ACCESS_SECRET);
 
   if (typeof payload === 'string' || typeof payload.sub !== 'string') {
-    throw new Error('Invalid access token');
+    throw new HttpError(401, 'Invalid access token');
   }
 
   return { userId: payload.sub };
 }
 
-export function getRefreshCookieOptions(): CookieOptions {
+function getRefreshCookiePaths(): string[] {
+  if (env.NODE_ENV !== 'development') {
+    return [env.REFRESH_COOKIE_PATH];
+  }
+
+  const browserPath = `/api${API_PATH_PREFIX}/auth`;
+  const directPath = `${API_PATH_PREFIX}/auth`;
+
+  if (env.REFRESH_COOKIE_PATH === browserPath || env.REFRESH_COOKIE_PATH === directPath) {
+    return [browserPath, directPath];
+  }
+
+  return [env.REFRESH_COOKIE_PATH];
+}
+
+export function getRefreshCookieOptions(path = env.REFRESH_COOKIE_PATH): CookieOptions {
   return {
     httpOnly: true,
     secure: env.NODE_ENV === 'production',
     sameSite: 'lax',
-    path: env.REFRESH_COOKIE_PATH,
+    path,
     maxAge: REFRESH_TOKEN_TTL_MS,
   };
 }
 
 export function setRefreshCookie(res: Response, token: string): void {
-  res.cookie(REFRESH_COOKIE_NAME, token, getRefreshCookieOptions());
+  for (const path of getRefreshCookiePaths()) {
+    res.cookie(REFRESH_COOKIE_NAME, token, getRefreshCookieOptions(path));
+  }
 }
 
 export function clearRefreshCookie(res: Response): void {
-  res.clearCookie(REFRESH_COOKIE_NAME, {
-    path: env.REFRESH_COOKIE_PATH,
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: env.NODE_ENV === 'production',
-  });
+  for (const path of getRefreshCookiePaths()) {
+    res.clearCookie(REFRESH_COOKIE_NAME, {
+      path,
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: env.NODE_ENV === 'production',
+    });
+  }
 }
 
 export async function createRefreshToken(userId: string): Promise<RefreshTokenResult> {

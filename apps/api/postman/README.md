@@ -30,7 +30,7 @@ If the environment is not selected, only Health will pass — auth requests send
 1. Same environment (**Wordlopol Local**) and running API
 2. Dictionary must be loaded: `pnpm db:import-words` (or health shows `wordCount > 0`)
 3. Open **Wordlopol Daily (automated)** → **Run**
-4. Run **00 Health** → **05 Guest guess missing guessNumber**
+4. Run **00 Health** → **05 Guest guess without session**
 
 Empty-dictionary **503** is covered by Vitest, not the Postman happy path.
 

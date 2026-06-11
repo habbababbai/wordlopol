@@ -27,10 +27,6 @@ type DailyGamePlayProps = {
   challenge: DailyChallengeDto;
 };
 
-function countSubmittedGuesses(rows: GameBoardRow[]): number {
-  return rows.filter((row) => row.results !== undefined).length;
-}
-
 function getInitialMode(date: string): PlayMode {
   const cached = loadDailyFinished(date);
   if (cached?.status === 'alreadyPlayed') return 'alreadyPlayed';
@@ -105,7 +101,6 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
     try {
       const result = await guessMutation.mutateAsync({
         guess: currentGuess,
-        ...(!isAuthenticated ? { guessNumber: countSubmittedGuesses(rows) + 1 } : {}),
       });
 
       const nextRows = [...rows];

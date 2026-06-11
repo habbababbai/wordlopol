@@ -31,7 +31,7 @@ describe('useDailyGuessMutation', () => {
   });
 
   it('submits guess via API client', async () => {
-    const body = { guess: 'mleko', guessNumber: 1 };
+    const body = { guess: 'mleko' };
     const response = {
       results: ['absent', 'present', 'absent', 'absent', 'correct'],
       won: false,

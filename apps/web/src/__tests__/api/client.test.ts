@@ -215,7 +215,7 @@ describe('api client', () => {
 
   it('submitDailyGuess sends POST with JSON body and csrf header', async () => {
     setCsrfToken('csrf-token');
-    const body = { guess: 'mleko', guessNumber: 1 };
+    const body = { guess: 'mleko' };
     const response = {
       results: ['absent', 'present', 'absent', 'absent', 'correct'],
       won: false,
@@ -236,6 +236,27 @@ describe('api client', () => {
       'Content-Type': 'application/json',
     });
     expect(init.headers).not.toHaveProperty('Authorization');
+  });
+
+  it('submitDailyGuess fetches csrf token when missing', async () => {
+    const body = { guess: 'mleko' };
+    const response = {
+      results: ['absent', 'present', 'absent', 'absent', 'correct'],
+      won: false,
+      finished: false,
+      guessNumber: 1,
+    };
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse({ csrfToken: 'fetched-csrf' }))
+      .mockResolvedValueOnce(jsonResponse(response));
+
+    await api.submitDailyGuess(body);
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(`${API_BASE}/auth/csrf`);
+    expect(getCsrfToken()).toBe('fetched-csrf');
+    const init = fetchMock.mock.calls[1]?.[1] as RequestInit;
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(`${API_BASE}/daily/guess`);
+    expect(init.headers).toMatchObject({ [CSRF_HEADER_NAME]: 'fetched-csrf' });
   });
 
   it('submitDailyGuess attaches Bearer token when set', async () => {

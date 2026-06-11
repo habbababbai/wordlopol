@@ -1,37 +1,55 @@
+import cookieParser from 'cookie-parser';
 import { Router } from 'express';
 import { z } from 'zod';
-import { MAX_GUESSES, type DailyGuessRequestDto } from '@wordlopol/shared';
+import { type DailyGuessRequestDto } from '@wordlopol/shared';
 
 import { asyncHandler } from '../lib/async-handler.js';
+import { ensureGuestDailySession, GUEST_DAILY_SESSION_COOKIE } from '../lib/guest-daily-session.js';
 import { validateBody } from '../lib/validate-body.js';
-import { dailyGuessRateLimit } from '../middleware/auth-rate-limit.js';
+import { dailyGuessRateLimit, dailyTodayRateLimit } from '../middleware/auth-rate-limit.js';
+import { csrfProtection } from '../middleware/csrf.js';
 import { optionalAuth } from '../middleware/optional-auth.js';
 import { getTodayChallenge, submitDailyGuess } from '../services/daily.js';
 
 const guessSchema = z.object({
   guess: z.string().trim().min(1),
-  guessNumber: z.number().int().min(1).max(MAX_GUESSES).optional(),
 }) satisfies z.ZodType<DailyGuessRequestDto>;
+
+const parseCookies = cookieParser();
 
 export const dailyRouter: Router = Router();
 
 dailyRouter.get(
   '/today',
-  asyncHandler(async (_req, res) => {
+  parseCookies,
+  dailyTodayRateLimit,
+  optionalAuth,
+  asyncHandler(async (req, res) => {
     const challenge = await getTodayChallenge();
+
+    if (!req.userId) {
+      await ensureGuestDailySession(req, res);
+    }
+
     res.json(challenge);
   }),
 );
 
 dailyRouter.post(
   '/guess',
+  parseCookies,
+  csrfProtection,
   dailyGuessRateLimit,
   optionalAuth,
   validateBody(guessSchema),
   asyncHandler(async (req, res) => {
+    const guestSessionId = req.userId
+      ? undefined
+      : (req.cookies[GUEST_DAILY_SESSION_COOKIE] as string | undefined);
+
     const result = await submitDailyGuess(req.body.guess, {
       userId: req.userId,
-      guessNumber: req.body.guessNumber,
+      guestSessionId,
     });
     res.json(result);
   }),

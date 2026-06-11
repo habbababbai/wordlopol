@@ -1,17 +1,27 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { prisma } from '../lib/prisma.js';
-import { createTestAgent, resetDatabase } from '../test/helpers.js';
+import { apiPath, createTestAgent, resetDatabase } from '../test/helpers.js';
 
-const okBody = {
+const appOkBody = {
   status: 'ok',
   database: 'connected',
   apiVersion: 'v1',
 } as const;
 
-const degradedBody = {
+const infraOkBody = {
+  status: 'ok',
+  database: 'connected',
+} as const;
+
+const appDegradedBody = {
   status: 'degraded',
   database: 'disconnected',
   apiVersion: 'v1',
+} as const;
+
+const infraDegradedBody = {
+  status: 'degraded',
+  database: 'disconnected',
 } as const;
 
 describe('GET /health', () => {
@@ -23,7 +33,7 @@ describe('GET /health', () => {
     vi.restoreAllMocks();
   });
 
-  it('returns 200 with connected database and word count on unversioned path', async () => {
+  it('returns minimal infra probe on unversioned path', async () => {
     await prisma.word.createMany({
       data: [
         { text: 'jabłko', length: 5 },
@@ -34,28 +44,53 @@ describe('GET /health', () => {
     const agent = await createTestAgent();
     const res = await agent.get('/health').expect(200);
 
+    expect(res.body).toEqual(infraOkBody);
+    expect(res.body).not.toHaveProperty('wordCount');
+    expect(res.body).not.toHaveProperty('apiVersion');
+  });
+
+  it('returns full app health on /v1/health', async () => {
+    await prisma.word.createMany({
+      data: [
+        { text: 'jabłko', length: 5 },
+        { text: 'wąż', length: 3 },
+      ],
+    });
+
+    const agent = await createTestAgent();
+    const res = await agent.get(apiPath('/health')).expect(200);
+
     expect(res.body).toEqual({
-      ...okBody,
+      ...appOkBody,
       wordCount: 2,
     });
   });
 
-  it('returns wordCount 0 when dictionary is empty', async () => {
+  it('returns wordCount 0 on /v1/health when dictionary is empty', async () => {
     const agent = await createTestAgent();
-    const res = await agent.get('/health').expect(200);
+    const res = await agent.get(apiPath('/health')).expect(200);
 
     expect(res.body).toMatchObject({
-      ...okBody,
+      ...appOkBody,
       wordCount: 0,
     });
   });
 
-  it('returns 503 when database is unavailable', async () => {
+  it('returns 503 on infra probe when database is unavailable', async () => {
     vi.spyOn(prisma, '$queryRaw').mockRejectedValue(new Error('connection refused'));
 
     const agent = await createTestAgent();
     const res = await agent.get('/health').expect(503);
 
-    expect(res.body).toEqual(degradedBody);
+    expect(res.body).toEqual(infraDegradedBody);
+  });
+
+  it('returns 503 on app health when database is unavailable', async () => {
+    vi.spyOn(prisma, '$queryRaw').mockRejectedValue(new Error('connection refused'));
+
+    const agent = await createTestAgent();
+    const res = await agent.get(apiPath('/health')).expect(503);
+
+    expect(res.body).toEqual(appDegradedBody);
   });
 });

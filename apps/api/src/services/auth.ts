@@ -18,6 +18,8 @@ import {
 } from '../lib/tokens.js';
 import { withDevToken } from '../lib/dev-auth-tokens.js';
 import { HttpError } from '../lib/http-error.js';
+import { logger } from '../lib/logger.js';
+import { normalizeEmail } from '../lib/normalize-email.js';
 import { isUniqueConstraintError } from '../lib/prisma-errors.js';
 import { toUserProfile } from '../lib/user-profile.js';
 import type {
@@ -38,12 +40,7 @@ type LoginResult = LoginResponseDto & { refreshToken: string };
 type RefreshResult = RefreshResponseDto & { refreshToken: string };
 
 export async function register(data: RegisterRequestDto): Promise<DevMessageResponseDto> {
-  const existing = await prisma.user.findUnique({ where: { email: data.email } });
-
-  if (existing) {
-    throw new HttpError(409, 'Email already registered');
-  }
-
+  const email = normalizeEmail(data.email);
   const passwordHash = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
 
   let user;
@@ -51,7 +48,7 @@ export async function register(data: RegisterRequestDto): Promise<DevMessageResp
   try {
     user = await prisma.user.create({
       data: {
-        email: data.email,
+        email,
         passwordHash,
         displayName: data.displayName,
       },
@@ -113,7 +110,8 @@ export async function verifyEmail(token: string): Promise<MessageResponseDto> {
   }
 
   const { userId, newEmail } = emailChange;
-  const taken = await prisma.user.findUnique({ where: { email: newEmail } });
+  const normalizedNewEmail = normalizeEmail(newEmail);
+  const taken = await prisma.user.findUnique({ where: { email: normalizedNewEmail } });
 
   if (taken) {
     throw new HttpError(409, 'Email already registered');
@@ -122,7 +120,7 @@ export async function verifyEmail(token: string): Promise<MessageResponseDto> {
   try {
     await prisma.user.update({
       where: { id: userId },
-      data: { email: newEmail, emailVerifiedAt: new Date() },
+      data: { email: normalizedNewEmail, emailVerifiedAt: new Date() },
     });
   } catch (error) {
     if (isUniqueConstraintError(error)) {
@@ -138,7 +136,7 @@ export async function verifyEmail(token: string): Promise<MessageResponseDto> {
 }
 
 export async function login(data: LoginRequestDto): Promise<LoginResult> {
-  const user = await prisma.user.findUnique({ where: { email: data.email } });
+  const user = await prisma.user.findUnique({ where: { email: normalizeEmail(data.email) } });
 
   if (!user || !(await bcrypt.compare(data.password, user.passwordHash))) {
     throw new HttpError(401, 'Invalid email or password');
@@ -178,7 +176,7 @@ export async function logoutAll(userId: string): Promise<void> {
 }
 
 export async function resendVerification(email: string): Promise<DevMessageResponseDto> {
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({ where: { email: normalizeEmail(email) } });
 
   if (user && !user.emailVerifiedAt) {
     await prisma.emailVerificationToken.deleteMany({ where: { userId: user.id } });
@@ -196,7 +194,7 @@ export async function resendVerification(email: string): Promise<DevMessageRespo
     try {
       await sendVerificationEmail(user.email, token);
     } catch (error) {
-      console.error('[auth] Failed to send verification email:', error);
+      logger.error({ err: error }, 'Failed to send verification email');
       return { message: 'If the email exists and is unverified, a verification link was sent' };
     }
 
@@ -210,7 +208,7 @@ export async function resendVerification(email: string): Promise<DevMessageRespo
 }
 
 export async function forgotPassword(email: string): Promise<DevMessageResponseDto> {
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({ where: { email: normalizeEmail(email) } });
 
   if (user) {
     await prisma.passwordResetToken.deleteMany({ where: { userId: user.id } });
@@ -228,7 +226,7 @@ export async function forgotPassword(email: string): Promise<DevMessageResponseD
     try {
       await sendPasswordResetEmail(user.email, token);
     } catch (error) {
-      console.error('[auth] Failed to send password reset email:', error);
+      logger.error({ err: error }, 'Failed to send password reset email');
       return { message: 'If the email exists, a reset link was sent' };
     }
 
@@ -279,7 +277,6 @@ export async function changePassword(
     where: { id: userId },
     data: { passwordHash },
   });
-  await revokeAllRefreshTokens(userId);
 
   return { message: 'Password changed' };
 }
@@ -288,24 +285,25 @@ export async function requestEmailChange(
   userId: string,
   newEmail: string,
 ): Promise<DevMessageResponseDto> {
+  const normalizedNewEmail = normalizeEmail(newEmail);
   const user = await prisma.user.findUnique({ where: { id: userId } });
 
   if (!user) {
     throw new HttpError(404, 'User not found');
   }
 
-  if (user.email === newEmail) {
+  if (user.email === normalizedNewEmail) {
     throw new HttpError(400, 'Email unchanged');
   }
 
-  const taken = await prisma.user.findUnique({ where: { email: newEmail } });
+  const taken = await prisma.user.findUnique({ where: { email: normalizedNewEmail } });
 
   if (taken) {
     throw new HttpError(409, 'Email already registered');
   }
 
-  const token = signEmailChangeToken(userId, newEmail);
-  await sendEmailChangeEmail(newEmail, token);
+  const token = signEmailChangeToken(userId, normalizedNewEmail);
+  await sendEmailChangeEmail(normalizedNewEmail, token);
 
   return withDevToken({ message: 'Verification email sent' }, token);
 }

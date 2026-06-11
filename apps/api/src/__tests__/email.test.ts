@@ -3,9 +3,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 const sendMock = vi.hoisted(() =>
   vi.fn().mockResolvedValue({ data: { id: 'email-1' }, error: null }),
 );
+const resendConstructor = vi.hoisted(() => vi.fn());
 
 vi.mock('resend', () => ({
   Resend: class {
+    constructor(...args: unknown[]) {
+      resendConstructor(...args);
+    }
+
     emails = { send: sendMock };
   },
 }));
@@ -17,6 +22,7 @@ describe('email', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     sendMock.mockClear();
+    resendConstructor.mockClear();
   });
 
   describe('url builders', () => {
@@ -71,6 +77,22 @@ describe('email', () => {
       });
     });
 
+    it('reuses a single Resend client across sends', async () => {
+      vi.stubEnv('RESEND_API_KEY', 're_live_real_key');
+      vi.stubEnv('EMAIL_FROM', 'auth@example.com');
+      vi.resetModules();
+      sendMock.mockClear();
+      resendConstructor.mockClear();
+
+      const { sendVerificationEmail, sendPasswordResetEmail } = await import('../lib/email.js');
+
+      await sendVerificationEmail('user@example.com', 'verify-token');
+      await sendPasswordResetEmail('user@example.com', 'reset-token');
+
+      expect(resendConstructor).toHaveBeenCalledOnce();
+      expect(sendMock).toHaveBeenCalledTimes(2);
+    });
+
     it('logs instead of sending when email is not configured', async () => {
       vi.stubEnv('RESEND_API_KEY', 're_xxxxxxxx');
       vi.stubEnv('EMAIL_FROM', 'auth@example.com');
@@ -78,7 +100,8 @@ describe('email', () => {
       sendMock.mockClear();
 
       const { sendVerificationEmail } = await import('../lib/email.js');
-      const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+      const { logger } = await import('../lib/logger.js');
+      const info = vi.spyOn(logger, 'info').mockImplementation(() => {});
 
       await sendVerificationEmail('user@example.com', 'test-token');
 

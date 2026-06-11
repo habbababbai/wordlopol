@@ -7,6 +7,7 @@ import {
 } from '@wordlopol/shared';
 
 import { dateKeyToUtcDate, getCalendarDateKey } from '../lib/daily-date.js';
+import { incrementGuestDailyGuess } from '../lib/guest-daily-session.js';
 import { assertGuessInDictionary, normalizeGuessLength, scoreGuess } from '../lib/guess.js';
 import { HttpError } from '../lib/http-error.js';
 import { prisma } from '../lib/prisma.js';
@@ -72,7 +73,7 @@ export async function getTodayChallenge(): Promise<DailyChallengeDto> {
 
 export interface SubmitDailyGuessOptions {
   userId?: string;
-  guessNumber?: number;
+  guestSessionId?: string;
 }
 
 async function recordDailyCompletionInTx(
@@ -129,13 +130,11 @@ export async function submitDailyGuess(
   const { userId } = options;
 
   if (!userId) {
-    if (options.guessNumber == null) {
-      throw new HttpError(400, 'guessNumber is required for guest play');
+    if (!options.guestSessionId) {
+      throw new HttpError(401, 'Guest session required');
     }
-    if (options.guessNumber < 1 || options.guessNumber > MAX_GUESSES) {
-      throw new HttpError(400, `guessNumber must be between 1 and ${MAX_GUESSES}`);
-    }
-    const guessNumber = options.guessNumber;
+
+    const guessNumber = await incrementGuestDailyGuess(options.guestSessionId, dateKey);
     const finished = won || guessNumber === MAX_GUESSES;
 
     return {
