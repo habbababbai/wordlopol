@@ -18,7 +18,7 @@ From repo root (API + web together):
 pnpm dev
 ```
 
-Web: http://localhost:5173 · API proxied at `/api` → http://localhost:3001
+Web: http://localhost:5173 · API client base `/api/v1` (Vite proxies `/api` → http://localhost:3001)
 
 From this package only: `pnpm dev`
 

@@ -19,6 +19,7 @@ import type {
   UserProfileResponseDto,
   VerifyEmailRequestDto,
 } from '@wordlopol/shared';
+import { API_PATH_PREFIX } from '@wordlopol/shared';
 
 import { ApiError } from './errors';
 import {
@@ -31,7 +32,7 @@ import {
 import { parseApiErrorMessage, parseAuthResponse, parseRefreshResponse } from './parse-response';
 import { clearAccessToken, getAccessToken, setAccessToken } from './token';
 
-const API_BASE = import.meta.env.VITE_API_URL ?? '/api';
+export const API_BASE = import.meta.env.VITE_API_URL ?? `/api${API_PATH_PREFIX}`;
 
 const NO_REFRESH_PATHS = new Set([
   '/auth/login',

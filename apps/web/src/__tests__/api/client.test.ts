@@ -2,9 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { clearAccessToken, getAccessToken, setAccessToken } from '@/api/token';
 import { clearCsrfToken, CSRF_HEADER_NAME, getCsrfToken, setCsrfToken } from '@/api/csrf';
-import { api, redirectToLogin } from '@/api/client';
-
-const API_BASE = '/api';
+import { api, API_BASE, redirectToLogin } from '@/api/client';
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
