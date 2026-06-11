@@ -31,6 +31,10 @@ const envSchema = z
     PORT: z.coerce.number().default(3001),
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     REFRESH_COOKIE_PATH: z.string().default(defaultRefreshCookiePath),
+    RATE_LIMIT_ENABLED: z
+      .enum(['true', 'false'])
+      .optional()
+      .transform((value) => value === 'true'),
   })
   .superRefine((data, ctx) => {
     if (data.NODE_ENV !== 'production') {

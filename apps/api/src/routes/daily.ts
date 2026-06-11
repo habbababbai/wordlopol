@@ -4,7 +4,7 @@ import { MAX_GUESSES, type DailyGuessRequestDto } from '@wordlopol/shared';
 
 import { asyncHandler } from '../lib/async-handler.js';
 import { validateBody } from '../lib/validate-body.js';
-import { dailyGuessRateLimit } from '../middleware/auth-rate-limit.js';
+import { dailyGuessRateLimit, dailyTodayRateLimit } from '../middleware/auth-rate-limit.js';
 import { optionalAuth } from '../middleware/optional-auth.js';
 import { getTodayChallenge, submitDailyGuess } from '../services/daily.js';
 
@@ -17,6 +17,7 @@ export const dailyRouter: Router = Router();
 
 dailyRouter.get(
   '/today',
+  dailyTodayRateLimit,
   asyncHandler(async (_req, res) => {
     const challenge = await getTodayChallenge();
     res.json(challenge);

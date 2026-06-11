@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import type { CookieOptions, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
+import { HttpError } from './http-error.js';
 import { prisma } from './prisma.js';
 
 export const REFRESH_COOKIE_NAME = 'refresh_token';
@@ -59,7 +60,7 @@ export function verifyEmailChangeToken(token: string): EmailChangeTokenPayload {
     typeof payload.sub !== 'string' ||
     typeof payload.newEmail !== 'string'
   ) {
-    throw new Error('Invalid email change token');
+    throw new HttpError(401, 'Invalid email change token');
   }
 
   return { userId: payload.sub, newEmail: payload.newEmail };
@@ -69,7 +70,7 @@ export function verifyAccessToken(token: string): AccessTokenPayload {
   const payload = jwt.verify(token, env.JWT_ACCESS_SECRET);
 
   if (typeof payload === 'string' || typeof payload.sub !== 'string') {
-    throw new Error('Invalid access token');
+    throw new HttpError(401, 'Invalid access token');
   }
 
   return { userId: payload.sub };

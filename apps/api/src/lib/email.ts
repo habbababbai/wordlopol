@@ -32,6 +32,16 @@ function logEmailLocally(to: string, subject: string, html: string): void {
   console.info(`[email] To: ${to}\nSubject: ${subject}\n${html}`);
 }
 
+let resendClient: Resend | null = null;
+
+function getResendClient(): Resend {
+  if (!resendClient) {
+    resendClient = new Resend(env.RESEND_API_KEY);
+  }
+
+  return resendClient;
+}
+
 async function sendEmail(to: string, subject: string, html: string): Promise<void> {
   if (!isEmailDeliveryConfigured()) {
     if (env.NODE_ENV === 'development' || env.NODE_ENV === 'test') {
@@ -42,7 +52,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
     throw new Error('Email is not configured');
   }
 
-  const resend = new Resend(env.RESEND_API_KEY);
+  const resend = getResendClient();
   const { error } = await resend.emails.send({
     from: env.EMAIL_FROM!,
     to,

@@ -14,6 +14,7 @@ import {
   loginRateLimit,
   refreshRateLimit,
   registerRateLimit,
+  resetPasswordRateLimit,
   resendVerificationRateLimit,
   verifyEmailRateLimit,
 } from '../middleware/auth-rate-limit.js';
@@ -180,6 +181,7 @@ authRouter.post(
 
 authRouter.post(
   '/reset-password',
+  resetPasswordRateLimit,
   validateBody(resetPasswordSchema),
   asyncHandler(async (req, res) => {
     const result = await resetPassword(req.body.token, req.body.password);
