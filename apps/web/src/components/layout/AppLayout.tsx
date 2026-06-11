@@ -136,6 +136,12 @@ export function AppLayout() {
     <div className="flex min-h-screen flex-col">
       <a
         href="#main-content"
+        onClick={() => {
+          const main = document.getElementById('main-content');
+          if (main instanceof HTMLElement) {
+            main.focus();
+          }
+        }}
         className={cn(
           'fixed top-4 left-4 z-100 translate-y-[-200%] rounded-md bg-card px-4 py-2 text-sm font-medium text-foreground shadow-md transition-transform focus:translate-y-0',
           focusVisibleRing,
@@ -206,7 +212,7 @@ export function AppLayout() {
         )}
       </header>
 
-      <main id="main-content" className="flex flex-1 flex-col">
+      <main id="main-content" tabIndex={-1} className="flex flex-1 flex-col">
         <Outlet />
       </main>
 

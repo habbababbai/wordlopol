@@ -69,14 +69,19 @@ describe('AppLayout', () => {
     expect(screen.queryByRole('link', { name: 'Ustawienia konta' })).not.toBeInTheDocument();
   });
 
-  it('renders skip link to main content', () => {
+  it('renders skip link to main content', async () => {
+    const user = userEvent.setup();
     renderAppLayout();
 
-    expect(screen.getByRole('link', { name: 'Przejdź do treści' })).toHaveAttribute(
-      'href',
-      '#main-content',
-    );
-    expect(document.getElementById('main-content')).toBeInTheDocument();
+    const skipLink = screen.getByRole('link', { name: 'Przejdź do treści' });
+    const main = document.getElementById('main-content');
+
+    expect(skipLink).toHaveAttribute('href', '#main-content');
+    expect(main).toBeInTheDocument();
+
+    skipLink.focus();
+    await user.keyboard('{Enter}');
+    expect(main).toHaveFocus();
   });
 
   it('shows settings footer link when authenticated', () => {

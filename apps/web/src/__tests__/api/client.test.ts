@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { clearAccessToken, getAccessToken, setAccessToken } from '@/api/token';
-import { clearCsrfToken, CSRF_HEADER_NAME, setCsrfToken } from '@/api/csrf';
+import { clearCsrfToken, CSRF_HEADER_NAME, getCsrfToken, setCsrfToken } from '@/api/csrf';
 import { api, redirectToLogin } from '@/api/client';
 
 const API_BASE = '/api';
@@ -127,6 +127,7 @@ describe('api client', () => {
     await api.logoutAll();
 
     expect(getAccessToken()).toBeNull();
+    expect(getCsrfToken()).toBeNull();
     expect(fetchMock).toHaveBeenCalledWith(
       `${API_BASE}/auth/logout-all`,
       expect.objectContaining({ method: 'POST', credentials: 'include' }),
