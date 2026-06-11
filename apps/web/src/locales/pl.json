@@ -30,7 +30,8 @@
     "logoutError": "Nie udało się wylogować. Spróbuj ponownie.",
     "accountSettings": "Ustawienia konta",
     "openMenu": "Otwórz menu",
-    "closeMenu": "Zamknij menu"
+    "closeMenu": "Zamknij menu",
+    "skipToMain": "Przejdź do treści"
   },
   "home": {
     "localeBadge": "PL",
