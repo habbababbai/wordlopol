@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { verifyAccessToken } from '../lib/tokens.js';
+import { expectApiError } from './helpers/expect-api-error.js';
 import { apiPath, createTestAgent, resetDatabase } from '../test/helpers.js';
 
 const verificationToken = vi.hoisted(() => ({ value: '' }));
@@ -82,7 +83,7 @@ describe('auth register verify login', () => {
     });
 
     expect(res.status).toBe(403);
-    expect(res.body).toEqual({ error: 'Email not verified' });
+    expect(res.body).toEqual(expectApiError('EMAIL_NOT_VERIFIED'));
   });
 
   it('resends verification email for unverified users', async () => {
@@ -125,7 +126,7 @@ describe('auth register verify login', () => {
     });
 
     expect(res.status).toBe(409);
-    expect(res.body).toEqual({ error: 'Email already registered' });
+    expect(res.body).toEqual(expectApiError('EMAIL_ALREADY_REGISTERED'));
   });
 
   it('rejects registration without displayName', async () => {
@@ -137,7 +138,7 @@ describe('auth register verify login', () => {
     });
 
     expect(res.status).toBe(400);
-    expect(res.body).toEqual({ error: 'Invalid request' });
+    expect(res.body).toEqual(expectApiError('VALIDATION_ERROR'));
   });
 
   it('rejects registration with blank displayName', async () => {
@@ -150,7 +151,7 @@ describe('auth register verify login', () => {
     });
 
     expect(res.status).toBe(400);
-    expect(res.body).toEqual({ error: 'Invalid request' });
+    expect(res.body).toEqual(expectApiError('VALIDATION_ERROR'));
   });
 
   it('rejects registration with invalid displayName characters', async () => {
@@ -163,7 +164,7 @@ describe('auth register verify login', () => {
     });
 
     expect(res.status).toBe(400);
-    expect(res.body).toEqual({ error: 'Invalid request' });
+    expect(res.body).toEqual(expectApiError('VALIDATION_ERROR'));
   });
 
   it('normalizes email on registration and login', async () => {

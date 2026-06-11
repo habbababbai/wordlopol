@@ -4,6 +4,7 @@ import { signAccessToken } from '../lib/tokens.js';
 import { prisma } from '../lib/prisma.js';
 import { dateKeyToUtcDate, getCalendarDateKey } from '../lib/daily-date.js';
 import { completeInfiniteWord, getNextWord, getOrCreateDailyPool } from '../services/infinite.js';
+import { expectApiError } from './helpers/expect-api-error.js';
 import {
   apiPath,
   createTestAgent,
@@ -24,7 +25,7 @@ describe('GET /infinite/next', () => {
     const agent = await createTestAgent();
     const res = await agent.get(apiPath('/infinite/next')).expect(401);
 
-    expect(res.body).toEqual({ error: 'Unauthorized' });
+    expect(res.body).toEqual(expectApiError('UNAUTHORIZED'));
   });
 
   it('returns 403 for unverified users', async () => {
@@ -37,7 +38,7 @@ describe('GET /infinite/next', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(403);
 
-    expect(res.body).toEqual({ error: 'Email not verified' });
+    expect(res.body).toEqual(expectApiError('EMAIL_NOT_VERIFIED'));
   });
 
   it('returns infinite metadata without the answer', async () => {
@@ -99,7 +100,7 @@ describe('GET /infinite/next', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(503);
 
-    expect(res.body).toEqual({ error: 'Dictionary not loaded' });
+    expect(res.body).toEqual(expectApiError('DICTIONARY_NOT_LOADED'));
   });
 });
 

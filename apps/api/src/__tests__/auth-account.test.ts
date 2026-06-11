@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { prisma } from '../lib/prisma.js';
 import { signAccessToken } from '../lib/tokens.js';
+import { expectApiError } from './helpers/expect-api-error.js';
 import {
   apiPath,
   createTestAgent,
@@ -149,7 +150,7 @@ describe('auth account endpoints', () => {
       .send({ displayName: 'Test Player' });
 
     expect(res.status).toBe(400);
-    expect(res.body).toEqual({ error: 'Display name unchanged' });
+    expect(res.body).toEqual(expectApiError('DISPLAY_NAME_UNCHANGED'));
   });
 
   it('rejects blank display name', async () => {
@@ -163,6 +164,6 @@ describe('auth account endpoints', () => {
       .send({ displayName: '   ' });
 
     expect(res.status).toBe(400);
-    expect(res.body).toEqual({ error: 'Invalid request' });
+    expect(res.body).toEqual(expectApiError('VALIDATION_ERROR'));
   });
 });

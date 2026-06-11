@@ -61,11 +61,11 @@ export async function incrementGuestDailyGuess(
     const session = await tx.guestDailySession.findUnique({ where: { id: sessionId } });
 
     if (!session || !isSameCalendarDate(session.date, dateKey)) {
-      throw new HttpError(401, 'Guest session required');
+      throw new HttpError(401, 'GUEST_SESSION_REQUIRED');
     }
 
     if (session.guessCount >= MAX_GUESSES) {
-      throw new HttpError(400, 'Game already finished');
+      throw new HttpError(400, 'GAME_ALREADY_FINISHED');
     }
 
     const guessNumber = session.guessCount + 1;
@@ -75,7 +75,7 @@ export async function incrementGuestDailyGuess(
     });
 
     if (claimed.count !== 1) {
-      throw new HttpError(409, 'Concurrent guess conflict');
+      throw new HttpError(409, 'CONCURRENT_GUESS_CONFLICT');
     }
 
     return guessNumber;

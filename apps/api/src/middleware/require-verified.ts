@@ -1,5 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
+
 import { prisma } from '../lib/prisma.js';
+import { sendApiError } from '../lib/send-api-error.js';
 
 export async function requireVerified(
   req: Request,
@@ -7,7 +9,7 @@ export async function requireVerified(
   next: NextFunction,
 ): Promise<void> {
   if (!req.userId) {
-    res.status(401).json({ error: 'Unauthorized' });
+    sendApiError(res, 401, 'UNAUTHORIZED');
     return;
   }
 
@@ -17,7 +19,7 @@ export async function requireVerified(
   });
 
   if (!user?.emailVerifiedAt) {
-    res.status(403).json({ error: 'Email not verified' });
+    sendApiError(res, 403, 'EMAIL_NOT_VERIFIED');
     return;
   }
 

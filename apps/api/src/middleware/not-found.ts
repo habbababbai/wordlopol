@@ -1,5 +1,7 @@
 import type { Request, Response } from 'express';
 
+import { sendApiError } from '../lib/send-api-error.js';
+
 export function notFoundHandler(_req: Request, res: Response): void {
-  res.status(404).json({ error: 'Not found' });
+  sendApiError(res, 404, 'NOT_FOUND');
 }

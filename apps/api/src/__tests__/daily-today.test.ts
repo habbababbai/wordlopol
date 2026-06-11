@@ -3,6 +3,7 @@ import { WORD_LENGTH } from '@wordlopol/shared';
 import { prisma } from '../lib/prisma.js';
 import { dateKeyToUtcDate, getCalendarDateKey } from '../lib/daily-date.js';
 import { getOrCreateDailyChallenge } from '../services/daily.js';
+import { expectApiError } from './helpers/expect-api-error.js';
 import { apiPath, createTestAgent, resetDatabase, seedDictionaryWords } from '../test/helpers.js';
 
 describe('GET /daily/today', () => {
@@ -79,7 +80,7 @@ describe('GET /daily/today', () => {
     const agent = await createTestAgent();
     const res = await agent.get(apiPath('/daily/today')).expect(503);
 
-    expect(res.body).toEqual({ error: 'Dictionary not loaded' });
+    expect(res.body).toEqual(expectApiError('DICTIONARY_NOT_LOADED'));
   });
 
   it('returns 503 when no five-letter words exist', async () => {
@@ -90,6 +91,6 @@ describe('GET /daily/today', () => {
     const agent = await createTestAgent();
     const res = await agent.get(apiPath('/daily/today')).expect(503);
 
-    expect(res.body).toEqual({ error: 'Dictionary not loaded' });
+    expect(res.body).toEqual(expectApiError('DICTIONARY_NOT_LOADED'));
   });
 });

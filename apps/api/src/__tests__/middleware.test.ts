@@ -5,6 +5,7 @@ import { signAccessToken } from '../lib/tokens.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { optionalAuth } from '../middleware/optional-auth.js';
 import { requireVerified } from '../middleware/require-verified.js';
+import { expectApiError } from './helpers/expect-api-error.js';
 import { createTestUser, resetDatabase } from '../test/helpers.js';
 
 function buildMiddlewareApp() {
@@ -37,7 +38,7 @@ describe('auth middleware', () => {
   describe('authenticate', () => {
     it('returns 401 without authorization header', async () => {
       const res = await request(buildMiddlewareApp()).get('/strict').expect(401);
-      expect(res.body).toEqual({ error: 'Unauthorized' });
+      expect(res.body).toEqual(expectApiError('UNAUTHORIZED'));
     });
 
     it('returns 401 for invalid token', async () => {
@@ -46,7 +47,7 @@ describe('auth middleware', () => {
         .set('Authorization', 'Bearer invalid-token')
         .expect(401);
 
-      expect(res.body).toEqual({ error: 'Unauthorized' });
+      expect(res.body).toEqual(expectApiError('UNAUTHORIZED'));
     });
 
     it('attaches userId for valid token', async () => {
@@ -100,7 +101,7 @@ describe('auth middleware', () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(403);
 
-      expect(res.body).toEqual({ error: 'Email not verified' });
+      expect(res.body).toEqual(expectApiError('EMAIL_NOT_VERIFIED'));
     });
 
     it('allows verified users', async () => {

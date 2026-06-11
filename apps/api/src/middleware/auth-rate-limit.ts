@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import { env } from '../config/env.js';
+import { sendApiError } from '../lib/send-api-error.js';
 
 function shouldSkipRateLimit(): boolean {
   if (env.NODE_ENV === 'test') {
@@ -15,7 +16,7 @@ function shouldSkipRateLimit(): boolean {
 }
 
 function rateLimitHandler(_req: Request, res: Response): void {
-  res.status(429).json({ error: 'Too many requests' });
+  sendApiError(res, 429, 'TOO_MANY_REQUESTS');
 }
 
 const sharedOptions = {
