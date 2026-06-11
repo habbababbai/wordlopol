@@ -59,7 +59,7 @@ export function GameTile({
       className={cn(
         sizeClasses[size],
         stateClasses[state],
-        'relative flex select-none items-center justify-center overflow-hidden rounded-[var(--radius-sm)] font-bold uppercase',
+        'relative flex select-none items-center justify-center overflow-hidden rounded-sm font-bold uppercase',
         animationClass,
         className,
       )}
