@@ -1,7 +1,9 @@
+import { API_PATH_PREFIX } from '@wordlopol/shared';
 import { doubleCsrf } from 'csrf-csrf';
 import { env } from '../config/env.js';
 
-const csrfCookiePath = env.NODE_ENV === 'test' ? '/' : '/api';
+const PUBLIC_API_PREFIX = `/api${API_PATH_PREFIX}`;
+const csrfCookiePath = env.NODE_ENV === 'test' ? API_PATH_PREFIX : PUBLIC_API_PREFIX;
 
 export const CSRF_HEADER_NAME = 'x-csrf-token';
 

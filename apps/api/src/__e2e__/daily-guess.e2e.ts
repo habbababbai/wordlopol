@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
 import { getOrCreateDailyChallenge } from '../services/daily.js';
 import { getCalendarDateKey } from '../lib/daily-date.js';
-import { resetDatabase, pickWrongWord, seedDictionaryWords } from '../test/helpers.js';
+import { apiPath, resetDatabase, pickWrongWord, seedDictionaryWords } from '../test/helpers.js';
 import { baseUrl } from './server.js';
 
 const TEST_WORDS = ['wążka', 'mleko', 'aabaa', 'aacaa', 'aadaa'];
@@ -23,7 +23,7 @@ describe('e2e: POST /daily/guess', () => {
     const wrongGuess = pickWrongWord(TEST_WORDS, answer);
 
     const midGame = await request(baseUrl)
-      .post('/daily/guess')
+      .post(apiPath('/daily/guess'))
       .send({ guess: wrongGuess, guessNumber: 1 })
       .expect(200);
 
@@ -31,7 +31,7 @@ describe('e2e: POST /daily/guess', () => {
     expect(midGame.body).not.toHaveProperty('answer');
 
     const win = await request(baseUrl)
-      .post('/daily/guess')
+      .post(apiPath('/daily/guess'))
       .send({ guess: answer, guessNumber: 2 })
       .expect(200);
 

@@ -4,6 +4,7 @@ import { signAccessToken } from '../lib/tokens.js';
 import { prisma } from '../lib/prisma.js';
 import { dateKeyToUtcDate, getCalendarDateKey } from '../lib/daily-date.js';
 import {
+  apiPath,
   createTestAgent,
   createTestUser,
   createVerifiedUserWithPassword,
@@ -35,7 +36,7 @@ describe('POST /infinite/guess', () => {
 
   it('returns 401 without authorization', async () => {
     const agent = await createTestAgent();
-    const res = await agent.post('/infinite/guess').send({ guess: 'mleko' }).expect(401);
+    const res = await agent.post(apiPath('/infinite/guess')).send({ guess: 'mleko' }).expect(401);
 
     expect(res.body).toEqual({ error: 'Unauthorized' });
   });
@@ -46,7 +47,7 @@ describe('POST /infinite/guess', () => {
 
     const agent = await createTestAgent();
     const res = await agent
-      .post('/infinite/guess')
+      .post(apiPath('/infinite/guess'))
       .set('Authorization', `Bearer ${token}`)
       .send({ guess: 'mleko' })
       .expect(403);
@@ -61,7 +62,7 @@ describe('POST /infinite/guess', () => {
 
     const agent = await createTestAgent();
     const res = await agent
-      .post('/infinite/guess')
+      .post(apiPath('/infinite/guess'))
       .set('Authorization', `Bearer ${token}`)
       .send({ guess: 'mleko' })
       .expect(400);
@@ -75,14 +76,17 @@ describe('POST /infinite/guess', () => {
     const token = signAccessToken(user.id);
     const answer = await (async () => {
       const agent = await createTestAgent();
-      await agent.get('/infinite/next').set('Authorization', `Bearer ${token}`).expect(200);
+      await agent
+        .get(apiPath('/infinite/next'))
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
       return getCurrentAnswer(user.id);
     })();
     const wrongGuess = pickWrongWord(TEST_POOL_WORDS, answer);
 
     const agent = await createTestAgent();
     const res = await agent
-      .post('/infinite/guess')
+      .post(apiPath('/infinite/guess'))
       .set('Authorization', `Bearer ${token}`)
       .send({ guess: wrongGuess })
       .expect(200);
@@ -100,11 +104,11 @@ describe('POST /infinite/guess', () => {
     const token = signAccessToken(user.id);
 
     const agent = await createTestAgent();
-    await agent.get('/infinite/next').set('Authorization', `Bearer ${token}`).expect(200);
+    await agent.get(apiPath('/infinite/next')).set('Authorization', `Bearer ${token}`).expect(200);
     const answer = await getCurrentAnswer(user.id);
 
     const res = await agent
-      .post('/infinite/guess')
+      .post(apiPath('/infinite/guess'))
       .set('Authorization', `Bearer ${token}`)
       .send({ guess: answer })
       .expect(200);
@@ -145,17 +149,17 @@ describe('POST /infinite/guess', () => {
     const token = signAccessToken(user.id);
 
     const agent = await createTestAgent();
-    await agent.get('/infinite/next').set('Authorization', `Bearer ${token}`).expect(200);
+    await agent.get(apiPath('/infinite/next')).set('Authorization', `Bearer ${token}`).expect(200);
     const answer = await getCurrentAnswer(user.id);
 
     await agent
-      .post('/infinite/guess')
+      .post(apiPath('/infinite/guess'))
       .set('Authorization', `Bearer ${token}`)
       .send({ guess: answer })
       .expect(200);
 
     const next = await agent
-      .get('/infinite/next')
+      .get(apiPath('/infinite/next'))
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
@@ -168,13 +172,13 @@ describe('POST /infinite/guess', () => {
     const token = signAccessToken(user.id);
 
     const agent = await createTestAgent();
-    await agent.get('/infinite/next').set('Authorization', `Bearer ${token}`).expect(200);
+    await agent.get(apiPath('/infinite/next')).set('Authorization', `Bearer ${token}`).expect(200);
     const answer = await getCurrentAnswer(user.id);
     const wrongGuesses = TEST_POOL_WORDS.filter((word) => word !== answer).slice(0, MAX_GUESSES);
 
     for (let i = 0; i < wrongGuesses.length; i++) {
       const res = await agent
-        .post('/infinite/guess')
+        .post(apiPath('/infinite/guess'))
         .set('Authorization', `Bearer ${token}`)
         .send({ guess: wrongGuesses[i] })
         .expect(200);
@@ -201,10 +205,10 @@ describe('POST /infinite/guess', () => {
     const token = signAccessToken(user.id);
 
     const agent = await createTestAgent();
-    await agent.get('/infinite/next').set('Authorization', `Bearer ${token}`).expect(200);
+    await agent.get(apiPath('/infinite/next')).set('Authorization', `Bearer ${token}`).expect(200);
 
     const res = await agent
-      .post('/infinite/guess')
+      .post(apiPath('/infinite/guess'))
       .set('Authorization', `Bearer ${token}`)
       .send({ guess: 'zzzzz' })
       .expect(400);

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
 import { signAccessToken } from '../lib/tokens.js';
-import { createVerifiedUserWithPassword, resetDatabase } from '../test/helpers.js';
+import { apiPath, createVerifiedUserWithPassword, resetDatabase } from '../test/helpers.js';
 import { baseUrl } from './server.js';
 
 describe('e2e: GET /user/profile', () => {
@@ -14,7 +14,7 @@ describe('e2e: GET /user/profile', () => {
     const token = signAccessToken(user.id);
 
     const res = await request(baseUrl)
-      .get('/user/profile')
+      .get(apiPath('/user/profile'))
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 

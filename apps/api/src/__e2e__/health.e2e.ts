@@ -20,6 +20,7 @@ describe('e2e: GET /health', () => {
       status: 'ok',
       database: 'connected',
       wordCount: 1,
+      apiVersion: 'v1',
     });
   });
 });

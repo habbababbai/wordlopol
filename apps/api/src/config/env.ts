@@ -1,3 +1,4 @@
+import { API_PATH_PREFIX } from '@wordlopol/shared';
 import { config } from 'dotenv';
 import { resolve } from 'path';
 import { z } from 'zod';
@@ -8,8 +9,11 @@ config({ path: resolve(process.cwd(), '.env') });
 const DEV_JWT_PLACEHOLDER = 'dev-only-placeholder-secret-min-32-chars!!';
 const DEV_CSRF_PLACEHOLDER = 'dev-only-csrf-secret-min-32-chars!!';
 
+const PUBLIC_API_PREFIX = `/api${API_PATH_PREFIX}`;
+
 const nodeEnv = process.env.NODE_ENV ?? 'development';
-const defaultRefreshCookiePath = nodeEnv === 'test' ? '/auth' : '/api/auth';
+const defaultRefreshCookiePath =
+  nodeEnv === 'test' ? `${API_PATH_PREFIX}/auth` : `${PUBLIC_API_PREFIX}/auth`;
 
 const envSchema = z
   .object({

@@ -1,5 +1,10 @@
+import { API_PATH_PREFIX } from '@wordlopol/shared';
 import type { Express } from 'express';
 import request from 'supertest';
+
+export function apiPath(path: string): string {
+  return `${API_PATH_PREFIX}${path}`;
+}
 
 export async function createTestApp(): Promise<Express> {
   const { createApp } = await import('../app.js');

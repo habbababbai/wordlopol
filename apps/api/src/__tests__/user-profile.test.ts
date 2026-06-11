@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { signAccessToken } from '../lib/tokens.js';
 import { prisma } from '../lib/prisma.js';
-import { createTestAgent, createVerifiedUserWithPassword, resetDatabase } from '../test/helpers.js';
+import {
+  apiPath,
+  createTestAgent,
+  createVerifiedUserWithPassword,
+  resetDatabase,
+} from '../test/helpers.js';
 
 describe('GET /user/profile', () => {
   beforeEach(async () => {
@@ -10,7 +15,7 @@ describe('GET /user/profile', () => {
 
   it('returns 401 without authorization', async () => {
     const agent = await createTestAgent();
-    const res = await agent.get('/user/profile').expect(401);
+    const res = await agent.get(apiPath('/user/profile')).expect(401);
 
     expect(res.body).toEqual({ error: 'Unauthorized' });
   });
@@ -21,7 +26,7 @@ describe('GET /user/profile', () => {
 
     const agent = await createTestAgent();
     const res = await agent
-      .get('/user/profile')
+      .get(apiPath('/user/profile'))
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
@@ -58,7 +63,7 @@ describe('GET /user/profile', () => {
 
     const agent = await createTestAgent();
     const res = await agent
-      .get('/user/profile')
+      .get(apiPath('/user/profile'))
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
