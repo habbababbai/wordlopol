@@ -209,6 +209,8 @@ Calendar day uses `Europe/Warsaw` (`TZ` env). The word is chosen deterministical
 
 **GET `/v1/daily/today` — 200**
 
+Sets `daily_guest_session` cookie for unauthenticated clients (httpOnly, path `/api/v1/daily` in dev). Call this before guest guesses.
+
 ```json
 {
   "date": "2026-06-06",
@@ -219,11 +221,11 @@ Calendar day uses `Europe/Warsaw` (`TZ` env). The word is chosen deterministical
 
 **POST `/v1/daily/guess` — body**
 
-Guests must send `guessNumber` (1–6); the server tracks guess count for authenticated users automatically.
-
 ```json
-{ "guess": "mleko", "guessNumber": 1 }
+{ "guess": "mleko" }
 ```
+
+Guests require the `daily_guest_session` cookie from `GET /v1/daily/today`; the server tracks guess count. Authenticated users send only `{ guess }` as well.
 
 **POST `/v1/daily/guess` — 200**
 
@@ -250,7 +252,9 @@ When `finished` is true (win or sixth guess), `answer` is included:
 
 On completion, authenticated users get a `GameResult` row and `UserStats` update. Guests are evaluated only (no persistence).
 
-**400** — invalid guess length, not in dictionary, missing `guessNumber` (guest), or game already finished
+**400** — invalid guess length, not in dictionary, or game already finished
+
+**401** — guest missing or invalid `daily_guest_session` cookie
 
 **409** — authenticated user already completed today's daily
 
@@ -554,8 +558,8 @@ sequenceDiagram
     Client->>API: GET /v1/daily/today
     API->>DB: find or create DailyChallenge for Warsaw calendar date
     DB-->>API: challenge metadata
-    API-->>Client: date, maxGuesses, wordLength (no answer)
-    Client->>API: POST /v1/daily/guess { guess, guessNumber? }
+    API-->>Client: date, maxGuesses, wordLength (no answer); Set-Cookie daily_guest_session (guests)
+    Client->>API: POST /v1/daily/guess { guess }
     API->>DB: validate word, evaluate guess
     API-->>Client: letter results (answer when finished)
 ```
@@ -564,14 +568,14 @@ sequenceDiagram
 
 Import `Wordlopol-Daily.postman_collection.json` with the same **Wordlopol Local** environment as auth.
 
-| #   | Request                | Expect                            |
-| --- | ---------------------- | --------------------------------- |
-| 00  | GET `/health`          | 200, `wordCount > 0`              |
-| 01  | GET `/v1/daily/today`  | 200, saves `daily_date`           |
-| 02  | GET `/v1/daily/today`  | 200, same `date` as step 01       |
-| 03  | POST `/v1/daily/guess` | 200, guest wrong guess, no answer |
-| 04  | POST `/v1/daily/guess` | 400, not in dictionary            |
-| 05  | POST `/v1/daily/guess` | 400, guest missing `guessNumber`  |
+| #   | Request                | Expect                                     |
+| --- | ---------------------- | ------------------------------------------ |
+| 00  | GET `/health`          | 200, `wordCount > 0`                       |
+| 01  | GET `/v1/daily/today`  | 200, saves `daily_date`, sets guest cookie |
+| 02  | GET `/v1/daily/today`  | 200, same `date` as step 01                |
+| 03  | POST `/v1/daily/guess` | 200, guest wrong guess, no answer          |
+| 04  | POST `/v1/daily/guess` | 400, not in dictionary                     |
+| 05  | POST `/v1/daily/guess` | 401, guest without session cookie          |
 
 **503 empty dictionary** — only reproducible with an empty `Word` table (covered by Vitest, not the Postman happy path).
 
@@ -674,24 +678,24 @@ See [Postman setup guide](#postman-setup-guide) for the automated collection, sc
 
 **Negative cases worth spot-checking:**
 
-| Method | Path                           | Expect                        |
-| ------ | ------------------------------ | ----------------------------- |
-| POST   | `/v1/auth/login`               | 403 before verify-email       |
-| POST   | `/v1/auth/register`            | 400 missing displayName       |
-| POST   | `/v1/auth/register`            | 409 duplicate email           |
-| POST   | `/v1/auth/refresh`             | 401 after logout              |
-| PATCH  | `/v1/auth/change-display-name` | 400 unchanged or blank name   |
-| PATCH  | `/v1/auth/change-password`     | 401 wrong current password    |
-| DELETE | `/v1/auth/account`             | 401 wrong password            |
-| GET    | `/v1/daily/today`              | 503 empty dictionary          |
-| POST   | `/v1/daily/guess`              | 400 not in dictionary         |
-| POST   | `/v1/daily/guess`              | 400 guest missing guessNumber |
-| GET    | `/v1/infinite/next`            | 401 without Bearer            |
-| GET    | `/v1/infinite/next`            | 403 unverified user           |
-| GET    | `/v1/user/profile`             | 401 without Bearer            |
-| POST   | `/v1/infinite/guess`           | 401 without Bearer            |
-| POST   | `/v1/infinite/guess`           | 403 unverified user           |
-| POST   | `/v1/infinite/guess`           | 400 no word in progress       |
+| Method | Path                           | Expect                           |
+| ------ | ------------------------------ | -------------------------------- |
+| POST   | `/v1/auth/login`               | 403 before verify-email          |
+| POST   | `/v1/auth/register`            | 400 missing displayName          |
+| POST   | `/v1/auth/register`            | 409 duplicate email              |
+| POST   | `/v1/auth/refresh`             | 401 after logout                 |
+| PATCH  | `/v1/auth/change-display-name` | 400 unchanged or blank name      |
+| PATCH  | `/v1/auth/change-password`     | 401 wrong current password       |
+| DELETE | `/v1/auth/account`             | 401 wrong password               |
+| GET    | `/v1/daily/today`              | 503 empty dictionary             |
+| POST   | `/v1/daily/guess`              | 400 not in dictionary            |
+| POST   | `/v1/daily/guess`              | 401 guest without session cookie |
+| GET    | `/v1/infinite/next`            | 401 without Bearer               |
+| GET    | `/v1/infinite/next`            | 403 unverified user              |
+| GET    | `/v1/user/profile`             | 401 without Bearer               |
+| POST   | `/v1/infinite/guess`           | 401 without Bearer               |
+| POST   | `/v1/infinite/guess`           | 403 unverified user              |
+| POST   | `/v1/infinite/guess`           | 400 no word in progress          |
 
 ---
 

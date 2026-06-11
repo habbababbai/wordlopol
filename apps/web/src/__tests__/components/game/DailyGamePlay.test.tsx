@@ -71,7 +71,7 @@ describe('DailyGamePlay', () => {
     resetDailyFinishedStore();
   });
 
-  it('submits guest guess with guessNumber and updates the board', async () => {
+  it('submits guest guess and updates the board', async () => {
     const user = userEvent.setup();
     mutateAsyncMock.mockResolvedValueOnce({
       results: ['present', 'absent', 'absent', 'absent', 'correct'],
@@ -86,7 +86,7 @@ describe('DailyGamePlay', () => {
     await user.click(within(container).getByRole('button', { name: 'Zatwierdź' }));
 
     await waitFor(() => {
-      expect(mutateAsyncMock).toHaveBeenCalledWith({ guess: 'maksa', guessNumber: 1 });
+      expect(mutateAsyncMock).toHaveBeenCalledWith({ guess: 'maksa' });
     });
 
     expect(within(container).getByRole('grid')).toBeInTheDocument();
@@ -140,7 +140,7 @@ describe('DailyGamePlay', () => {
     expect(within(container).queryByRole('grid')).not.toBeInTheDocument();
   });
 
-  it('omits guessNumber for authenticated users', async () => {
+  it('submits guess for authenticated users', async () => {
     const user = userEvent.setup();
     useAuthMock.mockReturnValue({
       user: {

@@ -215,7 +215,7 @@ describe('api client', () => {
 
   it('submitDailyGuess sends POST with JSON body and csrf header', async () => {
     setCsrfToken('csrf-token');
-    const body = { guess: 'mleko', guessNumber: 1 };
+    const body = { guess: 'mleko' };
     const response = {
       results: ['absent', 'present', 'absent', 'absent', 'correct'],
       won: false,

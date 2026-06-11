@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Wordlopol Daily (automated)",
-    "description": "Daily challenge happy path for local development.\n\nSETUP:\n1. Import Wordlopol-Local.postman_environment.json\n2. Select **Wordlopol Local** in the environment dropdown (top-right)\n3. Ensure dictionary is loaded (`pnpm db:import-words`)\n4. Run collection from **00 Health** through **05 Guest guess missing guessNumber** in order",
+    "description": "Daily challenge happy path for local development.\n\nSETUP:\n1. Import Wordlopol-Local.postman_environment.json\n2. Select **Wordlopol Local** in the environment dropdown (top-right)\n3. Ensure dictionary is loaded (`pnpm db:import-words`)\n4. Run collection from **00 Health** through **05 Guest guess without session** in order\n\nUses Postman cookie jar — run 01 Daily Today before guest guesses so `daily_guest_session` is set.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -129,7 +129,7 @@
         "header": [{ "key": "Content-Type", "value": "application/json" }],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"guess\": \"mleko\",\n  \"guessNumber\": 1\n}",
+          "raw": "{\n  \"guess\": \"mleko\"\n}",
           "options": { "raw": { "language": "json" } }
         },
         "url": "{{base_url}}/daily/guess"
@@ -156,23 +156,30 @@
         "header": [{ "key": "Content-Type", "value": "application/json" }],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"guess\": \"zzzzz\",\n  \"guessNumber\": 2\n}",
+          "raw": "{\n  \"guess\": \"zzzzz\"\n}",
           "options": { "raw": { "language": "json" } }
         },
         "url": "{{base_url}}/daily/guess"
       }
     },
     {
-      "name": "05 Guest guess missing guessNumber",
+      "name": "05 Guest guess without session",
       "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.cookies.clear();"]
+          }
+        },
         {
           "listen": "test",
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test('Status 400', () => pm.response.to.have.status(400));",
-              "pm.test('guessNumber required', () => {",
-              "  pm.expect(pm.response.json().error).to.eql('guessNumber is required for guest play');",
+              "pm.test('Status 401', () => pm.response.to.have.status(401));",
+              "pm.test('Guest session required', () => {",
+              "  pm.expect(pm.response.json().error).to.eql('Guest session required');",
               "});"
             ]
           }
