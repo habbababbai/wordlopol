@@ -2,11 +2,7 @@ import { z } from 'zod';
 
 import { normalizeEmail } from './normalize-email.js';
 
-export const normalizedEmailSchema = z
-  .string()
-  .trim()
-  .transform(normalizeEmail)
-  .pipe(z.string().email());
+export const normalizedEmailSchema = z.string().transform(normalizeEmail).pipe(z.string().email());
 
 export const displayNameSchema = z
   .string()

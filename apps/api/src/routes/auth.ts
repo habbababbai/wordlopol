@@ -11,8 +11,11 @@ import { clearAuthSessionResponse, revokeAndClearAuthSession } from '../lib/auth
 import { authenticate } from '../middleware/authenticate.js';
 import {
   authenticatedRateLimit,
+  authRouterRateLimit,
+  csrfTokenRateLimit,
   forgotPasswordRateLimit,
   loginRateLimit,
+  logoutRateLimit,
   refreshRateLimit,
   registerRateLimit,
   resetPasswordRateLimit,
@@ -79,9 +82,11 @@ export const authRouter: Router = Router();
 
 authRouter.use(cookieParser());
 authRouter.use(csrfProtection);
+authRouter.use(authRouterRateLimit);
 
 authRouter.get(
   '/csrf',
+  csrfTokenRateLimit,
   asyncHandler(async (req, res) => {
     const csrfToken = generateCsrfToken(req, res);
     res.json({ csrfToken });
@@ -139,6 +144,7 @@ authRouter.post(
 
 authRouter.post(
   '/logout',
+  logoutRateLimit,
   asyncHandler(async (req, res) => {
     const refreshToken = req.cookies[REFRESH_COOKIE_NAME] as string | undefined;
     await revokeAndClearAuthSession(res, { refreshToken });

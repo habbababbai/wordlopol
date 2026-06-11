@@ -9,9 +9,8 @@ import {
 
 import { prisma } from './prisma.js';
 
-async function checkDatabase(): Promise<boolean> {
+async function checkDatabase(): Promise<void> {
   await prisma.$queryRaw`SELECT 1`;
-  return true;
 }
 
 export async function infraHealthHandler(_req: Request, res: Response): Promise<void> {

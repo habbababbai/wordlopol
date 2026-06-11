@@ -110,7 +110,8 @@ export async function verifyEmail(token: string): Promise<MessageResponseDto> {
   }
 
   const { userId, newEmail } = emailChange;
-  const taken = await prisma.user.findUnique({ where: { email: newEmail } });
+  const normalizedNewEmail = normalizeEmail(newEmail);
+  const taken = await prisma.user.findUnique({ where: { email: normalizedNewEmail } });
 
   if (taken) {
     throw new HttpError(409, 'Email already registered');
@@ -119,7 +120,7 @@ export async function verifyEmail(token: string): Promise<MessageResponseDto> {
   try {
     await prisma.user.update({
       where: { id: userId },
-      data: { email: newEmail, emailVerifiedAt: new Date() },
+      data: { email: normalizedNewEmail, emailVerifiedAt: new Date() },
     });
   } catch (error) {
     if (isUniqueConstraintError(error)) {

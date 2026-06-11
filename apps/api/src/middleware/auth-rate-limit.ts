@@ -1,3 +1,4 @@
+import type { Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import { env } from '../config/env.js';
 
@@ -13,26 +14,28 @@ function shouldSkipRateLimit(): boolean {
   return env.NODE_ENV === 'development';
 }
 
-function createAuthRateLimiter(max: number) {
-  return rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max,
-    standardHeaders: true,
-    legacyHeaders: false,
-    skip: () => shouldSkipRateLimit(),
-    handler: (_req, res) => {
-      res.status(429).json({ error: 'Too many requests' });
-    },
-  });
+function rateLimitHandler(_req: Request, res: Response): void {
+  res.status(429).json({ error: 'Too many requests' });
 }
 
-export const registerRateLimit = createAuthRateLimiter(5);
-export const loginRateLimit = createAuthRateLimiter(10);
-export const forgotPasswordRateLimit = createAuthRateLimiter(5);
-export const resetPasswordRateLimit = createAuthRateLimiter(5);
-export const resendVerificationRateLimit = createAuthRateLimiter(5);
-export const verifyEmailRateLimit = createAuthRateLimiter(20);
-export const refreshRateLimit = createAuthRateLimiter(60);
-export const authenticatedRateLimit = createAuthRateLimiter(120);
-export const dailyTodayRateLimit = createAuthRateLimiter(120);
-export const dailyGuessRateLimit = createAuthRateLimiter(120);
+const sharedOptions = {
+  windowMs: 15 * 60 * 1000,
+  standardHeaders: true as const,
+  legacyHeaders: false as const,
+  skip: () => shouldSkipRateLimit(),
+  handler: rateLimitHandler,
+};
+
+export const authRouterRateLimit = rateLimit({ ...sharedOptions, max: 120 });
+export const registerRateLimit = rateLimit({ ...sharedOptions, max: 5 });
+export const loginRateLimit = rateLimit({ ...sharedOptions, max: 10 });
+export const forgotPasswordRateLimit = rateLimit({ ...sharedOptions, max: 5 });
+export const resetPasswordRateLimit = rateLimit({ ...sharedOptions, max: 5 });
+export const resendVerificationRateLimit = rateLimit({ ...sharedOptions, max: 5 });
+export const verifyEmailRateLimit = rateLimit({ ...sharedOptions, max: 20 });
+export const refreshRateLimit = rateLimit({ ...sharedOptions, max: 60 });
+export const logoutRateLimit = rateLimit({ ...sharedOptions, max: 30 });
+export const csrfTokenRateLimit = rateLimit({ ...sharedOptions, max: 120 });
+export const authenticatedRateLimit = rateLimit({ ...sharedOptions, max: 120 });
+export const dailyTodayRateLimit = rateLimit({ ...sharedOptions, max: 120 });
+export const dailyGuessRateLimit = rateLimit({ ...sharedOptions, max: 120 });

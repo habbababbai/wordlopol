@@ -15,13 +15,13 @@ const guessSchema = z.object({
   guess: z.string().trim().min(1),
 }) satisfies z.ZodType<DailyGuessRequestDto>;
 
-export const dailyRouter: Router = Router();
+const parseCookies = cookieParser();
 
-dailyRouter.use(cookieParser());
-dailyRouter.use(csrfProtection);
+export const dailyRouter: Router = Router();
 
 dailyRouter.get(
   '/today',
+  parseCookies,
   dailyTodayRateLimit,
   optionalAuth,
   asyncHandler(async (req, res) => {
@@ -37,6 +37,8 @@ dailyRouter.get(
 
 dailyRouter.post(
   '/guess',
+  parseCookies,
+  csrfProtection,
   dailyGuessRateLimit,
   optionalAuth,
   validateBody(guessSchema),
