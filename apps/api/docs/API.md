@@ -1,6 +1,16 @@
 # Wordlopol API — endpoints & testing
 
-Base URL (local): `http://localhost:3001`
+## Base URLs (local)
+
+| Client           | Base URL                       | Notes                                       |
+| ---------------- | ------------------------------ | ------------------------------------------- |
+| Express (direct) | `http://localhost:3001/v1`     | Postman, curl, integration tests            |
+| Web (Vite proxy) | `http://localhost:5173/api/v1` | Browser; proxy strips `/api` → server `/v1` |
+| Infra probe      | `http://localhost:3001/health` | Unversioned; same handler as `/v1/health`   |
+
+All **application** routes live under `/v1` on the server (`/v1/auth`, `/v1/daily`, …). `/api` is only the gateway prefix in front of the web app.
+
+Cookie paths (refresh, CSRF): `/api/v1/...` in development and production (matches browser `/api/v1` paths); `/v1/...` in test. For Postman cookie flows against the API only, use `http://localhost:5173/api/v1` (Vite proxy, `pnpm dev`) or set `REFRESH_COOKIE_PATH=/v1/auth` in `.env` when calling `http://localhost:3001/v1` directly.
 
 All JSON request/response bodies unless noted. Errors: `{ "error": "<message>" }`.
 
@@ -16,35 +26,35 @@ sequenceDiagram
     participant Email
 
     Note over Client,Email: Registration
-    Client->>API: POST /auth/register
+    Client->>API: POST /v1/auth/register
     API->>DB: create User + verification token hash
     API->>Email: send verification link
-    Client->>API: POST /auth/verify-email { token }
+    Client->>API: POST /v1/auth/verify-email { token }
     API->>DB: set emailVerifiedAt
 
     Note over Client,DB: Login & sessions
-    Client->>API: POST /auth/login
+    Client->>API: POST /v1/auth/login
     API-->>Client: accessToken + user (JSON) + refresh_token (httpOnly cookie)
     Client->>API: Bearer accessToken on protected routes
-    Client->>API: POST /auth/refresh (cookie auto-sent)
+    Client->>API: POST /v1/auth/refresh (cookie auto-sent)
     API-->>Client: new accessToken + rotated refresh cookie
 
     Note over Client,DB: Logout
-    Client->>API: POST /auth/logout (cookie)
+    Client->>API: POST /v1/auth/logout (cookie)
     API->>DB: delete refresh token hash
-    Client->>API: POST /auth/logout-all (Bearer token)
+    Client->>API: POST /v1/auth/logout-all (Bearer token)
     API->>DB: delete all refresh tokens for user
 ```
 
 ### Token model
 
-| Token          | Storage                         | Lifetime | Used for                             |
-| -------------- | ------------------------------- | -------- | ------------------------------------ |
-| Access JWT     | Client memory / Postman env     | 15 min   | `Authorization: Bearer <token>`      |
-| Refresh token  | httpOnly cookie `refresh_token` | 7 days   | `POST /auth/refresh`, `/auth/logout` |
-| Email verify   | Email link → body token         | 24 h     | `POST /auth/verify-email`            |
-| Password reset | Email link → body token         | 1 h      | `POST /auth/reset-password`          |
-| Email change   | Email link → body token (JWT)   | 24 h     | `POST /auth/verify-email`            |
+| Token          | Storage                         | Lifetime | Used for                                   |
+| -------------- | ------------------------------- | -------- | ------------------------------------------ |
+| Access JWT     | Client memory / Postman env     | 15 min   | `Authorization: Bearer <token>`            |
+| Refresh token  | httpOnly cookie `refresh_token` | 7 days   | `POST /v1/auth/refresh`, `/v1/auth/logout` |
+| Email verify   | Email link → body token         | 24 h     | `POST /v1/auth/verify-email`               |
+| Password reset | Email link → body token         | 1 h      | `POST /v1/auth/reset-password`             |
+| Email change   | Email link → body token (JWT)   | 24 h     | `POST /v1/auth/verify-email`               |
 
 Refresh tokens are stored as **SHA-256 hashes** in the database (never plaintext). Each refresh **rotates** the token (old one invalidated).
 
@@ -54,34 +64,35 @@ Refresh tokens are stored as **SHA-256 hashes** in the database (never plaintext
 
 ### Health
 
-| Method | Path      | Auth | Description                             |
-| ------ | --------- | ---- | --------------------------------------- |
-| GET    | `/health` | —    | DB connectivity + dictionary word count |
+| Method | Path         | Auth | Description                        |
+| ------ | ------------ | ---- | ---------------------------------- |
+| GET    | `/health`    | —    | Infra probe (unversioned)          |
+| GET    | `/v1/health` | —    | Same handler; use from app clients |
 
 **200**
 
 ```json
-{ "status": "ok", "database": "connected", "wordCount": 4062 }
+{ "status": "ok", "database": "connected", "wordCount": 4062, "apiVersion": "v1" }
 ```
 
 **503** — database unreachable
 
 ```json
-{ "status": "degraded", "database": "disconnected" }
+{ "status": "degraded", "database": "disconnected", "apiVersion": "v1" }
 ```
 
 ---
 
 ### Auth — public
 
-| Method | Path                        | Body                               | Success                                                                    |
-| ------ | --------------------------- | ---------------------------------- | -------------------------------------------------------------------------- |
-| POST   | `/auth/register`            | `{ email, password, displayName }` | **201** `{ message }` (+ `devToken`, `devAccessToken` in development only) |
-| POST   | `/auth/verify-email`        | `{ token }`                        | **200** `{ message }`                                                      |
-| POST   | `/auth/login`               | `{ email, password }`              | **200** `{ accessToken, user }` + `Set-Cookie: refresh_token`              |
-| POST   | `/auth/resend-verification` | `{ email }`                        | **200** `{ message }` (+ `devToken` in dev when email sent)                |
-| POST   | `/auth/forgot-password`     | `{ email }`                        | **200** `{ message }` (+ `devToken` in dev when email sent)                |
-| POST   | `/auth/reset-password`      | `{ token, password }`              | **200** `{ message }`                                                      |
+| Method | Path                           | Body                               | Success                                                                    |
+| ------ | ------------------------------ | ---------------------------------- | -------------------------------------------------------------------------- |
+| POST   | `/v1/auth/register`            | `{ email, password, displayName }` | **201** `{ message }` (+ `devToken`, `devAccessToken` in development only) |
+| POST   | `/v1/auth/verify-email`        | `{ token }`                        | **200** `{ message }`                                                      |
+| POST   | `/v1/auth/login`               | `{ email, password }`              | **200** `{ accessToken, user }` + `Set-Cookie: refresh_token`              |
+| POST   | `/v1/auth/resend-verification` | `{ email }`                        | **200** `{ message }` (+ `devToken` in dev when email sent)                |
+| POST   | `/v1/auth/forgot-password`     | `{ email }`                        | **200** `{ message }` (+ `devToken` in dev when email sent)                |
+| POST   | `/v1/auth/reset-password`      | `{ token, password }`              | **200** `{ message }`                                                      |
 
 Rate-limited (15 min window): `register` (5), `login` (10), `resend-verification` (5), `forgot-password` (5) per IP. **Disabled in `development` and `test`.**
 
@@ -95,7 +106,7 @@ Rate-limited (15 min window): `register` (5), `login` (10), `resend-verification
 
 When `NODE_ENV=development`, token-bearing auth endpoints also return `devToken` in the JSON body so Postman can run the full collection without copying from logs or email. **Never present in production or test.**
 
-`register` also returns `devAccessToken` (a valid access JWT for the new, unverified user) so negative Postman flows can hit protected routes such as `GET /infinite/next` and expect **403 Email not verified**.
+`register` also returns `devAccessToken` (a valid access JWT for the new, unverified user) so negative Postman flows can hit protected routes such as `GET /v1/infinite/next` and expect **403 Email not verified**.
 
 ```json
 { "message": "Verification email sent", "devToken": "64-char-hex", "devAccessToken": "eyJ..." }
@@ -126,12 +137,12 @@ Endpoints that may include `devToken`: `register`, `resend-verification`, `forgo
 
 ### Auth — refresh cookie
 
-These endpoints read the `refresh_token` cookie (path `/auth`). No Bearer token required.
+These endpoints read the `refresh_token` cookie (path `/api/v1/auth` in dev/prod; `/v1/auth` in test). No Bearer token required.
 
-| Method | Path            | Success                                              |
-| ------ | --------------- | ---------------------------------------------------- |
-| POST   | `/auth/refresh` | **200** `{ accessToken }` + new cookie               |
-| POST   | `/auth/logout`  | **200** `{ message: "Logged out" }` + cookie cleared |
+| Method | Path               | Success                                              |
+| ------ | ------------------ | ---------------------------------------------------- |
+| POST   | `/v1/auth/refresh` | **200** `{ accessToken }` + new cookie               |
+| POST   | `/v1/auth/logout`  | **200** `{ message: "Logged out" }` + cookie cleared |
 
 ---
 
@@ -139,13 +150,13 @@ These endpoints read the `refresh_token` cookie (path `/auth`). No Bearer token 
 
 Send header: `Authorization: Bearer <accessToken>`
 
-| Method | Path                        | Body                               | Success                                                  |
-| ------ | --------------------------- | ---------------------------------- | -------------------------------------------------------- |
-| POST   | `/auth/logout-all`          | —                                  | **200** `{ message }` + cookie cleared                   |
-| PATCH  | `/auth/change-display-name` | `{ displayName }`                  | **200** `{ user }`                                       |
-| PATCH  | `/auth/change-password`     | `{ currentPassword, newPassword }` | **200** `{ message }`                                    |
-| PATCH  | `/auth/change-email`        | `{ newEmail }`                     | **200** `{ message }` (+ `devToken` in development only) |
-| DELETE | `/auth/account`             | `{ password }`                     | **200** `{ message }`                                    |
+| Method | Path                           | Body                               | Success                                                  |
+| ------ | ------------------------------ | ---------------------------------- | -------------------------------------------------------- |
+| POST   | `/v1/auth/logout-all`          | —                                  | **200** `{ message }` + cookie cleared                   |
+| PATCH  | `/v1/auth/change-display-name` | `{ displayName }`                  | **200** `{ user }`                                       |
+| PATCH  | `/v1/auth/change-password`     | `{ currentPassword, newPassword }` | **200** `{ message }`                                    |
+| PATCH  | `/v1/auth/change-email`        | `{ newEmail }`                     | **200** `{ message }` (+ `devToken` in development only) |
+| DELETE | `/v1/auth/account`             | `{ password }`                     | **200** `{ message }`                                    |
 
 `change-password`, `logout-all`, and `account` delete also revoke refresh sessions server-side.
 
@@ -153,9 +164,9 @@ Send header: `Authorization: Bearer <accessToken>`
 
 ### User profile
 
-| Method | Path            | Auth   | Description                        |
-| ------ | --------------- | ------ | ---------------------------------- |
-| GET    | `/user/profile` | Bearer | Profile + stats for signed-in user |
+| Method | Path               | Auth   | Description                        |
+| ------ | ------------------ | ------ | ---------------------------------- |
+| GET    | `/v1/user/profile` | Bearer | Profile + stats for signed-in user |
 
 Only the authenticated user can read their own profile. No public profiles.
 
@@ -189,14 +200,14 @@ If the user has never played, numeric stats are `0` and timed fields are `null`.
 
 ### Daily challenge
 
-| Method | Path           | Auth     | Description                                        |
-| ------ | -------------- | -------- | -------------------------------------------------- |
-| GET    | `/daily/today` | —        | Today's challenge metadata (no answer)             |
-| POST   | `/daily/guess` | optional | Validate a guess; persist stats when authenticated |
+| Method | Path              | Auth     | Description                                        |
+| ------ | ----------------- | -------- | -------------------------------------------------- |
+| GET    | `/v1/daily/today` | —        | Today's challenge metadata (no answer)             |
+| POST   | `/v1/daily/guess` | optional | Validate a guess; persist stats when authenticated |
 
 Calendar day uses `Europe/Warsaw` (`TZ` env). The word is chosen deterministically from the dictionary and persisted lazily on first request for that date.
 
-**GET `/daily/today` — 200**
+**GET `/v1/daily/today` — 200**
 
 ```json
 {
@@ -206,7 +217,7 @@ Calendar day uses `Europe/Warsaw` (`TZ` env). The word is chosen deterministical
 }
 ```
 
-**POST `/daily/guess` — body**
+**POST `/v1/daily/guess` — body**
 
 Guests must send `guessNumber` (1–6); the server tracks guess count for authenticated users automatically.
 
@@ -214,7 +225,7 @@ Guests must send `guessNumber` (1–6); the server tracks guess count for authen
 { "guess": "mleko", "guessNumber": 1 }
 ```
 
-**POST `/daily/guess` — 200**
+**POST `/v1/daily/guess` — 200**
 
 ```json
 {
@@ -255,18 +266,18 @@ Responses never include the answer until the game is finished.
 
 ### Infinite mode
 
-| Method | Path              | Auth                    | Description                               |
-| ------ | ----------------- | ----------------------- | ----------------------------------------- |
-| GET    | `/infinite/next`  | Bearer + verified email | Next word metadata from today's pool      |
-| POST   | `/infinite/guess` | Bearer + verified email | Validate a guess for the in-progress word |
+| Method | Path                 | Auth                    | Description                               |
+| ------ | -------------------- | ----------------------- | ----------------------------------------- |
+| GET    | `/v1/infinite/next`  | Bearer + verified email | Next word metadata from today's pool      |
+| POST   | `/v1/infinite/guess` | Bearer + verified email | Validate a guess for the in-progress word |
 
 Requires `authenticate` and `requireVerified`. Guests and unverified users cannot access infinite mode.
 
 Each Warsaw calendar day has one **shared pool** of up to 300 five-letter words (`INFINITE_POOL_SIZE`), lazy-created in `DailyWordPool`. Per player, words are drawn randomly without duplicates within a cycle; when the pool is exhausted the player starts a new cycle over the same word set in a different order.
 
-Call `GET /infinite/next` before guessing. Repeated `GET /infinite/next` calls while a word is in progress return the same `wordNumber` (refresh-safe). The answer is never included until the game is finished.
+Call `GET /v1/infinite/next` before guessing. Repeated `GET /v1/infinite/next` calls while a word is in progress return the same `wordNumber` (refresh-safe). The answer is never included until the game is finished.
 
-**GET `/infinite/next` — 200**
+**GET `/v1/infinite/next` — 200**
 
 ```json
 {
@@ -278,17 +289,17 @@ Call `GET /infinite/next` before guessing. Repeated `GET /infinite/next` calls w
 }
 ```
 
-**POST `/infinite/guess` — body**
+**POST `/v1/infinite/guess` — body**
 
 ```json
 { "guess": "mleko" }
 ```
 
-**POST `/infinite/guess` — 200**
+**POST `/v1/infinite/guess` — 200**
 
-Same shape as daily guess (`results`, `won`, `finished`, `guessNumber`, optional `answer` when finished). On completion, writes `GameResult` and updates `UserStats`, then clears the in-progress word so the next `GET /infinite/next` serves the following pool word.
+Same shape as daily guess (`results`, `won`, `finished`, `guessNumber`, optional `answer` when finished). On completion, writes `GameResult` and updates `UserStats`, then clears the in-progress word so the next `GET /v1/infinite/next` serves the following pool word.
 
-**400** — invalid guess, not in dictionary, no word in progress (call `/infinite/next` first), or game already finished
+**400** — invalid guess, not in dictionary, no word in progress (call `/v1/infinite/next` first), or game already finished
 
 **401** — missing or invalid Bearer token
 
@@ -375,34 +386,34 @@ pnpm db:import-words   # optional for health wordCount
 pnpm --filter @wordlopol/api dev
 ```
 
-API runs at `http://localhost:3001`. Ensure `NODE_ENV=development` (default) so `devToken` is returned for automated Postman runs.
+API runs at `http://localhost:3001/v1` (direct) or `http://localhost:5173/api/v1` (via Vite when `pnpm dev`). Ensure `NODE_ENV=development` (default) so `devToken` is returned for automated Postman runs.
 
 ### 2. Environment variables
 
 Create environment **Wordlopol Local**:
 
-| Variable             | Initial value           | Set by                                        | Used for                         |
-| -------------------- | ----------------------- | --------------------------------------------- | -------------------------------- |
-| `base_url`           | `http://localhost:3001` | you                                           | all requests                     |
-| `display_name`       | `Player`                | collection Pre-request Script                 | register                         |
-| `email`              | _(auto)_                | collection Pre-request Script                 | register, login, forgot-password |
-| `new_email`          | _(auto)_                | collection Pre-request Script                 | change-email                     |
-| `password`           | `secure-password`       | collection script; steps 8 & 10 Tests scripts | login, change-password, delete   |
-| `access_token`       | _(empty)_               | login Tests script (step 3)                   | Bearer on steps 6, 9–13          |
-| `verify_token`       | _(empty)_               | register Tests script (step 1)                | verify-email (step 2)            |
-| `reset_token`        | _(empty)_               | forgot-password Tests script (step 7)         | reset-password (step 8)          |
-| `email_change_token` | _(empty)_               | change-email Tests script (step 11)           | verify-email (step 12)           |
+| Variable             | Initial value              | Set by                                                           | Used for                         |
+| -------------------- | -------------------------- | ---------------------------------------------------------------- | -------------------------------- |
+| `base_url`           | `http://localhost:3001/v1` | you (or `http://localhost:5173/api/v1` for cookie auth via Vite) | all requests                     |
+| `display_name`       | `Player`                   | collection Pre-request Script                                    | register                         |
+| `email`              | _(auto)_                   | collection Pre-request Script                                    | register, login, forgot-password |
+| `new_email`          | _(auto)_                   | collection Pre-request Script                                    | change-email                     |
+| `password`           | `secure-password`          | collection script; steps 8 & 10 Tests scripts                    | login, change-password, delete   |
+| `access_token`       | _(empty)_                  | login Tests script (step 3)                                      | Bearer on steps 6, 9–13          |
+| `verify_token`       | _(empty)_                  | register Tests script (step 1)                                   | verify-email (step 2)            |
+| `reset_token`        | _(empty)_                  | forgot-password Tests script (step 7)                            | reset-password (step 8)          |
+| `email_change_token` | _(empty)_                  | change-email Tests script (step 11)                              | verify-email (step 12)           |
 
 You only need to set `base_url` manually — the collection scripts populate the rest on each run.
 
 ### 3. Collection settings
 
-| Setting       | Value                                                            |
-| ------------- | ---------------------------------------------------------------- |
-| Cookie jar    | **Enabled** (default) — login sets `refresh_token` automatically |
-| Cookie path   | `/auth` — sent on all `{{base_url}}/auth/*` requests             |
-| Bearer routes | Authorization → **Bearer Token** → `{{access_token}}`            |
-| Content-Type  | `application/json` on all POST/PATCH/DELETE with body            |
+| Setting       | Value                                                                                                               |
+| ------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Cookie jar    | **Enabled** (default) — login sets `refresh_token` automatically                                                    |
+| Cookie path   | `/api/v1/auth` (dev) — use Vite `base_url` for refresh/logout, or `REFRESH_COOKIE_PATH=/v1/auth` for direct `:3001` |
+| Bearer routes | Authorization → **Bearer Token** → `{{access_token}}`                                                               |
+| Content-Type  | `application/json` on all POST/PATCH/DELETE with body                                                               |
 
 ### 4. Collection Pre-request Script
 
@@ -423,22 +434,22 @@ if (!pm.collectionVariables.get('run_initialized')) {
 
 Run with **Collection Runner** in order. No manual token copying.
 
-| #   | Name                | Method | Path                        | Auth   | Body                                                                                      |
-| --- | ------------------- | ------ | --------------------------- | ------ | ----------------------------------------------------------------------------------------- |
-| —   | Health              | GET    | `/health`                   | —      | _(none)_                                                                                  |
-| 1   | Register            | POST   | `/auth/register`            | —      | `{ "email": "{{email}}", "password": "{{password}}", "displayName": "{{display_name}}" }` |
-| 2   | Verify email        | POST   | `/auth/verify-email`        | —      | `{ "token": "{{verify_token}}" }`                                                         |
-| 3   | Login               | POST   | `/auth/login`               | —      | `{ "email": "{{email}}", "password": "{{password}}" }`                                    |
-| 4   | Refresh             | POST   | `/auth/refresh`             | Cookie | _(none)_                                                                                  |
-| 5   | Logout              | POST   | `/auth/logout`              | Cookie | _(none)_                                                                                  |
-| 6   | Logout all          | POST   | `/auth/logout-all`          | Bearer | _(none)_                                                                                  |
-| 7   | Forgot password     | POST   | `/auth/forgot-password`     | —      | `{ "email": "{{email}}" }`                                                                |
-| 8   | Reset password      | POST   | `/auth/reset-password`      | —      | `{ "token": "{{reset_token}}", "password": "new-password" }`                              |
-| 9   | Change display name | PATCH  | `/auth/change-display-name` | Bearer | `{ "displayName": "Updated Player" }`                                                     |
-| 10  | Change password     | PATCH  | `/auth/change-password`     | Bearer | `{ "currentPassword": "{{password}}", "newPassword": "changed-password" }`                |
-| 11  | Change email        | PATCH  | `/auth/change-email`        | Bearer | `{ "newEmail": "{{new_email}}" }`                                                         |
-| 12  | Verify email change | POST   | `/auth/verify-email`        | —      | `{ "token": "{{email_change_token}}" }`                                                   |
-| 13  | Delete account      | DELETE | `/auth/account`             | Bearer | `{ "password": "{{password}}" }`                                                          |
+| #   | Name                | Method | Path                           | Auth   | Body                                                                                      |
+| --- | ------------------- | ------ | ------------------------------ | ------ | ----------------------------------------------------------------------------------------- |
+| —   | Health              | GET    | `/health`                      | —      | _(none)_                                                                                  |
+| 1   | Register            | POST   | `/v1/auth/register`            | —      | `{ "email": "{{email}}", "password": "{{password}}", "displayName": "{{display_name}}" }` |
+| 2   | Verify email        | POST   | `/v1/auth/verify-email`        | —      | `{ "token": "{{verify_token}}" }`                                                         |
+| 3   | Login               | POST   | `/v1/auth/login`               | —      | `{ "email": "{{email}}", "password": "{{password}}" }`                                    |
+| 4   | Refresh             | POST   | `/v1/auth/refresh`             | Cookie | _(none)_                                                                                  |
+| 5   | Logout              | POST   | `/v1/auth/logout`              | Cookie | _(none)_                                                                                  |
+| 6   | Logout all          | POST   | `/v1/auth/logout-all`          | Bearer | _(none)_                                                                                  |
+| 7   | Forgot password     | POST   | `/v1/auth/forgot-password`     | —      | `{ "email": "{{email}}" }`                                                                |
+| 8   | Reset password      | POST   | `/v1/auth/reset-password`      | —      | `{ "token": "{{reset_token}}", "password": "new-password" }`                              |
+| 9   | Change display name | PATCH  | `/v1/auth/change-display-name` | Bearer | `{ "displayName": "Updated Player" }`                                                     |
+| 10  | Change password     | PATCH  | `/v1/auth/change-password`     | Bearer | `{ "currentPassword": "{{password}}", "newPassword": "changed-password" }`                |
+| 11  | Change email        | PATCH  | `/v1/auth/change-email`        | Bearer | `{ "newEmail": "{{new_email}}" }`                                                         |
+| 12  | Verify email change | POST   | `/v1/auth/verify-email`        | —      | `{ "token": "{{email_change_token}}" }`                                                   |
+| 13  | Delete account      | DELETE | `/v1/auth/account`             | Bearer | `{ "password": "{{password}}" }`                                                          |
 
 **Password chain:** step 8 → `new-password` · step 10 → `changed-password` · step 13 uses `{{password}}` (= `changed-password` after step 10 script).
 
@@ -540,11 +551,11 @@ sequenceDiagram
     participant API
     participant DB
 
-    Client->>API: GET /daily/today
+    Client->>API: GET /v1/daily/today
     API->>DB: find or create DailyChallenge for Warsaw calendar date
     DB-->>API: challenge metadata
     API-->>Client: date, maxGuesses, wordLength (no answer)
-    Client->>API: POST /daily/guess { guess, guessNumber? }
+    Client->>API: POST /v1/daily/guess { guess, guessNumber? }
     API->>DB: validate word, evaluate guess
     API-->>Client: letter results (answer when finished)
 ```
@@ -553,14 +564,14 @@ sequenceDiagram
 
 Import `Wordlopol-Daily.postman_collection.json` with the same **Wordlopol Local** environment as auth.
 
-| #   | Request             | Expect                            |
-| --- | ------------------- | --------------------------------- |
-| 00  | GET `/health`       | 200, `wordCount > 0`              |
-| 01  | GET `/daily/today`  | 200, saves `daily_date`           |
-| 02  | GET `/daily/today`  | 200, same `date` as step 01       |
-| 03  | POST `/daily/guess` | 200, guest wrong guess, no answer |
-| 04  | POST `/daily/guess` | 400, not in dictionary            |
-| 05  | POST `/daily/guess` | 400, guest missing `guessNumber`  |
+| #   | Request                | Expect                            |
+| --- | ---------------------- | --------------------------------- |
+| 00  | GET `/health`          | 200, `wordCount > 0`              |
+| 01  | GET `/v1/daily/today`  | 200, saves `daily_date`           |
+| 02  | GET `/v1/daily/today`  | 200, same `date` as step 01       |
+| 03  | POST `/v1/daily/guess` | 200, guest wrong guess, no answer |
+| 04  | POST `/v1/daily/guess` | 400, not in dictionary            |
+| 05  | POST `/v1/daily/guess` | 400, guest missing `guessNumber`  |
 
 **503 empty dictionary** — only reproducible with an empty `Word` table (covered by Vitest, not the Postman happy path).
 
@@ -574,11 +585,11 @@ sequenceDiagram
     participant API
     participant DB
 
-    Client->>API: GET /infinite/next (Bearer, verified)
+    Client->>API: GET /v1/infinite/next (Bearer, verified)
     API->>DB: find or create shared DailyWordPool for Warsaw date
     API->>DB: pick random unused word for player cycle
     API-->>Client: date, wordNumber, poolSize, maxGuesses, wordLength (no answer)
-    Client->>API: POST /infinite/guess { guess }
+    Client->>API: POST /v1/infinite/guess { guess }
     API->>DB: validate word, evaluate guess, record stats on finish
     API-->>Client: letter results (answer when finished)
 ```
@@ -587,16 +598,16 @@ sequenceDiagram
 
 Import `Wordlopol-Infinite.postman_collection.json` with the same **Wordlopol Local** environment as auth.
 
-| #   | Request                   | Expect                                   |
-| --- | ------------------------- | ---------------------------------------- |
-| 00  | GET `/health`             | 200, init user, `wordCount > 0`          |
-| 01  | POST `/auth/register`     | 201, saves `verify_token`                |
-| 02  | POST `/auth/verify-email` | 200                                      |
-| 03  | POST `/auth/login`        | 200, saves `access_token`                |
-| 04  | GET `/infinite/next`      | 200, saves `infinite_date`, `wordNumber` |
-| 05  | GET `/infinite/next`      | 200, same date and `wordNumber` as 04    |
-| 06  | POST `/infinite/guess`    | 200, wrong guess, no answer              |
-| 07  | GET `/infinite/next`      | 200, same in-progress `wordNumber`       |
+| #   | Request                      | Expect                                   |
+| --- | ---------------------------- | ---------------------------------------- |
+| 00  | GET `/health`                | 200, init user, `wordCount > 0`          |
+| 01  | POST `/v1/auth/register`     | 201, saves `verify_token`                |
+| 02  | POST `/v1/auth/verify-email` | 200                                      |
+| 03  | POST `/v1/auth/login`        | 200, saves `access_token`                |
+| 04  | GET `/v1/infinite/next`      | 200, saves `infinite_date`, `wordNumber` |
+| 05  | GET `/v1/infinite/next`      | 200, same date and `wordNumber` as 04    |
+| 06  | POST `/v1/infinite/guess`    | 200, wrong guess, no answer              |
+| 07  | GET `/v1/infinite/next`      | 200, same in-progress `wordNumber`       |
 
 Edge cases: `Wordlopol-Infinite-Negative.postman_collection.json` — 401/403 on `/next` and `/guess`, 400 without word in progress.
 
@@ -618,11 +629,11 @@ Edge cases: `Wordlopol-Infinite-Negative.postman_collection.json` — 401/403 on
 - Rate limiting on register, login, forgot-password, resend-verification
 - Forgot-password / resend-verification do not reveal whether email exists
 - Previous password-reset tokens invalidated on new forgot-password request
-- `POST /auth/resend-verification` for stuck unverified accounts
+- `POST /v1/auth/resend-verification` for stuck unverified accounts
 - 97 automated integration tests + 7 e2e (health, auth, daily, infinite, guess, profile, tokens, middleware)
-- Daily challenge: deterministic word per Warsaw calendar day; lazy DB persistence on `GET /daily/today`; `POST /daily/guess` with optional auth
-- Infinite mode: shared daily word pool; `requireVerified` on infinite routes; `POST /infinite/guess` records stats on completion
-- User profile: `GET /user/profile` returns profile + stats for authenticated user only
+- Daily challenge: deterministic word per Warsaw calendar day; lazy DB persistence on `GET /v1/daily/today`; `POST /v1/daily/guess` with optional auth
+- Infinite mode: shared daily word pool; `requireVerified` on infinite routes; `POST /v1/infinite/guess` records stats on completion
+- User profile: `GET /v1/user/profile` returns profile + stats for authenticated user only
 
 ### Remaining gaps
 
@@ -638,49 +649,49 @@ Edge cases: `Wordlopol-Infinite-Negative.postman_collection.json` — 401/403 on
 
 See [Postman setup guide](#postman-setup-guide) for the automated collection, scripts, and environment setup.
 
-| #   | Method | Path                        | Auth              |
-| --- | ------ | --------------------------- | ----------------- |
-| —   | GET    | `/health`                   | —                 |
-| —   | GET    | `/daily/today`              | —                 |
-| —   | POST   | `/daily/guess`              | optional          |
-| —   | GET    | `/infinite/next`            | Bearer + verified |
-| —   | POST   | `/infinite/guess`           | Bearer + verified |
-| —   | GET    | `/user/profile`             | Bearer            |
-| 1   | POST   | `/auth/register`            | —                 |
-| 2   | POST   | `/auth/verify-email`        | —                 |
-| 3   | POST   | `/auth/login`               | —                 |
-| 4   | GET    | `/user/profile`             | Bearer            |
-| 5   | POST   | `/auth/refresh`             | Cookie            |
-| 6   | POST   | `/auth/logout`              | Cookie            |
-| 7   | POST   | `/auth/logout-all`          | Bearer            |
-| 8   | POST   | `/auth/forgot-password`     | —                 |
-| 9   | POST   | `/auth/reset-password`      | —                 |
-| 10  | PATCH  | `/auth/change-display-name` | Bearer            |
-| 11  | PATCH  | `/auth/change-password`     | Bearer            |
-| 12  | PATCH  | `/auth/change-email`        | Bearer            |
-| 13  | POST   | `/auth/verify-email`        | —                 |
-| 14  | DELETE | `/auth/account`             | Bearer            |
+| #   | Method | Path                           | Auth              |
+| --- | ------ | ------------------------------ | ----------------- |
+| —   | GET    | `/health`                      | —                 |
+| —   | GET    | `/v1/daily/today`              | —                 |
+| —   | POST   | `/v1/daily/guess`              | optional          |
+| —   | GET    | `/v1/infinite/next`            | Bearer + verified |
+| —   | POST   | `/v1/infinite/guess`           | Bearer + verified |
+| —   | GET    | `/v1/user/profile`             | Bearer            |
+| 1   | POST   | `/v1/auth/register`            | —                 |
+| 2   | POST   | `/v1/auth/verify-email`        | —                 |
+| 3   | POST   | `/v1/auth/login`               | —                 |
+| 4   | GET    | `/v1/user/profile`             | Bearer            |
+| 5   | POST   | `/v1/auth/refresh`             | Cookie            |
+| 6   | POST   | `/v1/auth/logout`              | Cookie            |
+| 7   | POST   | `/v1/auth/logout-all`          | Bearer            |
+| 8   | POST   | `/v1/auth/forgot-password`     | —                 |
+| 9   | POST   | `/v1/auth/reset-password`      | —                 |
+| 10  | PATCH  | `/v1/auth/change-display-name` | Bearer            |
+| 11  | PATCH  | `/v1/auth/change-password`     | Bearer            |
+| 12  | PATCH  | `/v1/auth/change-email`        | Bearer            |
+| 13  | POST   | `/v1/auth/verify-email`        | —                 |
+| 14  | DELETE | `/v1/auth/account`             | Bearer            |
 
 **Negative cases worth spot-checking:**
 
-| Method | Path                        | Expect                        |
-| ------ | --------------------------- | ----------------------------- |
-| POST   | `/auth/login`               | 403 before verify-email       |
-| POST   | `/auth/register`            | 400 missing displayName       |
-| POST   | `/auth/register`            | 409 duplicate email           |
-| POST   | `/auth/refresh`             | 401 after logout              |
-| PATCH  | `/auth/change-display-name` | 400 unchanged or blank name   |
-| PATCH  | `/auth/change-password`     | 401 wrong current password    |
-| DELETE | `/auth/account`             | 401 wrong password            |
-| GET    | `/daily/today`              | 503 empty dictionary          |
-| POST   | `/daily/guess`              | 400 not in dictionary         |
-| POST   | `/daily/guess`              | 400 guest missing guessNumber |
-| GET    | `/infinite/next`            | 401 without Bearer            |
-| GET    | `/infinite/next`            | 403 unverified user           |
-| GET    | `/user/profile`             | 401 without Bearer            |
-| POST   | `/infinite/guess`           | 401 without Bearer            |
-| POST   | `/infinite/guess`           | 403 unverified user           |
-| POST   | `/infinite/guess`           | 400 no word in progress       |
+| Method | Path                           | Expect                        |
+| ------ | ------------------------------ | ----------------------------- |
+| POST   | `/v1/auth/login`               | 403 before verify-email       |
+| POST   | `/v1/auth/register`            | 400 missing displayName       |
+| POST   | `/v1/auth/register`            | 409 duplicate email           |
+| POST   | `/v1/auth/refresh`             | 401 after logout              |
+| PATCH  | `/v1/auth/change-display-name` | 400 unchanged or blank name   |
+| PATCH  | `/v1/auth/change-password`     | 401 wrong current password    |
+| DELETE | `/v1/auth/account`             | 401 wrong password            |
+| GET    | `/v1/daily/today`              | 503 empty dictionary          |
+| POST   | `/v1/daily/guess`              | 400 not in dictionary         |
+| POST   | `/v1/daily/guess`              | 400 guest missing guessNumber |
+| GET    | `/v1/infinite/next`            | 401 without Bearer            |
+| GET    | `/v1/infinite/next`            | 403 unverified user           |
+| GET    | `/v1/user/profile`             | 401 without Bearer            |
+| POST   | `/v1/infinite/guess`           | 401 without Bearer            |
+| POST   | `/v1/infinite/guess`           | 403 unverified user           |
+| POST   | `/v1/infinite/guess`           | 400 no word in progress       |
 
 ---
 
@@ -694,31 +705,31 @@ See [Postman setup guide](#postman-setup-guide) for the automated collection, sc
 
 ### Suites
 
-| Suite                          | Location         | Tests                                          |
-| ------------------------------ | ---------------- | ---------------------------------------------- |
-| `health.test.ts`               | `src/__tests__/` | DB connected / empty / degraded                |
-| `tokens.test.ts`               | `src/__tests__/` | JWT + refresh create/rotate/revoke             |
-| `middleware.test.ts`           | `src/__tests__/` | authenticate, optionalAuth, requireVerified    |
-| `email.test.ts`                | `src/__tests__/` | URL builders + send behavior                   |
-| `auth-register.test.ts`        | `src/__tests__/` | register → verify → login, resend-verification |
-| `auth-session.test.ts`         | `src/__tests__/` | refresh, logout, logout-all                    |
-| `auth-account.test.ts`         | `src/__tests__/` | reset, change-password, change-email, delete   |
-| `tokens-email-change.test.ts`  | `src/__tests__/` | email-change JWT                               |
-| `daily-word-picker.test.ts`    | `src/__tests__/` | deterministic word index picker                |
-| `daily-today.test.ts`          | `src/__tests__/` | GET /daily/today, idempotency, empty dict 503  |
-| `daily-guess.test.ts`          | `src/__tests__/` | POST /daily/guess guest + auth, stats          |
-| `infinite-pool-picker.test.ts` | `src/__tests__/` | seeded shuffle and pool index picker           |
-| `infinite-pool.test.ts`        | `src/__tests__/` | shared pool creation, idempotency, 503         |
-| `infinite-next.test.ts`        | `src/__tests__/` | GET /infinite/next auth, cycles, no answer     |
-| `infinite-guess.test.ts`       | `src/__tests__/` | POST /infinite/guess auth, stats, progression  |
-| `user-profile.test.ts`         | `src/__tests__/` | GET /user/profile auth, zero + persisted stats |
-| `health.e2e.ts`                | `src/__e2e__/`   | health over real HTTP                          |
-| `auth.e2e.ts`                  | `src/__e2e__/`   | register → verify → login → refresh over HTTP  |
-| `daily.e2e.ts`                 | `src/__e2e__/`   | daily today over real HTTP                     |
-| `daily-guess.e2e.ts`           | `src/__e2e__/`   | daily guess over real HTTP                     |
-| `infinite.e2e.ts`              | `src/__e2e__/`   | infinite next over real HTTP                   |
-| `infinite-guess.e2e.ts`        | `src/__e2e__/`   | infinite guess over real HTTP                  |
-| `user-profile.e2e.ts`          | `src/__e2e__/`   | user profile over real HTTP                    |
+| Suite                          | Location         | Tests                                             |
+| ------------------------------ | ---------------- | ------------------------------------------------- |
+| `health.test.ts`               | `src/__tests__/` | DB connected / empty / degraded                   |
+| `tokens.test.ts`               | `src/__tests__/` | JWT + refresh create/rotate/revoke                |
+| `middleware.test.ts`           | `src/__tests__/` | authenticate, optionalAuth, requireVerified       |
+| `email.test.ts`                | `src/__tests__/` | URL builders + send behavior                      |
+| `auth-register.test.ts`        | `src/__tests__/` | register → verify → login, resend-verification    |
+| `auth-session.test.ts`         | `src/__tests__/` | refresh, logout, logout-all                       |
+| `auth-account.test.ts`         | `src/__tests__/` | reset, change-password, change-email, delete      |
+| `tokens-email-change.test.ts`  | `src/__tests__/` | email-change JWT                                  |
+| `daily-word-picker.test.ts`    | `src/__tests__/` | deterministic word index picker                   |
+| `daily-today.test.ts`          | `src/__tests__/` | GET /v1/daily/today, idempotency, empty dict 503  |
+| `daily-guess.test.ts`          | `src/__tests__/` | POST /v1/daily/guess guest + auth, stats          |
+| `infinite-pool-picker.test.ts` | `src/__tests__/` | seeded shuffle and pool index picker              |
+| `infinite-pool.test.ts`        | `src/__tests__/` | shared pool creation, idempotency, 503            |
+| `infinite-next.test.ts`        | `src/__tests__/` | GET /v1/infinite/next auth, cycles, no answer     |
+| `infinite-guess.test.ts`       | `src/__tests__/` | POST /v1/infinite/guess auth, stats, progression  |
+| `user-profile.test.ts`         | `src/__tests__/` | GET /v1/user/profile auth, zero + persisted stats |
+| `health.e2e.ts`                | `src/__e2e__/`   | health over real HTTP                             |
+| `auth.e2e.ts`                  | `src/__e2e__/`   | register → verify → login → refresh over HTTP     |
+| `daily.e2e.ts`                 | `src/__e2e__/`   | daily today over real HTTP                        |
+| `daily-guess.e2e.ts`           | `src/__e2e__/`   | daily guess over real HTTP                        |
+| `infinite.e2e.ts`              | `src/__e2e__/`   | infinite next over real HTTP                      |
+| `infinite-guess.e2e.ts`        | `src/__e2e__/`   | infinite guess over real HTTP                     |
+| `user-profile.e2e.ts`          | `src/__e2e__/`   | user profile over real HTTP                       |
 
 **Integration** — Supertest against an in-process Express app (`vitest.config.ts`).
 

@@ -52,7 +52,8 @@ pnpm db:import-words
 pnpm dev
 ```
 
-- API: http://localhost:3001/health → `{ "status": "ok", "database": "connected", "wordCount": 4062 }`
+- API probe: http://localhost:3001/health → `{ "status": "ok", "database": "connected", "wordCount": 4062, "apiVersion": "v1" }`
+- API app routes: `http://localhost:3001/v1/...` (web uses `/api/v1/...` via Vite proxy)
 - Web: http://localhost:5173
 
 ## Word list format
@@ -97,6 +98,7 @@ Auth flows (verify email, password reset, change email) use [Resend](https://res
 | Document                                       | Description                     |
 | ---------------------------------------------- | ------------------------------- |
 | [docs/V1.md](./docs/V1.md)                     | v1.0 done vs remaining          |
+| [docs/API-BACKLOG.md](./docs/API-BACKLOG.md)   | API contract & hardening plan   |
 | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | System design                   |
 | [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md) | Commits, PRs, releases, CI      |
 | [apps/api/docs/API.md](./apps/api/docs/API.md) | API endpoints, Postman, testing |

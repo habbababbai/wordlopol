@@ -2,14 +2,14 @@
 
 ## Files
 
-| File                                                  | Purpose                                           |
-| ----------------------------------------------------- | ------------------------------------------------- |
-| `Wordlopol-Local.postman_environment.json`            | Shared environment (only set `base_url` manually) |
-| `Wordlopol-Auth.postman_collection.json`              | Auth happy-path flow (15 requests)                |
-| `Wordlopol-Auth-Negative.postman_collection.json`     | Auth edge cases & error responses (9 folders)     |
-| `Wordlopol-Daily.postman_collection.json`             | Daily challenge happy path (6 requests)           |
-| `Wordlopol-Infinite.postman_collection.json`          | Infinite mode happy path (8 requests)             |
-| `Wordlopol-Infinite-Negative.postman_collection.json` | Infinite edge cases (401, 403, guess errors)      |
+| File                                                  | Purpose                                                      |
+| ----------------------------------------------------- | ------------------------------------------------------------ |
+| `Wordlopol-Local.postman_environment.json`            | Shared environment (`base_url` = `http://localhost:3001/v1`) |
+| `Wordlopol-Auth.postman_collection.json`              | Auth happy-path flow (15 requests)                           |
+| `Wordlopol-Auth-Negative.postman_collection.json`     | Auth edge cases & error responses (9 folders)                |
+| `Wordlopol-Daily.postman_collection.json`             | Daily challenge happy path (6 requests)                      |
+| `Wordlopol-Infinite.postman_collection.json`          | Infinite mode happy path (8 requests)                        |
+| `Wordlopol-Infinite-Negative.postman_collection.json` | Infinite edge cases (401, 403, guess errors)                 |
 
 ## Import
 
