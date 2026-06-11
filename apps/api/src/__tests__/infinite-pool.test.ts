@@ -23,6 +23,15 @@ describe('getOrCreateDailyPool', () => {
     expect(pool.map((entry) => entry.order)).toEqual(Array.from({ length: 20 }, (_, i) => i));
   });
 
+  it('builds a full pool when dictionary size equals pool size on collision-prone dates', async () => {
+    await seedDictionaryWords(['wążka', 'mleko', 'aabaa', 'aacaa', 'aadaa']);
+
+    const pool = await getOrCreateDailyPool('2026-06-11');
+
+    expect(pool).toHaveLength(5);
+    expect(new Set(pool.map((entry) => entry.wordId)).size).toBe(5);
+  });
+
   it('is idempotent for the same calendar date', async () => {
     await seedDictionaryWords(['wążka', 'mleko', 'aabaa', 'aacaa', 'aadaa']);
 
