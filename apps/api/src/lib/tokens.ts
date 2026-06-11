@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
+import { API_PATH_PREFIX } from '@wordlopol/shared';
 import type { CookieOptions, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
@@ -76,27 +77,46 @@ export function verifyAccessToken(token: string): AccessTokenPayload {
   return { userId: payload.sub };
 }
 
-export function getRefreshCookieOptions(): CookieOptions {
+function getRefreshCookiePaths(): string[] {
+  if (env.NODE_ENV !== 'development') {
+    return [env.REFRESH_COOKIE_PATH];
+  }
+
+  const browserPath = `/api${API_PATH_PREFIX}/auth`;
+  const directPath = `${API_PATH_PREFIX}/auth`;
+
+  if (env.REFRESH_COOKIE_PATH === browserPath || env.REFRESH_COOKIE_PATH === directPath) {
+    return [browserPath, directPath];
+  }
+
+  return [env.REFRESH_COOKIE_PATH];
+}
+
+export function getRefreshCookieOptions(path = env.REFRESH_COOKIE_PATH): CookieOptions {
   return {
     httpOnly: true,
     secure: env.NODE_ENV === 'production',
     sameSite: 'lax',
-    path: env.REFRESH_COOKIE_PATH,
+    path,
     maxAge: REFRESH_TOKEN_TTL_MS,
   };
 }
 
 export function setRefreshCookie(res: Response, token: string): void {
-  res.cookie(REFRESH_COOKIE_NAME, token, getRefreshCookieOptions());
+  for (const path of getRefreshCookiePaths()) {
+    res.cookie(REFRESH_COOKIE_NAME, token, getRefreshCookieOptions(path));
+  }
 }
 
 export function clearRefreshCookie(res: Response): void {
-  res.clearCookie(REFRESH_COOKIE_NAME, {
-    path: env.REFRESH_COOKIE_PATH,
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: env.NODE_ENV === 'production',
-  });
+  for (const path of getRefreshCookiePaths()) {
+    res.clearCookie(REFRESH_COOKIE_NAME, {
+      path,
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: env.NODE_ENV === 'production',
+    });
+  }
 }
 
 export async function createRefreshToken(userId: string): Promise<RefreshTokenResult> {

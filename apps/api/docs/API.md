@@ -2,15 +2,16 @@
 
 ## Base URLs (local)
 
-| Client           | Base URL                       | Notes                                       |
-| ---------------- | ------------------------------ | ------------------------------------------- |
-| Express (direct) | `http://localhost:3001/v1`     | Postman, curl, integration tests            |
-| Web (Vite proxy) | `http://localhost:5173/api/v1` | Browser; proxy strips `/api` → server `/v1` |
-| Infra probe      | `http://localhost:3001/health` | Unversioned; same handler as `/v1/health`   |
+| Client           | Base URL                          | Notes                                       |
+| ---------------- | --------------------------------- | ------------------------------------------- |
+| Express (direct) | `http://localhost:3001/v1`        | Postman, curl, integration tests            |
+| Web (Vite proxy) | `http://localhost:5173/api/v1`    | Browser; proxy strips `/api` → server `/v1` |
+| Infra probe      | `http://localhost:3001/health`    | Unversioned; DB connectivity only           |
+| App health       | `http://localhost:3001/v1/health` | Full health incl. `wordCount`, `apiVersion` |
 
 All **application** routes live under `/v1` on the server (`/v1/auth`, `/v1/daily`, …). `/api` is only the gateway prefix in front of the web app.
 
-Cookie paths (refresh, CSRF): `/api/v1/...` in development and production (matches browser `/api/v1` paths); `/v1/...` in test. For Postman cookie flows against the API only, use `http://localhost:5173/api/v1` (Vite proxy, `pnpm dev`) or set `REFRESH_COOKIE_PATH=/v1/auth` in `.env` when calling `http://localhost:3001/v1` directly.
+Cookie paths (refresh, CSRF): in **development**, refresh cookies are set on both `/api/v1/auth` and `/v1/auth` so Postman against `:3001/v1` and the browser via `:5173/api/v1` both work without env overrides. In **production** and **test**, a single path applies (`/api/v1/auth` or `/v1/auth` respectively).
 
 All JSON request/response bodies unless noted. Errors: `{ "error": "<message>" }`.
 
@@ -64,18 +65,30 @@ Refresh tokens are stored as **SHA-256 hashes** in the database (never plaintext
 
 ### Health
 
-| Method | Path         | Auth | Description                        |
-| ------ | ------------ | ---- | ---------------------------------- |
-| GET    | `/health`    | —    | Infra probe (unversioned)          |
-| GET    | `/v1/health` | —    | Same handler; use from app clients |
+| Method | Path         | Auth | Description                           |
+| ------ | ------------ | ---- | ------------------------------------- |
+| GET    | `/health`    | —    | Infra probe (DB only; no `wordCount`) |
+| GET    | `/v1/health` | —    | App health for clients                |
 
-**200**
+**200** — `GET /health` (infra)
+
+```json
+{ "status": "ok", "database": "connected" }
+```
+
+**200** — `GET /v1/health` (app)
 
 ```json
 { "status": "ok", "database": "connected", "wordCount": 4062, "apiVersion": "v1" }
 ```
 
-**503** — database unreachable
+**503** — database unreachable (`GET /health`)
+
+```json
+{ "status": "degraded", "database": "disconnected" }
+```
+
+**503** — database unreachable (`GET /v1/health`)
 
 ```json
 { "status": "degraded", "database": "disconnected", "apiVersion": "v1" }

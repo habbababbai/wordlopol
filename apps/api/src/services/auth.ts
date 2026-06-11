@@ -18,6 +18,7 @@ import {
 } from '../lib/tokens.js';
 import { withDevToken } from '../lib/dev-auth-tokens.js';
 import { HttpError } from '../lib/http-error.js';
+import { logger } from '../lib/logger.js';
 import { normalizeEmail } from '../lib/normalize-email.js';
 import { isUniqueConstraintError } from '../lib/prisma-errors.js';
 import { toUserProfile } from '../lib/user-profile.js';
@@ -192,7 +193,7 @@ export async function resendVerification(email: string): Promise<DevMessageRespo
     try {
       await sendVerificationEmail(user.email, token);
     } catch (error) {
-      console.error('[auth] Failed to send verification email:', error);
+      logger.error({ err: error }, 'Failed to send verification email');
       return { message: 'If the email exists and is unverified, a verification link was sent' };
     }
 
@@ -224,7 +225,7 @@ export async function forgotPassword(email: string): Promise<DevMessageResponseD
     try {
       await sendPasswordResetEmail(user.email, token);
     } catch (error) {
-      console.error('[auth] Failed to send password reset email:', error);
+      logger.error({ err: error }, 'Failed to send password reset email');
       return { message: 'If the email exists, a reset link was sent' };
     }
 
@@ -275,7 +276,6 @@ export async function changePassword(
     where: { id: userId },
     data: { passwordHash },
   });
-  await revokeAllRefreshTokens(userId);
 
   return { message: 'Password changed' };
 }

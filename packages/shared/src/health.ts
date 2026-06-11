@@ -14,3 +14,15 @@ export interface HealthDegradedResponseDto {
 }
 
 export type HealthResponseDto = HealthOkResponseDto | HealthDegradedResponseDto;
+
+export interface InfraHealthOkResponseDto {
+  status: 'ok';
+  database: 'connected';
+}
+
+export interface InfraHealthDegradedResponseDto {
+  status: 'degraded';
+  database: 'disconnected';
+}
+
+export type InfraHealthResponseDto = InfraHealthOkResponseDto | InfraHealthDegradedResponseDto;

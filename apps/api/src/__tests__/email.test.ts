@@ -100,7 +100,8 @@ describe('email', () => {
       sendMock.mockClear();
 
       const { sendVerificationEmail } = await import('../lib/email.js');
-      const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+      const { logger } = await import('../lib/logger.js');
+      const info = vi.spyOn(logger, 'info').mockImplementation(() => {});
 
       await sendVerificationEmail('user@example.com', 'test-token');
 

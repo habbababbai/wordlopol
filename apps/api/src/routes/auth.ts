@@ -6,7 +6,8 @@ import { asyncHandler } from '../lib/async-handler.js';
 import { displayNameSchema, normalizedEmailSchema } from '../lib/auth-schemas.js';
 import { HttpError } from '../lib/http-error.js';
 import { validateBody } from '../lib/validate-body.js';
-import { clearRefreshCookie, REFRESH_COOKIE_NAME, setRefreshCookie } from '../lib/tokens.js';
+import { REFRESH_COOKIE_NAME, setRefreshCookie } from '../lib/tokens.js';
+import { clearAuthSessionResponse, revokeAndClearAuthSession } from '../lib/auth-session.js';
 import { authenticate } from '../middleware/authenticate.js';
 import {
   authenticatedRateLimit,
@@ -25,8 +26,6 @@ import {
   deleteAccount,
   forgotPassword,
   login,
-  logout,
-  logoutAll,
   refreshSession,
   register,
   requestEmailChange,
@@ -142,8 +141,7 @@ authRouter.post(
   '/logout',
   asyncHandler(async (req, res) => {
     const refreshToken = req.cookies[REFRESH_COOKIE_NAME] as string | undefined;
-    await logout(refreshToken);
-    clearRefreshCookie(res);
+    await revokeAndClearAuthSession(res, { refreshToken });
     res.json({ message: 'Logged out' });
   }),
 );
@@ -153,8 +151,7 @@ authRouter.post(
   authenticatedRateLimit,
   authenticate,
   asyncHandler(async (req, res) => {
-    await logoutAll(req.userId!);
-    clearRefreshCookie(res);
+    await revokeAndClearAuthSession(res, { userId: req.userId! });
     res.json({ message: 'Logged out from all devices' });
   }),
 );
@@ -200,7 +197,7 @@ authRouter.patch(
       req.body.currentPassword,
       req.body.newPassword,
     );
-    clearRefreshCookie(res);
+    await revokeAndClearAuthSession(res, { userId: req.userId! });
     res.json(result);
   }),
 );
@@ -234,7 +231,7 @@ authRouter.delete(
   validateBody(deleteAccountSchema),
   asyncHandler(async (req, res) => {
     const result = await deleteAccount(req.userId!, req.body.password);
-    clearRefreshCookie(res);
+    clearAuthSessionResponse(res);
     res.json(result);
   }),
 );

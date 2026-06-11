@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
 
 import { HttpError } from '../lib/http-error.js';
+import { logger } from '../lib/logger.js';
 import { isInvalidCsrfTokenError } from './csrf.js';
 
 export function errorHandler(
@@ -30,7 +31,7 @@ export function errorHandler(
     return;
   }
 
-  console.error('[api] Unhandled error:', error);
+  logger.error({ err: error, requestId: _req.requestId }, 'Unhandled API error');
 
   res.status(500).json({ error: 'Internal server error' });
 }

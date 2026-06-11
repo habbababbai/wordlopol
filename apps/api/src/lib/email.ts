@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { env } from '../config/env.js';
+import { logger } from './logger.js';
 
 export function buildVerificationUrl(token: string): string {
   return `${env.APP_URL}/verify-email?token=${encodeURIComponent(token)}`;
@@ -29,7 +30,7 @@ export function isEmailDeliveryConfigured(
 }
 
 function logEmailLocally(to: string, subject: string, html: string): void {
-  console.info(`[email] To: ${to}\nSubject: ${subject}\n${html}`);
+  logger.info({ to, subject, html }, 'Email (local fallback)');
 }
 
 let resendClient: Resend | null = null;
@@ -62,7 +63,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
 
   if (error) {
     if (env.NODE_ENV === 'development') {
-      console.warn(`[email] Resend failed (${error.message}); logging email locally instead.`);
+      logger.warn({ err: error.message }, 'Resend failed; logging email locally instead');
       logEmailLocally(to, subject, html);
       return;
     }
