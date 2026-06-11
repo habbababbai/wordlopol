@@ -89,14 +89,17 @@ export function GameBoard({
       aria-label="Plansza gry"
       aria-rowcount={MAX_GUESSES}
       aria-colcount={WORD_LENGTH}
-      className={cn('flex flex-col gap-1.5', className)}
+      className={cn('flex flex-col gap-1 sm:gap-1.5', className)}
     >
       {boardRows.map((row, rowIndex) => (
         <div
           key={rowIndex}
           role="row"
           aria-rowindex={rowIndex + 1}
-          className={cn('flex gap-1.5', shakingRowIndex === rowIndex && 'animate-row-shake')}
+          className={cn(
+            'flex gap-1 sm:gap-1.5',
+            shakingRowIndex === rowIndex && 'animate-row-shake',
+          )}
         >
           {Array.from({ length: WORD_LENGTH }).map((_, colIndex) => {
             const state = getTileState(rowIndex, colIndex, row, activeRowIndex, activeColIndex);
