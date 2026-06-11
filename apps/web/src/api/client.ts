@@ -198,6 +198,15 @@ export const api = {
     }
   },
 
+  logoutAll: async () => {
+    try {
+      await request<MessageResponseDto>('/auth/logout-all', { method: 'POST' });
+    } finally {
+      clearAccessToken();
+      clearCsrfToken();
+    }
+  },
+
   refresh: async () => {
     await ensureCsrfToken(API_BASE);
 

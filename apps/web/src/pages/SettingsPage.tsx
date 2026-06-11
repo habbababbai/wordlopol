@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { DeleteAccountSettingsCard } from '@/components/settings/DeleteAccountSettingsCard';
 import { DisplayNameSettingsCard } from '@/components/settings/DisplayNameSettingsCard';
 import { EmailSettingsCard } from '@/components/settings/EmailSettingsCard';
+import { LogoutAllSettingsCard } from '@/components/settings/LogoutAllSettingsCard';
 import { PasswordSettingsCard } from '@/components/settings/PasswordSettingsCard';
 import { ErrorCard, Spinner } from '@/components/ui/loader';
 import { useProfileQuery } from '@/hooks/queries/use-profile-query';
@@ -46,6 +47,7 @@ export function SettingsPage() {
         <DisplayNameSettingsCard displayName={profile.displayName} />
         <EmailSettingsCard currentEmail={profile.email} />
         <PasswordSettingsCard />
+        <LogoutAllSettingsCard />
         <DeleteAccountSettingsCard />
       </div>
     </div>

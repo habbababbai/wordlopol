@@ -66,6 +66,47 @@ describe('AppLayout', () => {
     expect(screen.getByRole('link', { name: 'Nieskończony' })).toHaveAttribute('href', '/infinite');
     expect(screen.getByRole('link', { name: 'Profil' })).toHaveAttribute('href', '/profile');
     expect(screen.getByRole('link', { name: 'Zaloguj' })).toHaveAttribute('href', '/login');
+    expect(screen.queryByRole('link', { name: 'Ustawienia konta' })).not.toBeInTheDocument();
+  });
+
+  it('renders skip link to main content', async () => {
+    const user = userEvent.setup();
+    renderAppLayout();
+
+    const skipLink = screen.getByRole('link', { name: 'Przejdź do treści' });
+    const main = document.getElementById('main-content');
+
+    expect(skipLink).toHaveAttribute('href', '#main-content');
+    expect(main).toBeInTheDocument();
+
+    skipLink.focus();
+    await user.keyboard('{Enter}');
+    expect(main).toHaveFocus();
+  });
+
+  it('shows settings footer link when authenticated', () => {
+    useAuthMock.mockReturnValue({
+      user: {
+        id: 'user-1',
+        email: 'player@example.com',
+        displayName: 'Player',
+        emailVerified: true,
+        stats: {
+          dailyPlayed: 0,
+          dailyWon: 0,
+          infinitePlayed: 0,
+          infiniteWon: 0,
+          bestTimedWords: null,
+          bestTimedMs: null,
+          bestTimedWord: null,
+        },
+      },
+      isAuthenticated: true,
+      isLoading: false,
+    });
+
+    renderAppLayout();
+
     expect(screen.getByRole('link', { name: 'Ustawienia konta' })).toHaveAttribute(
       'href',
       '/settings',

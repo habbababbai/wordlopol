@@ -16,7 +16,7 @@ type GameTileProps = {
 
 const sizeClasses = {
   sm: 'h-10 w-10 text-sm',
-  md: 'h-14 w-14 text-xl',
+  md: 'h-11 w-11 text-lg sm:h-14 sm:w-14 sm:text-xl',
   lg: 'h-16 w-16 text-2xl',
 } as const;
 
@@ -59,7 +59,7 @@ export function GameTile({
       className={cn(
         sizeClasses[size],
         stateClasses[state],
-        'relative flex select-none items-center justify-center overflow-hidden rounded-[var(--radius-sm)] font-bold uppercase',
+        'relative flex select-none items-center justify-center overflow-hidden rounded-sm font-bold uppercase',
         animationClass,
         className,
       )}

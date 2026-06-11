@@ -13,6 +13,7 @@ const changeDisplayNameMock = vi.hoisted(() => vi.fn());
 const changeEmailMock = vi.hoisted(() => vi.fn());
 const changePasswordMock = vi.hoisted(() => vi.fn());
 const deleteAccountMock = vi.hoisted(() => vi.fn());
+const logoutAllMock = vi.hoisted(() => vi.fn());
 
 vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
@@ -50,6 +51,13 @@ vi.mock('@/hooks/mutations/use-change-password-mutation', () => ({
 vi.mock('@/hooks/mutations/use-delete-account-mutation', () => ({
   useDeleteAccountMutation: () => ({
     mutateAsync: deleteAccountMock,
+    isPending: false,
+  }),
+}));
+
+vi.mock('@/hooks/mutations/use-logout-all-mutation', () => ({
+  useLogoutAllMutation: () => ({
+    mutateAsync: logoutAllMock,
     isPending: false,
   }),
 }));
@@ -97,6 +105,7 @@ describe('SettingsPage', () => {
     changeEmailMock.mockReset();
     changePasswordMock.mockReset();
     deleteAccountMock.mockReset();
+    logoutAllMock.mockReset();
   });
 
   it('shows loading state', () => {
@@ -139,6 +148,7 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('heading', { name: 'Nazwa wyświetlana' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Adres e-mail' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Hasło' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Sesje' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Strefa niebezpieczna' })).toBeInTheDocument();
   });
 
@@ -197,6 +207,30 @@ describe('SettingsPage', () => {
       expect(screen.getByRole('alert')).toHaveTextContent('Hasła nie są identyczne');
     });
     expect(changePasswordMock).not.toHaveBeenCalled();
+  });
+
+  it('redirects to home after logout all', async () => {
+    const user = userEvent.setup();
+    mockProfileLoaded();
+    logoutAllMock.mockResolvedValueOnce({ message: 'Logged out from all devices' });
+
+    renderWithProviders(<SettingsPage />, { route: '/settings' });
+
+    await user.click(screen.getByRole('button', { name: 'Wyloguj ze wszystkich urządzeń' }));
+
+    await waitFor(() => {
+      expect(logoutAllMock).toHaveBeenCalledTimes(1);
+      expect(
+        screen.getByText('Wylogowano ze wszystkich urządzeń. Za chwilę wrócisz na stronę główną.'),
+      ).toBeInTheDocument();
+    });
+
+    await waitFor(
+      () => {
+        expect(navigateMock).toHaveBeenCalledWith('/');
+      },
+      { timeout: SETTINGS_REDIRECT_DELAY_MS + 500 },
+    );
   });
 
   it('redirects to login after password change', async () => {

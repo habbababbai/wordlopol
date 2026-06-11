@@ -10,6 +10,9 @@ import { cn } from '../../lib/utils';
 import { ThemeToggle } from '../ThemeToggle';
 import { Badge } from '../ui/badge';
 
+const focusVisibleRing =
+  'outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50';
+
 function NavItem({
   to,
   children,
@@ -26,6 +29,7 @@ function NavItem({
       className={({ isActive }) =>
         cn(
           'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+          focusVisibleRing,
           isActive
             ? 'bg-accent text-accent-foreground'
             : 'text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -51,7 +55,10 @@ function NavButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+      className={cn(
+        'rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50',
+        focusVisibleRing,
+      )}
     >
       {children}
     </button>
@@ -107,6 +114,7 @@ export function AppLayout() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
   const logoutMutation = useLogoutMutation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -126,6 +134,22 @@ export function AppLayout() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <a
+        href="#main-content"
+        onClick={() => {
+          const main = document.getElementById('main-content');
+          if (main instanceof HTMLElement) {
+            main.focus();
+          }
+        }}
+        className={cn(
+          'fixed top-4 left-4 z-100 translate-y-[-200%] rounded-md bg-card px-4 py-2 text-sm font-medium text-foreground shadow-md transition-transform focus:translate-y-0',
+          focusVisibleRing,
+        )}
+      >
+        {t('nav.skipToMain')}
+      </a>
+
       <header className="sticky top-0 z-50 w-full border-b border-border bg-card/80 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-4xl items-center justify-between gap-4 px-4">
           <NavLink to="/" className="flex items-center gap-2" onClick={closeMobile}>
@@ -150,7 +174,10 @@ export function AppLayout() {
 
             <button
               type="button"
-              className="flex size-9 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-muted md:hidden [&_svg]:size-4"
+              className={cn(
+                'flex size-9 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-muted md:hidden [&_svg]:size-4',
+                focusVisibleRing,
+              )}
               aria-label={mobileOpen ? t('nav.closeMenu') : t('nav.openMenu')}
               aria-controls={MOBILE_NAV_ID}
               aria-expanded={mobileOpen}
@@ -185,15 +212,17 @@ export function AppLayout() {
         )}
       </header>
 
-      <main className="flex flex-1 flex-col">
+      <main id="main-content" tabIndex={-1} className="flex flex-1 flex-col">
         <Outlet />
       </main>
 
-      <footer className="border-t border-border py-4 text-center text-sm text-muted-foreground">
-        <NavLink to="/settings" className="hover:text-foreground">
-          {t('nav.accountSettings')}
-        </NavLink>
-      </footer>
+      {isAuthenticated && (
+        <footer className="border-t border-border py-4 text-center text-sm text-muted-foreground">
+          <NavLink to="/settings" className={cn('hover:text-foreground', focusVisibleRing)}>
+            {t('nav.accountSettings')}
+          </NavLink>
+        </footer>
+      )}
     </div>
   );
 }

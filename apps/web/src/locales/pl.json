@@ -7,6 +7,19 @@
       "generic": "Coś poszło nie tak. Spróbuj ponownie."
     }
   },
+  "game": {
+    "board": {
+      "label": "Plansza gry",
+      "cell": {
+        "empty": "Puste pole",
+        "active": "Aktywne pole",
+        "filled": "Litera {{letter}}",
+        "correct": "Litera {{letter}}, na właściwym miejscu",
+        "present": "Litera {{letter}}, w słowie",
+        "absent": "Litera {{letter}}, nie w słowie"
+      }
+    }
+  },
   "nav": {
     "main": "Główne",
     "daily": "Dziennie",
@@ -17,7 +30,8 @@
     "logoutError": "Nie udało się wylogować. Spróbuj ponownie.",
     "accountSettings": "Ustawienia konta",
     "openMenu": "Otwórz menu",
-    "closeMenu": "Zamknij menu"
+    "closeMenu": "Zamknij menu",
+    "skipToMain": "Przejdź do treści"
   },
   "home": {
     "localeBadge": "PL",
@@ -231,6 +245,11 @@
         "currentLabel": "Obecne hasło",
         "success": "Hasło zostało zmienione. Za chwilę przekierujemy do logowania."
       },
+      "sessions": {
+        "title": "Sesje",
+        "description": "Wyloguj się ze wszystkich urządzeń, na których jesteś zalogowany.",
+        "success": "Wylogowano ze wszystkich urządzeń. Za chwilę wrócisz na stronę główną."
+      },
       "deleteAccount": {
         "title": "Strefa niebezpieczna",
         "description": "Usunięcie konta jest trwałe. Stracisz dostęp do statystyk i historii gier.",
@@ -245,7 +264,8 @@
       "actions": {
         "saveDisplayName": "Zapisz nazwę",
         "changeEmail": "Zmień e-mail",
-        "changePassword": "Zmień hasło"
+        "changePassword": "Zmień hasło",
+        "logoutAll": "Wyloguj ze wszystkich urządzeń"
       }
     }
   }
