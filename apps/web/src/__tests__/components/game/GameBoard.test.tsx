@@ -51,6 +51,9 @@ describe('GameBoard', () => {
     expect(tiles[2]?.firstChild).toHaveClass('bg-[var(--tile-absent)]');
     expect(tiles[4]?.firstChild).toHaveClass('bg-[var(--tile-correct)]');
     expect(tiles[0]?.firstChild).toHaveClass('animate-tile-flip');
+    expect(tiles[0]).toHaveAttribute('aria-label', 'Litera S, na właściwym miejscu');
+    expect(tiles[1]).toHaveAttribute('aria-label', 'Litera K, w słowie');
+    expect(tiles[2]).toHaveAttribute('aria-label', 'Litera A, nie w słowie');
   });
 
   it('shows filled and active tiles on the current row', () => {
@@ -64,6 +67,9 @@ describe('GameBoard', () => {
     expect(tiles[1]?.firstChild).toHaveClass('border-[var(--tile-filled-border)]');
     expect(tiles[2]?.firstChild).toHaveClass('border-[var(--tile-active-border)]');
     expect(tiles[3]?.firstChild).toHaveClass('border-[var(--tile-empty-border)]');
+    expect(tiles[0]).toHaveAttribute('aria-label', 'Litera S');
+    expect(tiles[2]).toHaveAttribute('aria-label', 'Aktywne pole');
+    expect(tiles[3]).toHaveAttribute('aria-label', 'Puste pole');
   });
 
   it('applies shake animation to the shaking row', () => {

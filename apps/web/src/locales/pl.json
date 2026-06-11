@@ -7,6 +7,19 @@
       "generic": "Coś poszło nie tak. Spróbuj ponownie."
     }
   },
+  "game": {
+    "board": {
+      "label": "Plansza gry",
+      "cell": {
+        "empty": "Puste pole",
+        "active": "Aktywne pole",
+        "filled": "Litera {{letter}}",
+        "correct": "Litera {{letter}}, na właściwym miejscu",
+        "present": "Litera {{letter}}, w słowie",
+        "absent": "Litera {{letter}}, nie w słowie"
+      }
+    }
+  },
   "nav": {
     "main": "Główne",
     "daily": "Dziennie",
