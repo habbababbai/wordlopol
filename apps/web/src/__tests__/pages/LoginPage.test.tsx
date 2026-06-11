@@ -84,7 +84,9 @@ describe('LoginPage', () => {
 
   it('shows API error message', async () => {
     const user = userEvent.setup();
-    mutateAsyncMock.mockRejectedValueOnce(new ApiError(401, 'Invalid credentials'));
+    mutateAsyncMock.mockRejectedValueOnce(
+      new ApiError(401, 'Invalid email or password', 'INVALID_EMAIL_OR_PASSWORD'),
+    );
 
     renderWithProviders(<LoginPage />, { route: '/login' });
 
@@ -93,7 +95,7 @@ describe('LoginPage', () => {
     await user.click(screen.getByRole('button', { name: 'Zaloguj się' }));
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Invalid credentials');
+      expect(screen.getByRole('alert')).toHaveTextContent('Nieprawidłowy e-mail lub hasło');
     });
   });
 });

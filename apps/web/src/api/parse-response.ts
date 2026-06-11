@@ -1,3 +1,5 @@
+import { isApiErrorResponse, type ApiErrorCode } from '@wordlopol/shared';
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -16,12 +18,42 @@ export type ParsedAuthResponse = {
   };
 };
 
-export function parseApiErrorMessage(data: unknown): string {
-  if (isRecord(data) && typeof data.error === 'string') {
-    return data.error;
+export type ParsedApiError = {
+  code: ApiErrorCode | null;
+  message: string;
+};
+
+const REQUEST_FAILED: ParsedApiError = { code: null, message: 'Request failed' };
+
+export function parseApiError(data: unknown): ParsedApiError {
+  if (isApiErrorResponse(data)) {
+    return {
+      code: data.error.code,
+      message: data.error.message,
+    };
   }
 
-  return 'Request failed';
+  if (isRecord(data) && typeof data.error === 'string') {
+    return {
+      code: null,
+      message: data.error,
+    };
+  }
+
+  return REQUEST_FAILED;
+}
+
+export function parseApiErrorMessage(data: unknown): string {
+  return parseApiError(data).message;
+}
+
+export async function parseApiErrorFromResponse(res: Response): Promise<ParsedApiError> {
+  try {
+    const data: unknown = await res.json();
+    return parseApiError(data);
+  } catch {
+    return REQUEST_FAILED;
+  }
 }
 
 export function parseRefreshResponse(data: unknown): ParsedRefreshResponse {

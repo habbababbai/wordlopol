@@ -94,11 +94,7 @@ export function InfiniteGamePlay({ word, onNextWord }: InfiniteGamePlayProps) {
         }
       }
     } catch (error) {
-      if (
-        error instanceof ApiError &&
-        error.status === 400 &&
-        error.message === 'Not in dictionary'
-      ) {
+      if (error instanceof ApiError && error.code === 'NOT_IN_DICTIONARY') {
         toast({ message: t('pages.infinite.play.invalidWord'), variant: 'warning' });
         return;
       }

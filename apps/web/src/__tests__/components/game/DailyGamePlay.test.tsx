@@ -124,7 +124,9 @@ describe('DailyGamePlay', () => {
 
   it('handles 409 by switching to already-played screen and caching state', async () => {
     const user = userEvent.setup();
-    mutateAsyncMock.mockRejectedValueOnce(new ApiError(409, 'Already played today'));
+    mutateAsyncMock.mockRejectedValueOnce(
+      new ApiError(409, 'Already played today', 'ALREADY_PLAYED_TODAY'),
+    );
 
     const { container } = renderWithProviders(<DailyGamePlay challenge={challenge} />);
 

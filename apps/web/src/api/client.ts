@@ -29,7 +29,11 @@ import {
   ensureCsrfToken,
   getCsrfToken,
 } from './csrf';
-import { parseApiErrorMessage, parseAuthResponse, parseRefreshResponse } from './parse-response';
+import {
+  parseApiErrorFromResponse,
+  parseAuthResponse,
+  parseRefreshResponse,
+} from './parse-response';
 import { clearAccessToken, getAccessToken, setAccessToken } from './token';
 
 export const API_BASE = import.meta.env.VITE_API_URL ?? `/api${API_PATH_PREFIX}`;
@@ -53,15 +57,6 @@ export function redirectToLogin(): void {
   window.location.assign(loginPath);
 }
 
-async function parseErrorMessage(res: Response): Promise<string> {
-  try {
-    const data: unknown = await res.json();
-    return parseApiErrorMessage(data);
-  } catch {
-    return 'Request failed';
-  }
-}
-
 async function refreshAccessToken(): Promise<string> {
   if (!refreshPromise) {
     refreshPromise = (async () => {
@@ -80,7 +75,8 @@ async function refreshAccessToken(): Promise<string> {
       });
 
       if (!res.ok) {
-        throw new ApiError(res.status, await parseErrorMessage(res));
+        const parsed = await parseApiErrorFromResponse(res);
+        throw new ApiError(res.status, parsed.message, parsed.code);
       }
 
       const data: unknown = await res.json();
@@ -140,7 +136,8 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   if (!res.ok) {
-    throw new ApiError(res.status, await parseErrorMessage(res));
+    const parsed = await parseApiErrorFromResponse(res);
+    throw new ApiError(res.status, parsed.message, parsed.code);
   }
 
   if (res.status === 204) {
