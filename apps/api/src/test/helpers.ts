@@ -76,3 +76,9 @@ export function pickWrongWord(words: string[], answer: string): string {
   }
   return wrong;
 }
+
+export async function startGuestDailySession(
+  agent: Awaited<ReturnType<typeof createTestAgent>>,
+): Promise<void> {
+  await agent.get(apiPath('/daily/today')).expect(200);
+}

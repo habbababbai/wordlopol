@@ -15,6 +15,8 @@ const PUBLIC_API_PREFIX = `/api${API_PATH_PREFIX}`;
 const nodeEnv = process.env.NODE_ENV ?? 'development';
 const defaultRefreshCookiePath =
   nodeEnv === 'test' ? `${API_PATH_PREFIX}/auth` : `${PUBLIC_API_PREFIX}/auth`;
+const defaultGuestDailySessionCookiePath =
+  nodeEnv === 'test' ? `${API_PATH_PREFIX}/daily` : `${PUBLIC_API_PREFIX}/daily`;
 
 const envSchema = z
   .object({
@@ -31,6 +33,7 @@ const envSchema = z
     PORT: z.coerce.number().default(3001),
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     REFRESH_COOKIE_PATH: z.string().default(defaultRefreshCookiePath),
+    GUEST_DAILY_SESSION_COOKIE_PATH: z.string().default(defaultGuestDailySessionCookiePath),
     RATE_LIMIT_ENABLED: z
       .enum(['true', 'false'])
       .optional()

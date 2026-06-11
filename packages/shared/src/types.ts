@@ -60,7 +60,6 @@ export interface AuthResponseDto {
 
 export interface DailyGuessRequestDto {
   guess: string;
-  guessNumber?: number;
 }
 
 export interface InfiniteGuessRequestDto {

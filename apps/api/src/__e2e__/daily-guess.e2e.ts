@@ -21,19 +21,19 @@ describe('e2e: POST /daily/guess', () => {
     await seedDictionaryWords(TEST_WORDS);
     const answer = await getTodayAnswer();
     const wrongGuess = pickWrongWord(TEST_WORDS, answer);
+    const agent = request.agent(baseUrl);
 
-    const midGame = await request(baseUrl)
+    await agent.get(apiPath('/daily/today')).expect(200);
+
+    const midGame = await agent
       .post(apiPath('/daily/guess'))
-      .send({ guess: wrongGuess, guessNumber: 1 })
+      .send({ guess: wrongGuess })
       .expect(200);
 
     expect(midGame.body.finished).toBe(false);
     expect(midGame.body).not.toHaveProperty('answer');
 
-    const win = await request(baseUrl)
-      .post(apiPath('/daily/guess'))
-      .send({ guess: answer, guessNumber: 2 })
-      .expect(200);
+    const win = await agent.post(apiPath('/daily/guess')).send({ guess: answer }).expect(200);
 
     expect(win.body).toMatchObject({
       won: true,

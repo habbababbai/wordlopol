@@ -111,6 +111,15 @@ model DailyPlayerDay {
   @@id([userId, date])
 }
 
+model GuestDailySession {
+  id         String   @id @default(uuid())
+  date       DateTime @db.Date
+  guessCount Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([date])
+}
+
 model InfinitePlayerDay {
   userId        String
   date          DateTime @db.Date

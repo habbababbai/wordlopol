@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { MAX_GUESSES } from '@wordlopol/shared';
 import { signAccessToken } from '../lib/tokens.js';
 import { prisma } from '../lib/prisma.js';
+import { GUEST_DAILY_SESSION_COOKIE } from '../lib/guest-daily-session.js';
 import { dateKeyToUtcDate, getCalendarDateKey } from '../lib/daily-date.js';
 import { getOrCreateDailyChallenge } from '../services/daily.js';
 import {
@@ -11,6 +12,7 @@ import {
   pickWrongWord,
   resetDatabase,
   seedDictionaryWords,
+  startGuestDailySession,
 } from '../test/helpers.js';
 
 const TEST_WORDS = ['wążka', 'mleko', 'aabaa', 'aacaa', 'aadaa', 'aaeaa', 'aafaa', 'aagaa'];
@@ -32,10 +34,9 @@ describe('POST /daily/guess', () => {
     const wrongGuess = pickWrongWord(TEST_WORDS, answer);
 
     const agent = await createTestAgent();
-    const res = await agent
-      .post(apiPath('/daily/guess'))
-      .send({ guess: wrongGuess, guessNumber: 1 })
-      .expect(200);
+    await startGuestDailySession(agent);
+
+    const res = await agent.post(apiPath('/daily/guess')).send({ guess: wrongGuess }).expect(200);
 
     expect(res.body.guessNumber).toBe(1);
     expect(res.body.won).toBe(false);
@@ -49,10 +50,9 @@ describe('POST /daily/guess', () => {
     const answer = await getTodayAnswer();
 
     const agent = await createTestAgent();
-    const res = await agent
-      .post(apiPath('/daily/guess'))
-      .send({ guess: answer, guessNumber: 1 })
-      .expect(200);
+    await startGuestDailySession(agent);
+
+    const res = await agent.post(apiPath('/daily/guess')).send({ guess: answer }).expect(200);
 
     expect(res.body).toEqual({
       results: ['correct', 'correct', 'correct', 'correct', 'correct'],
@@ -63,23 +63,38 @@ describe('POST /daily/guess', () => {
     });
   });
 
-  it('requires guessNumber for guest play', async () => {
+  it('requires a guest session cookie', async () => {
     await seedDictionaryWords(TEST_WORDS);
 
     const agent = await createTestAgent();
-    const res = await agent.post(apiPath('/daily/guess')).send({ guess: 'mleko' }).expect(400);
+    const res = await agent.post(apiPath('/daily/guess')).send({ guess: 'mleko' }).expect(401);
 
-    expect(res.body).toEqual({ error: 'guessNumber is required for guest play' });
+    expect(res.body).toEqual({ error: 'Guest session required' });
+  });
+
+  it('tracks guest guess count server-side across requests', async () => {
+    await seedDictionaryWords(TEST_WORDS);
+    const answer = await getTodayAnswer();
+    const wrongGuess = pickWrongWord(TEST_WORDS, answer);
+
+    const agent = await createTestAgent();
+    await startGuestDailySession(agent);
+
+    const first = await agent.post(apiPath('/daily/guess')).send({ guess: wrongGuess }).expect(200);
+    expect(first.body.guessNumber).toBe(1);
+
+    const second = await agent.post(apiPath('/daily/guess')).send({ guess: answer }).expect(200);
+    expect(second.body.guessNumber).toBe(2);
+    expect(second.body.won).toBe(true);
   });
 
   it('rejects guesses that are not in the dictionary', async () => {
     await seedDictionaryWords(TEST_WORDS);
 
     const agent = await createTestAgent();
-    const res = await agent
-      .post(apiPath('/daily/guess'))
-      .send({ guess: 'zzzzz', guessNumber: 1 })
-      .expect(400);
+    await startGuestDailySession(agent);
+
+    const res = await agent.post(apiPath('/daily/guess')).send({ guess: 'zzzzz' }).expect(400);
 
     expect(res.body).toEqual({ error: 'Not in dictionary' });
   });
@@ -88,10 +103,9 @@ describe('POST /daily/guess', () => {
     await seedDictionaryWords(TEST_WORDS);
 
     const agent = await createTestAgent();
-    const res = await agent
-      .post(apiPath('/daily/guess'))
-      .send({ guess: 'ab', guessNumber: 1 })
-      .expect(400);
+    await startGuestDailySession(agent);
+
+    const res = await agent.post(apiPath('/daily/guess')).send({ guess: 'ab' }).expect(400);
 
     expect(res.body).toEqual({ error: 'Guess must be 5 letters' });
   });
@@ -222,5 +236,23 @@ describe('POST /daily/guess', () => {
       where: { userId: user.id },
     });
     expect(stats).toMatchObject({ dailyPlayed: 1, dailyWon: 0 });
+  });
+});
+
+describe('GET /daily/today guest session', () => {
+  beforeEach(async () => {
+    await resetDatabase();
+  });
+
+  it('sets a guest session cookie for unauthenticated requests', async () => {
+    await seedDictionaryWords(TEST_WORDS);
+
+    const agent = await createTestAgent();
+    const res = await agent.get(apiPath('/daily/today')).expect(200);
+
+    expect(res.headers['set-cookie']?.[0]).toContain(`${GUEST_DAILY_SESSION_COOKIE}=`);
+
+    const sessionCount = await prisma.guestDailySession.count();
+    expect(sessionCount).toBe(1);
   });
 });
