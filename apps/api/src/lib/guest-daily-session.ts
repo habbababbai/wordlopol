@@ -24,10 +24,18 @@ function isSameCalendarDate(stored: Date, dateKey: string): boolean {
   return stored.getTime() === dateKeyToUtcDate(dateKey).getTime();
 }
 
+async function deleteStaleGuestDailySessions(todayDateKey: string): Promise<void> {
+  await prisma.guestDailySession.deleteMany({
+    where: { date: { lt: dateKeyToUtcDate(todayDateKey) } },
+  });
+}
+
 export async function ensureGuestDailySession(req: Request, res: Response): Promise<string> {
   const dateKey = getCalendarDateKey();
   const date = dateKeyToUtcDate(dateKey);
   const existingId = req.cookies[GUEST_DAILY_SESSION_COOKIE] as string | undefined;
+
+  await deleteStaleGuestDailySessions(dateKey);
 
   if (existingId) {
     const session = await prisma.guestDailySession.findUnique({ where: { id: existingId } });

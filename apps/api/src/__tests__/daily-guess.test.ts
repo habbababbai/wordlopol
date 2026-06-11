@@ -255,4 +255,45 @@ describe('GET /daily/today guest session', () => {
     const sessionCount = await prisma.guestDailySession.count();
     expect(sessionCount).toBe(1);
   });
+
+  it('deletes guest sessions from previous calendar days', async () => {
+    await seedDictionaryWords(TEST_WORDS);
+
+    const todayKey = getCalendarDateKey();
+    const yesterdayKey = getCalendarDateKey(new Date(Date.now() - 86_400_000));
+
+    await prisma.guestDailySession.createMany({
+      data: [
+        { date: dateKeyToUtcDate('2020-01-01'), guessCount: 2 },
+        { date: dateKeyToUtcDate(yesterdayKey), guessCount: 1 },
+      ],
+    });
+
+    const agent = await createTestAgent();
+    await agent.get(apiPath('/daily/today')).expect(200);
+
+    const remaining = await prisma.guestDailySession.findMany();
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0]?.date).toEqual(dateKeyToUtcDate(todayKey));
+  });
+
+  it('replaces a stale guest session cookie from a previous day', async () => {
+    await seedDictionaryWords(TEST_WORDS);
+
+    const yesterdayKey = getCalendarDateKey(new Date(Date.now() - 86_400_000));
+    const staleSession = await prisma.guestDailySession.create({
+      data: { date: dateKeyToUtcDate(yesterdayKey), guessCount: 3 },
+    });
+
+    const agent = await createTestAgent();
+    await agent
+      .get(apiPath('/daily/today'))
+      .set('Cookie', `${GUEST_DAILY_SESSION_COOKIE}=${staleSession.id}`)
+      .expect(200);
+
+    expect(
+      await prisma.guestDailySession.findUnique({ where: { id: staleSession.id } }),
+    ).toBeNull();
+    expect(await prisma.guestDailySession.count()).toBe(1);
+  });
 });
