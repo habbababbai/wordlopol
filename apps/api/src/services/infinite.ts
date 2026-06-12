@@ -35,11 +35,15 @@ function cycleSeed(userId: string, dateKey: string, cycleNumber: number): string
   return `${userId}:${dateKey}:${cycleNumber}`;
 }
 
-async function loadFiveLetterWords() {
-  return prisma.word.findMany({
+/** Ordered word ids for deterministic pool indexing — ids only, no text column. */
+async function loadFiveLetterWordIds(): Promise<number[]> {
+  const rows = await prisma.word.findMany({
     where: { length: WORD_LENGTH },
     orderBy: { id: 'asc' },
+    select: { id: true },
   });
+
+  return rows.map((row) => row.id);
 }
 
 /**
@@ -60,12 +64,12 @@ export async function getOrCreateDailyPool(dateKey: string) {
     return existing;
   }
 
-  const words = await loadFiveLetterWords();
-  if (words.length === 0) {
+  const wordIds = await loadFiveLetterWordIds();
+  if (wordIds.length === 0) {
     throw new HttpError(503, 'DICTIONARY_NOT_LOADED');
   }
 
-  const poolSize = Math.min(INFINITE_POOL_SIZE, words.length);
+  const poolSize = Math.min(INFINITE_POOL_SIZE, wordIds.length);
   const selectedWordIds = new Set<number>();
   const entries: Array<{ date: Date; wordId: number; order: number }> = [];
 
@@ -73,19 +77,18 @@ export async function getOrCreateDailyPool(dateKey: string) {
     let salt = 0;
     let wordId: number | undefined;
 
-    while (salt <= words.length) {
-      const index = pickPoolWordIndexForDate(dateKey, order + salt * poolSize, words.length);
-      const candidate = words[index];
-      if (!selectedWordIds.has(candidate.id)) {
-        wordId = candidate.id;
+    while (salt <= wordIds.length) {
+      const index = pickPoolWordIndexForDate(dateKey, order + salt * poolSize, wordIds.length);
+      const candidateId = wordIds[index];
+      if (!selectedWordIds.has(candidateId)) {
+        wordId = candidateId;
         break;
       }
       salt++;
     }
 
     if (wordId === undefined) {
-      const fallback = words.find((word) => !selectedWordIds.has(word.id));
-      wordId = fallback?.id;
+      wordId = wordIds.find((id) => !selectedWordIds.has(id));
     }
 
     if (wordId === undefined) {
