@@ -1,8 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Response } from 'express';
+import jwt from 'jsonwebtoken';
+import { env } from '@/config/env.js';
 import { prisma } from '@/lib/prisma.js';
 import { HttpError } from '@/lib/http-error.js';
 import {
+  ACCESS_TOKEN_TTL_SEC,
   createRefreshToken,
   hashToken,
   revokeAllRefreshTokens,
@@ -33,6 +36,16 @@ describe('tokens', () => {
     const token = signAccessToken('user-123', false);
 
     expect(verifyAccessToken(token)).toEqual({ userId: 'user-123', emailVerified: false });
+  });
+
+  it('treats legacy access tokens without emailVerified as unverified', () => {
+    const userId = 'user-123';
+    const token = jwt.sign({}, env.JWT_ACCESS_SECRET, {
+      subject: userId,
+      expiresIn: ACCESS_TOKEN_TTL_SEC,
+    });
+
+    expect(verifyAccessToken(token)).toEqual({ userId, emailVerified: false });
   });
 
   it('throws INVALID_ACCESS_TOKEN for invalid access tokens', () => {

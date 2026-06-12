@@ -1,7 +1,9 @@
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
-import { signAccessToken } from '@/lib/tokens.js';
+import { env } from '@/config/env.js';
+import { ACCESS_TOKEN_TTL_SEC, signAccessToken } from '@/lib/tokens.js';
 import { authenticate } from '@/middleware/authenticate.js';
 import { optionalAuth } from '@/middleware/optional-auth.js';
 import { requireVerified } from '@/middleware/require-verified.js';
@@ -116,7 +118,7 @@ describe('auth middleware', () => {
       expect(res.body).toEqual({ userId: user.id });
     });
 
-    it('checks JWT emailVerified claim instead of the database', async () => {
+    it('allows access when JWT claims verified even if the database row is not', async () => {
       const user = await createTestUser({ emailVerified: false });
       const token = signAccessToken(user.id, true);
 
@@ -126,6 +128,21 @@ describe('auth middleware', () => {
         .expect(200);
 
       expect(res.body).toEqual({ userId: user.id });
+    });
+
+    it('returns 403 for legacy access tokens without emailVerified claim', async () => {
+      const user = await createTestUser({ emailVerified: true });
+      const token = jwt.sign({}, env.JWT_ACCESS_SECRET, {
+        subject: user.id,
+        expiresIn: ACCESS_TOKEN_TTL_SEC,
+      });
+
+      const res = await request(buildMiddlewareApp())
+        .get('/verified')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(403);
+
+      expect(res.body).toEqual(expectApiError('EMAIL_NOT_VERIFIED'));
     });
   });
 });
