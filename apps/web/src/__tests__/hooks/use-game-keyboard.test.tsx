@@ -75,6 +75,17 @@ describe('useGameKeyboard', () => {
     expect(onInput).toHaveBeenCalledWith('C');
   });
 
+  it('accepts Polish diacritics typed with alt/option', () => {
+    ({ unmount } = renderHook(() => useGameKeyboard(onInput)));
+
+    dispatchKeyDown('ą', document.body, { altKey: true });
+    dispatchKeyDown('ś', document.body, { altKey: true });
+
+    expect(onInput).toHaveBeenCalledTimes(2);
+    expect(onInput).toHaveBeenNthCalledWith(1, 'Ą');
+    expect(onInput).toHaveBeenNthCalledWith(2, 'Ś');
+  });
+
   it('ignores keydown when focus is in an input', () => {
     ({ unmount } = renderHook(() => useGameKeyboard(onInput)));
 

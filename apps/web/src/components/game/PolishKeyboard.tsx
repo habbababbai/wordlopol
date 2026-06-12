@@ -72,7 +72,9 @@ function KeyboardKeyButton({
         className,
       )}
     >
-      {keyboardKey.kind === 'letter' ? keyboardKey.letter : keyboardKey.label}
+      {keyboardKey.kind === 'letter'
+        ? keyboardKey.letter
+        : (keyboardKey.display ?? keyboardKey.label)}
     </button>
   );
 }

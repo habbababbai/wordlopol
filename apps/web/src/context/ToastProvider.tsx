@@ -4,6 +4,7 @@ import type { ToastItem, ToastOptions } from '../components/ui/toast-types';
 import { ToastContext } from './toast-context';
 
 const DEFAULT_DURATION_MS = 4000;
+export const TOAST_FADE_MS = 200;
 
 function createToastId(): string {
   return crypto.randomUUID();
@@ -29,7 +30,22 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       clearTimeout(timer);
       timersRef.current.delete(id);
     }
-    setToasts((current) => current.filter((t) => t.id !== id));
+
+    let shouldRemove = false;
+    setToasts((current) => {
+      const toast = current.find((t) => t.id === id);
+      if (!toast || toast.exiting) {
+        return current;
+      }
+      shouldRemove = true;
+      return current.map((t) => (t.id === id ? { ...t, exiting: true } : t));
+    });
+
+    if (!shouldRemove) return;
+
+    setTimeout(() => {
+      setToasts((current) => current.filter((t) => t.id !== id));
+    }, TOAST_FADE_MS);
   }, []);
 
   const toast = useCallback(
