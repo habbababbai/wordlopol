@@ -53,7 +53,7 @@ See [docs/API.md](./docs/API.md) for endpoint details, auth flow, Postman setup,
 
 ```bash
 curl http://localhost:3001/health
-# { "status": "ok", "database": "connected", "wordCount": 4062, "apiVersion": "v1" }
+# { "status": "ok", "database": "connected", "wordCount": <n>, "apiVersion": "v1" }
 
 curl http://localhost:3001/v1/daily/today
 ```

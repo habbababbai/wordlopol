@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.0.0] — 2026-06-12
+
+First production-ready API for Wordlopol.
+
+### Features
+
+- **Auth** — register, verify email, login, refresh, logout, logout-all, password reset/change, email change, account delete (JWT + httpOnly refresh cookies, CSRF)
+- **Daily** — `GET /v1/daily/today`, `POST /v1/daily/guess` for guests and registered users; stats for logged-in players
+- **Infinite** — `GET /v1/infinite/next`, `POST /v1/infinite/guess` for verified users; shared daily word pool
+- **Profile** — `GET /v1/user/profile` with aggregated stats
+- **Health** — `/health` and `/v1/health`
+- **Contracts** — `/v1` routes, stable error codes (`@wordlopol/shared`), OpenAPI spec and Postman collections
+
+### Security & quality
+
+- Guest daily anti-cheat; rate limits on auth; refresh token rotation
+- Zod validation; Prisma 7 + PostgreSQL; Resend for transactional email
+- Integration tests (Supertest) and e2e tests over real HTTP
+
 ## [0.8.0](https://github.com/habbababbai/wordlopol/compare/api-v0.7.0...api-v0.8.0) (2026-06-07)
 
 ### Features

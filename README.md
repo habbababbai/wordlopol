@@ -6,7 +6,7 @@ Polish Wordle-style word game. Guess 5-letter Polish words — diacritics matter
 
 See [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md) — commits (`feat(api): ...`), branches, PRs, releases, Husky hooks, and CI.
 
-Quick checks: `pnpm validate` · `pnpm test:all` (Postgres on 5433). **v1.0 status:** [docs/V1.md](./docs/V1.md).
+Quick checks: `pnpm validate` · `pnpm test:all` (Postgres on 5433). **1.0 scope & QA:** [docs/V1.md](./docs/V1.md).
 
 ## Monorepo structure
 
@@ -52,13 +52,13 @@ pnpm db:import-words
 pnpm dev
 ```
 
-- API probe: http://localhost:3001/health → `{ "status": "ok", "database": "connected", "wordCount": 4062, "apiVersion": "v1" }`
+- API probe: http://localhost:3001/health → `{ "status": "ok", "database": "connected", "wordCount": <n>, "apiVersion": "v1" }`
 - API app routes: `http://localhost:3001/v1/...` (web uses `/api/v1/...` via Vite proxy)
 - Web: http://localhost:5173
 
-## Word list format
+## Word list
 
-Place words in `data/words.txt` — one word per line. Only 5-letter words with Polish diacritics are imported.
+Place 5-letter Polish words in `data/words.txt` (one per line), then:
 
 ```bash
 pnpm db:import-words
@@ -97,10 +97,10 @@ Auth flows (verify email, password reset, change email) use [Resend](https://res
 
 | Document                                       | Description                     |
 | ---------------------------------------------- | ------------------------------- |
-| [docs/V1.md](./docs/V1.md)                     | v1.0 done vs remaining          |
-| [docs/API-BACKLOG.md](./docs/API-BACKLOG.md)   | API contract & hardening plan   |
+| [docs/V1.md](./docs/V1.md)                     | 1.0 scope and pre-release QA    |
 | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | System design                   |
 | [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md) | Commits, PRs, releases, CI      |
+| [docs/SUPPLY_CHAIN.md](./docs/SUPPLY_CHAIN.md) | pnpm supply-chain policies      |
 | [apps/api/docs/API.md](./apps/api/docs/API.md) | API endpoints, Postman, testing |
 | [CHANGELOG.md](./CHANGELOG.md)                 | Repo-level changelog            |
 

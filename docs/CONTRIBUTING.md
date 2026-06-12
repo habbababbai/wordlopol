@@ -120,5 +120,6 @@ Also: `validate-release-files` blocks manual app changelog edits; `dependency-re
 
 ## Project docs
 
-- [V1.md](./V1.md) — what is done and what remains for v1.0
+- [V1.md](./V1.md) — 1.0 shipped scope and pre-release QA
 - [ARCHITECTURE.md](./ARCHITECTURE.md) — system design
+- [SUPPLY_CHAIN.md](./SUPPLY_CHAIN.md) — pnpm supply-chain settings
