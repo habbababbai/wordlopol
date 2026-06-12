@@ -88,7 +88,17 @@ describe('api client', () => {
     setAccessToken('expired-token');
     fetchMock
       .mockResolvedValueOnce(jsonResponse({ error: 'Unauthorized' }, 401))
-      .mockResolvedValueOnce(jsonResponse({ error: 'Missing refresh token' }, 401));
+      .mockResolvedValueOnce(
+        jsonResponse(
+          {
+            error: {
+              code: 'MISSING_REFRESH_TOKEN',
+              message: 'Missing refresh token',
+            },
+          },
+          401,
+        ),
+      );
 
     await expect(api.getHealth()).rejects.toMatchObject({
       message: 'Invalid or expired refresh token',
