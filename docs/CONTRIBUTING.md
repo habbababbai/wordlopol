@@ -76,12 +76,15 @@ Config: [`.coderabbit.yaml`](../.coderabbit.yaml). Inline review on code PRs; sk
 
 ## Releases and changelogs
 
-| File                                             | Updated by                       |
-| ------------------------------------------------ | -------------------------------- |
-| [CHANGELOG.md](../CHANGELOG.md)                  | You — repo CI, tooling, docs PRs |
-| `apps/api/CHANGELOG.md`, `apps/web/CHANGELOG.md` | **release-please** only          |
+| File                                             | Updated by                                             |
+| ------------------------------------------------ | ------------------------------------------------------ |
+| [CHANGELOG.md](../CHANGELOG.md)                  | You — repo CI, tooling, docs PRs                       |
+| `apps/api/CHANGELOG.md`, `apps/web/CHANGELOG.md` | **release-please**, or **manual** on a `docs/*` branch |
+| `.github/release-please/*-manifest.json`         | **release-please** only (version bumps with tags)      |
 
-**Never edit** `apps/*/CHANGELOG.md` or `.github/release-please/*-manifest.json` in feature PRs — CI blocks this.
+**Never edit** `apps/*/CHANGELOG.md` in feature PRs (`feat/*`, `fix/*`, …) — CI blocks this.
+
+**Manual app changelogs:** open a PR from a `docs/*` branch (e.g. `docs/repo-v1-changelogs`) when preparing a release without release-please. Manifest JSON still requires a release-please PR.
 
 ### App release flow
 
@@ -116,7 +119,7 @@ Release PRs get light CI (Prettier only) and no CodeRabbit review.
 | Docs only      | branch name, PR title, `ci-docs` (format)                                |
 | release-please | `ci-release-pr` (format, app changelogs excluded)                        |
 
-Also: `validate-release-files` blocks manual app changelog edits; `dependency-review` on PRs.
+Also: `validate-release-files` blocks app changelog edits outside `docs/*` and `release-please--*` branches; `dependency-review` on PRs.
 
 ## Project docs
 

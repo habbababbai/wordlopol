@@ -21,14 +21,28 @@ else
   RANGE="${BASE}...${HEAD}"
 fi
 
+HEAD_BRANCH="${HEAD}"
+if [[ "${HEAD_BRANCH}" == "HEAD" ]]; then
+  HEAD_BRANCH="$(git branch --show-current)"
+fi
+
+# Manual app changelog edits allowed on docs/* branches (e.g. docs/repo-v1-changelogs).
+ALLOW_MANUAL_APP_CHANGELOGS=0
+if [[ "${HEAD_BRANCH}" == docs/* ]]; then
+  ALLOW_MANUAL_APP_CHANGELOGS=1
+fi
+
 FAILED=0
 
 while IFS= read -r file; do
   [[ -z "${file}" ]] && continue
 
   if [[ "${file}" == apps/api/CHANGELOG.md || "${file}" == apps/web/CHANGELOG.md ]]; then
+    if [[ "${ALLOW_MANUAL_APP_CHANGELOGS}" -eq 1 ]]; then
+      continue
+    fi
     echo "Blocked: ${file}"
-    echo "  App changelogs are updated by release-please Release PRs only."
+    echo "  App changelogs: use release-please, or a docs/* branch for manual release notes."
     FAILED=1
   elif [[ "${file}" =~ ^\.github/release-please/.*-manifest\.json$ ]]; then
     echo "Blocked: ${file}"
