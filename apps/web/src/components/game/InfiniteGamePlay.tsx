@@ -8,6 +8,7 @@ import { ApiError } from '@/api/errors';
 import { authKeys } from '@/api/query-keys';
 import { useInfiniteGuessMutation } from '@/hooks/mutations/use-infinite-guess-mutation';
 import { useGameKeyboard } from '@/hooks/useGameKeyboard';
+import { useGameSounds } from '@/hooks/useGameSounds';
 import { useToast } from '@/hooks/useToast';
 import { getRowRevealDurationMs } from '@/lib/game-animation';
 import { getApiErrorMessage } from '@/lib/api-error-message';
@@ -31,6 +32,7 @@ export function InfiniteGamePlay({ word, onNextWord }: InfiniteGamePlayProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const guessMutation = useInfiniteGuessMutation();
+  const { playType, playRevealSequence } = useGameSounds();
 
   const [mode, setMode] = useState<PlayMode>('playing');
   const [rows, setRows] = useState<GameBoardRow[]>(() => createEmptyRows());
@@ -86,6 +88,7 @@ export function InfiniteGamePlay({ word, onNextWord }: InfiniteGamePlayProps) {
       const nextRows = [...rows];
       nextRows[activeRowIndex] = { letters: currentGuess, results: result.results };
       setRows(nextRows);
+      playRevealSequence(result.results);
 
       if (result.won) {
         setActiveRowIndex(word.maxGuesses);
@@ -130,6 +133,7 @@ export function InfiniteGamePlay({ word, onNextWord }: InfiniteGamePlayProps) {
     activeRowIndex,
     guessMutation,
     mode,
+    playRevealSequence,
     queryClient,
     rows,
     shakeActiveRow,
@@ -172,10 +176,11 @@ export function InfiniteGamePlay({ word, onNextWord }: InfiniteGamePlayProps) {
         next[activeRowIndex] = {
           letters: current.letters + key.toLowerCase(),
         };
+        playType();
         return next;
       });
     },
-    [activeRowIndex, locked, submitGuess, word.wordLength],
+    [activeRowIndex, locked, playType, submitGuess, word.wordLength],
   );
 
   useGameKeyboard(handleInput, { enabled: !locked });

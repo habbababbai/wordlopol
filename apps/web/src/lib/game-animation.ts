@@ -1,4 +1,4 @@
-const TILE_FLIP_DELAY_MS = 100;
+export const TILE_FLIP_DELAY_MS = 100;
 const TILE_FLIP_DURATION_MS = 500;
 
 export function getRowRevealDurationMs(wordLength: number): number {

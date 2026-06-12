@@ -1,6 +1,7 @@
 import { evaluateGuess, MAX_GUESSES, WORD_LENGTH } from '@wordlopol/shared';
 import { useCallback, useMemo, useState, useRef } from 'react';
 
+import { useGameSounds } from '@/hooks/useGameSounds';
 import { createEmptyRows, buildKeyStates, isGameFinished, isGameWon } from '@/lib/game-board';
 
 import { Button } from '../ui/button';
@@ -14,6 +15,7 @@ export function GamePlayDemo() {
   const [activeRowIndex, setActiveRowIndex] = useState(0);
   const [shakingRowIndex, setShakingRowIndex] = useState<number | null>(null);
   const shakeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { playType, playRevealSequence } = useGameSounds();
 
   const finished = isGameFinished(rows, activeRowIndex);
   const keyStates = useMemo(() => buildKeyStates(rows), [rows]);
@@ -55,13 +57,14 @@ export function GamePlayDemo() {
       next[activeRowIndex] = { letters: currentGuess, results };
       return next;
     });
+    playRevealSequence(results);
 
     if (!won) {
       setActiveRowIndex((index) => index + 1);
     } else {
       setActiveRowIndex(MAX_GUESSES);
     }
-  }, [activeRowIndex, rows, shakeActiveRow]);
+  }, [activeRowIndex, playRevealSequence, rows, shakeActiveRow]);
 
   const handleInput = useCallback(
     (key: string) => {
@@ -96,10 +99,11 @@ export function GamePlayDemo() {
         next[activeRowIndex] = {
           letters: current.letters + key.toLowerCase(),
         };
+        playType();
         return next;
       });
     },
-    [activeRowIndex, finished, submitGuess],
+    [activeRowIndex, finished, playType, submitGuess],
   );
 
   const statusMessage = finished

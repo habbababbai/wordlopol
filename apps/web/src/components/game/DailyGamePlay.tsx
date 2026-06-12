@@ -9,6 +9,7 @@ import { authKeys } from '@/api/query-keys';
 import { useDailyGuessMutation } from '@/hooks/mutations/use-daily-guess-mutation';
 import { useAuth } from '@/hooks/useAuth';
 import { useGameKeyboard } from '@/hooks/useGameKeyboard';
+import { useGameSounds } from '@/hooks/useGameSounds';
 import { useToast } from '@/hooks/useToast';
 import { getRowRevealDurationMs } from '@/lib/game-animation';
 import { buildKeyStates, createEmptyRows } from '@/lib/game-board';
@@ -68,6 +69,7 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const guessMutation = useDailyGuessMutation();
+  const { playType, playRevealSequence } = useGameSounds();
 
   const [mode, setMode] = useState<PlayMode>(() => getInitialMode(challenge.date));
   const [rows, setRows] = useState<GameBoardRow[]>(() => getInitialRows(challenge.date));
@@ -122,6 +124,7 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
       const nextRows = [...rows];
       nextRows[activeRowIndex] = { letters: currentGuess, results: result.results };
       setRows(nextRows);
+      playRevealSequence(result.results);
 
       if (result.won) {
         setActiveRowIndex(challenge.maxGuesses);
@@ -185,6 +188,7 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
     queryClient,
     rows,
     shakeActiveRow,
+    playRevealSequence,
     t,
     toast,
   ]);
@@ -222,10 +226,11 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
         next[activeRowIndex] = {
           letters: current.letters + key.toLowerCase(),
         };
+        playType();
         return next;
       });
     },
-    [activeRowIndex, challenge.wordLength, locked, submitGuess],
+    [activeRowIndex, challenge.wordLength, locked, playType, submitGuess],
   );
 
   useGameKeyboard(handleInput, { enabled: !locked });
