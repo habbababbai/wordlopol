@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { prisma } from '../lib/prisma.js';
-import { apiPath, createTestAgent, resetDatabase } from '../test/helpers.js';
+import { prisma } from '@/lib/prisma.js';
+import { apiPath, createTestAgent, resetDatabase } from '@/test/helpers.js';
 
 const appOkBody = {
   status: 'ok',

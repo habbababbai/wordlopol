@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { INFINITE_POOL_SIZE, WORD_LENGTH } from '@wordlopol/shared';
-import { prisma } from '../lib/prisma.js';
-import { dateKeyToUtcDate } from '../lib/daily-date.js';
-import { getOrCreateDailyPool } from '../services/infinite.js';
-import { resetDatabase, seedDictionaryWords } from '../test/helpers.js';
+import { prisma } from '@/lib/prisma.js';
+import { dateKeyToUtcDate } from '@/lib/daily-date.js';
+import { getOrCreateDailyPool } from '@/services/infinite.js';
+import { resetDatabase, seedDictionaryWords } from '@/test/helpers.js';
 
 describe('getOrCreateDailyPool', () => {
   beforeEach(async () => {

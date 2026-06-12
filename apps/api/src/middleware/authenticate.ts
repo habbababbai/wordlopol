@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { sendApiError } from '../lib/send-api-error.js';
-import { verifyAccessToken } from '../lib/tokens.js';
+import { sendApiError } from '@/lib/send-api-error.js';
+import { verifyAccessToken } from '@/lib/tokens.js';
 
 export function authenticate(req: Request, res: Response, next: NextFunction): void {
   const header = req.headers.authorization;

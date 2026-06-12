@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { WORD_LENGTH } from '@wordlopol/shared';
-import { signAccessToken } from '../lib/tokens.js';
-import { prisma } from '../lib/prisma.js';
-import { dateKeyToUtcDate, getCalendarDateKey } from '../lib/daily-date.js';
-import { completeInfiniteWord, getNextWord, getOrCreateDailyPool } from '../services/infinite.js';
+import { signAccessToken } from '@/lib/tokens.js';
+import { prisma } from '@/lib/prisma.js';
+import { dateKeyToUtcDate, getCalendarDateKey } from '@/lib/daily-date.js';
+import { completeInfiniteWord, getNextWord, getOrCreateDailyPool } from '@/services/infinite.js';
 import { expectApiError } from './helpers/expect-api-error.js';
 import {
   apiPath,
@@ -12,7 +12,7 @@ import {
   createVerifiedUserWithPassword,
   resetDatabase,
   seedDictionaryWords,
-} from '../test/helpers.js';
+} from '@/test/helpers.js';
 
 const TEST_POOL_WORDS = ['wążka', 'mleko', 'aabaa', 'aacaa', 'aadaa'];
 

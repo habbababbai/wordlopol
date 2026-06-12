@@ -1,17 +1,17 @@
 import express from 'express';
 import { describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
-import { errorHandler } from '../middleware/error-handler.js';
-import { requestId } from '../middleware/request-id.js';
+import { errorHandler } from '@/middleware/error-handler.js';
+import { requestId } from '@/middleware/request-id.js';
 import { expectApiError } from './helpers/expect-api-error.js';
 
-vi.mock('../lib/logger.js', () => ({
+vi.mock('@/lib/logger.js', () => ({
   logger: {
     error: vi.fn(),
   },
 }));
 
-import { logger } from '../lib/logger.js';
+import { logger } from '@/lib/logger.js';
 
 describe('errorHandler', () => {
   it('logs and returns 500 for unexpected errors', async () => {

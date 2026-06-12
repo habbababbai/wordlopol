@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { signAccessToken } from '../lib/tokens.js';
+import { signAccessToken } from '@/lib/tokens.js';
 import { expectApiError } from './helpers/expect-api-error.js';
 import {
   apiPath,
   createTestAgent,
   createVerifiedUserWithPassword,
   resetDatabase,
-} from '../test/helpers.js';
+} from '@/test/helpers.js';
 
 describe('auth session endpoints', () => {
   beforeEach(async () => {

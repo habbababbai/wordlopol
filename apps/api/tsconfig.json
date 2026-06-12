@@ -1,6 +1,10 @@
 {
   "extends": "@wordlopol/tsconfig/node.json",
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
     "outDir": "dist",
     "rootDir": "src"
   },

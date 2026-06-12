@@ -1,7 +1,7 @@
 import { API_PATH_PREFIX } from '@wordlopol/shared';
 import { doubleCsrf } from 'csrf-csrf';
 import type { NextFunction, Request, Response } from 'express';
-import { env } from '../config/env.js';
+import { env } from '@/config/env.js';
 
 const PUBLIC_API_PREFIX = `/api${API_PATH_PREFIX}`;
 const csrfCookiePath = env.NODE_ENV === 'test' ? API_PATH_PREFIX : PUBLIC_API_PREFIX;

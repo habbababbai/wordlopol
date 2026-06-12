@@ -7,7 +7,7 @@ export function apiPath(path: string): string {
 }
 
 export async function createTestApp(): Promise<Express> {
-  const { createApp } = await import('../app.js');
+  const { createApp } = await import('@/app.js');
   return createApp();
 }
 
@@ -18,7 +18,7 @@ export async function createTestAgent() {
 
 export async function createVerifiedUserWithPassword(password = 'secure-password') {
   const bcrypt = await import('bcrypt');
-  const { prisma } = await import('../lib/prisma.js');
+  const { prisma } = await import('@/lib/prisma.js');
 
   const user = await prisma.user.create({
     data: {
@@ -33,7 +33,7 @@ export async function createVerifiedUserWithPassword(password = 'secure-password
 }
 
 export async function createTestUser(options?: { emailVerified?: boolean; email?: string }) {
-  const { prisma } = await import('../lib/prisma.js');
+  const { prisma } = await import('@/lib/prisma.js');
 
   return prisma.user.create({
     data: {
@@ -46,7 +46,7 @@ export async function createTestUser(options?: { emailVerified?: boolean; email?
 }
 
 export async function resetDatabase(): Promise<void> {
-  const { prisma } = await import('../lib/prisma.js');
+  const { prisma } = await import('@/lib/prisma.js');
 
   const tables = await prisma.$queryRaw<Array<{ tablename: string }>>`
     SELECT tablename
@@ -61,7 +61,7 @@ export async function resetDatabase(): Promise<void> {
 }
 
 export async function seedDictionaryWords(texts: string[]): Promise<void> {
-  const { prisma } = await import('../lib/prisma.js');
+  const { prisma } = await import('@/lib/prisma.js');
 
   await prisma.word.createMany({
     data: texts.map((text) => ({ text, length: text.length })),

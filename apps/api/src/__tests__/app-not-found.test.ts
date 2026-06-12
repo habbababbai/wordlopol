@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { expectApiError } from './helpers/expect-api-error.js';
-import { apiPath, createTestAgent } from '../test/helpers.js';
+import { apiPath, createTestAgent } from '@/test/helpers.js';
 
 describe('unknown routes', () => {
   it('returns JSON 404 for unknown versioned paths', async () => {

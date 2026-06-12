@@ -1,12 +1,12 @@
 import express from 'express';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
-import { signAccessToken } from '../lib/tokens.js';
-import { authenticate } from '../middleware/authenticate.js';
-import { optionalAuth } from '../middleware/optional-auth.js';
-import { requireVerified } from '../middleware/require-verified.js';
+import { signAccessToken } from '@/lib/tokens.js';
+import { authenticate } from '@/middleware/authenticate.js';
+import { optionalAuth } from '@/middleware/optional-auth.js';
+import { requireVerified } from '@/middleware/require-verified.js';
 import { expectApiError } from './helpers/expect-api-error.js';
-import { createTestUser, resetDatabase } from '../test/helpers.js';
+import { createTestUser, resetDatabase } from '@/test/helpers.js';
 
 function buildMiddlewareApp() {
   const app = express();

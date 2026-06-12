@@ -2,12 +2,12 @@ import { Router } from 'express';
 import { z } from 'zod';
 import type { InfiniteGuessRequestDto } from '@wordlopol/shared';
 
-import { asyncHandler } from '../lib/async-handler.js';
-import { validateBody } from '../lib/validate-body.js';
-import { authenticatedRateLimit } from '../middleware/auth-rate-limit.js';
-import { authenticate } from '../middleware/authenticate.js';
-import { requireVerified } from '../middleware/require-verified.js';
-import { getNextWord, submitInfiniteGuess } from '../services/infinite.js';
+import { asyncHandler } from '@/lib/async-handler.js';
+import { validateBody } from '@/lib/validate-body.js';
+import { authenticatedRateLimit } from '@/middleware/auth-rate-limit.js';
+import { authenticate } from '@/middleware/authenticate.js';
+import { requireVerified } from '@/middleware/require-verified.js';
+import { getNextWord, submitInfiniteGuess } from '@/services/infinite.js';
 
 const guessSchema = z.object({
   guess: z.string().trim().min(1),

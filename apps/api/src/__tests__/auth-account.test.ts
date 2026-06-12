@@ -1,18 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { prisma } from '../lib/prisma.js';
-import { signAccessToken } from '../lib/tokens.js';
+import { prisma } from '@/lib/prisma.js';
+import { signAccessToken } from '@/lib/tokens.js';
 import { expectApiError } from './helpers/expect-api-error.js';
 import {
   apiPath,
   createTestAgent,
   createVerifiedUserWithPassword,
   resetDatabase,
-} from '../test/helpers.js';
+} from '@/test/helpers.js';
 
 const passwordResetToken = vi.hoisted(() => ({ value: '' }));
 const emailChangeToken = vi.hoisted(() => ({ value: '' }));
 
-vi.mock('../lib/email.js', () => ({
+vi.mock('@/lib/email.js', () => ({
   sendVerificationEmail: vi.fn(),
   sendPasswordResetEmail: vi.fn(async (_to: string, token: string) => {
     passwordResetToken.value = token;

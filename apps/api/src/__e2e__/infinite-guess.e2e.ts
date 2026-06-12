@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
-import { signAccessToken } from '../lib/tokens.js';
-import { prisma } from '../lib/prisma.js';
-import { dateKeyToUtcDate, getCalendarDateKey } from '../lib/daily-date.js';
+import { signAccessToken } from '@/lib/tokens.js';
+import { prisma } from '@/lib/prisma.js';
+import { dateKeyToUtcDate, getCalendarDateKey } from '@/lib/daily-date.js';
 import {
   apiPath,
   createVerifiedUserWithPassword,
   pickWrongWord,
   resetDatabase,
   seedDictionaryWords,
-} from '../test/helpers.js';
+} from '@/test/helpers.js';
 import { baseUrl } from './server.js';
 
 const TEST_POOL_WORDS = ['wążka', 'mleko', 'aabaa', 'aacaa', 'aadaa'];

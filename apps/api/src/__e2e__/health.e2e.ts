@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
-import { prisma } from '../lib/prisma.js';
-import { resetDatabase } from '../test/helpers.js';
+import { prisma } from '@/lib/prisma.js';
+import { resetDatabase } from '@/test/helpers.js';
 import { baseUrl } from './server.js';
 
 describe('e2e: health', () => {

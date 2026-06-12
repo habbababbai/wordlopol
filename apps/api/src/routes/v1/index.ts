@@ -1,10 +1,10 @@
 import { Router } from 'express';
 
-import { appHealthHandler } from '../../lib/health-handler.js';
-import { authRouter } from '../auth.js';
-import { dailyRouter } from '../daily.js';
-import { infiniteRouter } from '../infinite.js';
-import { userRouter } from '../user.js';
+import { appHealthHandler } from '@/lib/health-handler.js';
+import { authRouter } from '@/routes/auth.js';
+import { dailyRouter } from '@/routes/daily.js';
+import { infiniteRouter } from '@/routes/infinite.js';
+import { userRouter } from '@/routes/user.js';
 
 export const v1Router = Router();
 

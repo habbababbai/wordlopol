@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { MAX_GUESSES } from '@wordlopol/shared';
-import { signAccessToken } from '../lib/tokens.js';
-import { prisma } from '../lib/prisma.js';
-import { GUEST_DAILY_SESSION_COOKIE } from '../lib/guest-daily-session.js';
-import { dateKeyToUtcDate, getCalendarDateKey } from '../lib/daily-date.js';
-import { getOrCreateDailyChallenge } from '../services/daily.js';
+import { signAccessToken } from '@/lib/tokens.js';
+import { prisma } from '@/lib/prisma.js';
+import { GUEST_DAILY_SESSION_COOKIE } from '@/lib/guest-daily-session.js';
+import { dateKeyToUtcDate, getCalendarDateKey } from '@/lib/daily-date.js';
+import { getOrCreateDailyChallenge } from '@/services/daily.js';
 import { expectApiError } from './helpers/expect-api-error.js';
 import {
   apiPath,
@@ -14,7 +14,7 @@ import {
   resetDatabase,
   seedDictionaryWords,
   startGuestDailySession,
-} from '../test/helpers.js';
+} from '@/test/helpers.js';
 
 const TEST_WORDS = ['wążka', 'mleko', 'aabaa', 'aacaa', 'aadaa', 'aaeaa', 'aafaa', 'aagaa'];
 

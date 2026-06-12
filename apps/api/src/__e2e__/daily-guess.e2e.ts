@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
-import { getOrCreateDailyChallenge } from '../services/daily.js';
-import { getCalendarDateKey } from '../lib/daily-date.js';
-import { apiPath, resetDatabase, pickWrongWord, seedDictionaryWords } from '../test/helpers.js';
+import { getOrCreateDailyChallenge } from '@/services/daily.js';
+import { getCalendarDateKey } from '@/lib/daily-date.js';
+import { apiPath, resetDatabase, pickWrongWord, seedDictionaryWords } from '@/test/helpers.js';
 import { baseUrl } from './server.js';
 
 const TEST_WORDS = ['wążka', 'mleko', 'aabaa', 'aacaa', 'aadaa'];

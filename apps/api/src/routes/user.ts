@@ -1,9 +1,9 @@
 import { Router } from 'express';
 
-import { asyncHandler } from '../lib/async-handler.js';
-import { authenticatedRateLimit } from '../middleware/auth-rate-limit.js';
-import { authenticate } from '../middleware/authenticate.js';
-import { getUserProfile } from '../services/user.js';
+import { asyncHandler } from '@/lib/async-handler.js';
+import { authenticatedRateLimit } from '@/middleware/auth-rate-limit.js';
+import { authenticate } from '@/middleware/authenticate.js';
+import { getUserProfile } from '@/services/user.js';
 
 export const userRouter: Router = Router();
 

@@ -10,7 +10,7 @@ export async function startE2eServer(): Promise<void> {
     throw new Error('E2E server already running');
   }
 
-  const { createApp } = await import('../app.js');
+  const { createApp } = await import('@/app.js');
   const app: Express = createApp();
 
   await new Promise<void>((resolve, reject) => {

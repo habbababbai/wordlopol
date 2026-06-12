@@ -8,12 +8,12 @@ import {
   type InfiniteWordDto,
 } from '@wordlopol/shared';
 
-import { dateKeyToUtcDate, getCalendarDateKey } from '../lib/daily-date.js';
-import { assertGuessInDictionary, normalizeGuessLength, scoreGuess } from '../lib/guess.js';
-import { HttpError } from '../lib/http-error.js';
-import { prisma } from '../lib/prisma.js';
-import { isUniqueConstraintError } from '../lib/prisma-errors.js';
-import { isWordInDictionary } from '../lib/word-dictionary.js';
+import { dateKeyToUtcDate, getCalendarDateKey } from '@/lib/daily-date.js';
+import { assertGuessInDictionary, normalizeGuessLength, scoreGuess } from '@/lib/guess.js';
+import { HttpError } from '@/lib/http-error.js';
+import { prisma } from '@/lib/prisma.js';
+import { isUniqueConstraintError } from '@/lib/prisma-errors.js';
+import { isWordInDictionary } from '@/lib/word-dictionary.js';
 
 type PoolEntry = Awaited<ReturnType<typeof getOrCreateDailyPool>>[number];
 

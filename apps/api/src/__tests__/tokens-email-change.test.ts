@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { describe, expect, it } from 'vitest';
-import { env } from '../config/env.js';
-import { HttpError } from '../lib/http-error.js';
-import { signEmailChangeToken, verifyEmailChangeToken } from '../lib/tokens.js';
+import { env } from '@/config/env.js';
+import { HttpError } from '@/lib/http-error.js';
+import { signEmailChangeToken, verifyEmailChangeToken } from '@/lib/tokens.js';
 
 describe('email change tokens', () => {
   it('signs and verifies email change token', () => {
