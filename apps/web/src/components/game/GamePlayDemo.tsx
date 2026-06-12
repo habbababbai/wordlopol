@@ -89,21 +89,26 @@ export function GamePlayDemo() {
         return;
       }
 
+      const current = rows[activeRowIndex];
+      if (!current || current.results || current.letters.length >= WORD_LENGTH) {
+        return;
+      }
+
       setRows((previous) => {
         const next = [...previous];
-        const current = next[activeRowIndex];
-        if (!current || current.results || current.letters.length >= WORD_LENGTH) {
+        const row = next[activeRowIndex];
+        if (!row || row.results || row.letters.length >= WORD_LENGTH) {
           return previous;
         }
 
         next[activeRowIndex] = {
-          letters: current.letters + key.toLowerCase(),
+          letters: row.letters + key.toLowerCase(),
         };
-        playType();
         return next;
       });
+      playType();
     },
-    [activeRowIndex, finished, playType, submitGuess],
+    [activeRowIndex, finished, playType, rows, submitGuess],
   );
 
   const statusMessage = finished

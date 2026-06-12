@@ -46,11 +46,37 @@ describe('GameResultModal', () => {
     expect(onNextWord).toHaveBeenCalledTimes(1);
     expect(onGoHome).toHaveBeenCalledTimes(1);
   });
+
+  it('does not dismiss on Escape or backdrop click', async () => {
+    const user = userEvent.setup();
+    const onGoHome = vi.fn();
+
+    render(
+      <GameResultModal open mode="daily" won guessNumber={3} answer="maksa" onGoHome={onGoHome} />,
+    );
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(onGoHome).not.toHaveBeenCalled();
+
+    const overlay = document.querySelector('[data-slot="dialog-overlay"]');
+    expect(overlay).not.toBeNull();
+    await user.click(overlay!);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(onGoHome).not.toHaveBeenCalled();
+  });
 });
 
 describe('getRowRevealDurationMs', () => {
   it('waits for the last tile flip to finish', async () => {
     const { getRowRevealDurationMs } = await import('@/lib/game-animation');
     expect(getRowRevealDurationMs(5)).toBe(900);
+  });
+
+  it('clamps invalid word lengths to one tile', async () => {
+    const { getRowRevealDurationMs } = await import('@/lib/game-animation');
+    expect(getRowRevealDurationMs(0)).toBe(500);
   });
 });

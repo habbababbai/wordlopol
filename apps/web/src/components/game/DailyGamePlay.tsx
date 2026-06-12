@@ -216,21 +216,26 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
         return;
       }
 
+      const current = rows[activeRowIndex];
+      if (!current || current.results || current.letters.length >= challenge.wordLength) {
+        return;
+      }
+
       setRows((previous) => {
         const next = [...previous];
-        const current = next[activeRowIndex];
-        if (!current || current.results || current.letters.length >= challenge.wordLength) {
+        const row = next[activeRowIndex];
+        if (!row || row.results || row.letters.length >= challenge.wordLength) {
           return previous;
         }
 
         next[activeRowIndex] = {
-          letters: current.letters + key.toLowerCase(),
+          letters: row.letters + key.toLowerCase(),
         };
-        playType();
         return next;
       });
+      playType();
     },
-    [activeRowIndex, challenge.wordLength, locked, playType, submitGuess],
+    [activeRowIndex, challenge.wordLength, locked, playType, rows, submitGuess],
   );
 
   useGameKeyboard(handleInput, { enabled: !locked });

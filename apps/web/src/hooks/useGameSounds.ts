@@ -41,13 +41,18 @@ export function useGameSounds(): {
   const ensureContext = useCallback(async (): Promise<AudioContext | null> => {
     if (!enabledRef.current || typeof window === 'undefined') return null;
 
-    contextRef.current ??= new AudioContext();
+    try {
+      contextRef.current ??= new AudioContext();
 
-    if (contextRef.current.state === 'suspended') {
-      await contextRef.current.resume();
+      if (contextRef.current.state === 'suspended') {
+        await contextRef.current.resume();
+      }
+
+      return contextRef.current;
+    } catch {
+      contextRef.current = null;
+      return null;
     }
-
-    return contextRef.current;
   }, []);
 
   const playType = useCallback(() => {

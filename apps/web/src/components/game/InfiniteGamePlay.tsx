@@ -166,21 +166,26 @@ export function InfiniteGamePlay({ word, onNextWord }: InfiniteGamePlayProps) {
         return;
       }
 
+      const current = rows[activeRowIndex];
+      if (!current || current.results || current.letters.length >= word.wordLength) {
+        return;
+      }
+
       setRows((previous) => {
         const next = [...previous];
-        const current = next[activeRowIndex];
-        if (!current || current.results || current.letters.length >= word.wordLength) {
+        const row = next[activeRowIndex];
+        if (!row || row.results || row.letters.length >= word.wordLength) {
           return previous;
         }
 
         next[activeRowIndex] = {
-          letters: current.letters + key.toLowerCase(),
+          letters: row.letters + key.toLowerCase(),
         };
-        playType();
         return next;
       });
+      playType();
     },
-    [activeRowIndex, locked, playType, submitGuess, word.wordLength],
+    [activeRowIndex, locked, playType, rows, submitGuess, word.wordLength],
   );
 
   useGameKeyboard(handleInput, { enabled: !locked });

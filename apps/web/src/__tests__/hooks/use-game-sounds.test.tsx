@@ -88,6 +88,27 @@ describe('useGameSounds', () => {
     expect(scheduleRevealSoundsMock).not.toHaveBeenCalled();
   });
 
+  it('skips sounds when AudioContext creation fails', async () => {
+    vi.stubGlobal(
+      'AudioContext',
+      class {
+        constructor() {
+          throw new Error('Audio blocked');
+        }
+      },
+    );
+
+    const { result } = renderHook(() => useGameSounds());
+
+    result.current.playType();
+    result.current.playRevealSequence(['correct']);
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(playTypeSoundMock).not.toHaveBeenCalled();
+    expect(scheduleRevealSoundsMock).not.toHaveBeenCalled();
+  });
+
   it('closes audio context on unmount', async () => {
     const { unmount, result } = renderHook(() => useGameSounds());
 
