@@ -2,9 +2,11 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { GamePageHeader } from '@/components/game/GamePageHeader';
+import { InfiniteGameIcon } from '@/components/game/game-page-icons';
 import { InfiniteGamePlay } from '@/components/game/InfiniteGamePlay';
 import { ErrorCard, GameBoardSkeleton, Spinner } from '@/components/ui/loader';
 import { useInfiniteNextQuery } from '@/hooks/queries/use-infinite-next-query';
+import { usePageMetadata } from '@/hooks/usePageMetadata';
 import { formatCalendarDate } from '@/lib/format-calendar-date';
 
 function InfinitePageShell({ children }: { children: ReactNode }) {
@@ -15,14 +17,30 @@ function InfinitePageShell({ children }: { children: ReactNode }) {
   );
 }
 
+function InfinitePageHeader() {
+  const { t } = useTranslation();
+
+  return (
+    <GamePageHeader
+      icon={<InfiniteGameIcon />}
+      title={t('pages.infinite.title')}
+      description={t('pages.infinite.description')}
+    />
+  );
+}
+
 export function InfinitePage() {
   const { t } = useTranslation();
   const { data: word, isPending, isError, refetch } = useInfiniteNextQuery();
+  const pageTitle = t('pages.infinite.title');
+  const pageDescription = t('pages.infinite.description');
+
+  usePageMetadata({ title: pageTitle, description: pageDescription });
 
   if (isPending) {
     return (
       <InfinitePageShell>
-        <GamePageHeader title={t('pages.infinite.title')} />
+        <InfinitePageHeader />
         <Spinner size="lg" />
         <p className="text-sm text-muted-foreground">{t('pages.infinite.loading')}</p>
         <GameBoardSkeleton />
@@ -33,7 +51,7 @@ export function InfinitePage() {
   if (isError || !word) {
     return (
       <InfinitePageShell>
-        <GamePageHeader title={t('pages.infinite.title')} />
+        <InfinitePageHeader />
         <ErrorCard
           title={t('pages.infinite.errorTitle')}
           message={t('pages.infinite.errorMessage')}
@@ -49,7 +67,9 @@ export function InfinitePage() {
   return (
     <InfinitePageShell>
       <GamePageHeader
-        title={t('pages.infinite.title')}
+        icon={<InfiniteGameIcon />}
+        title={pageTitle}
+        description={pageDescription}
         subtitle={localizedDate}
         badge={{
           label: t('pages.infinite.progressLabel', {

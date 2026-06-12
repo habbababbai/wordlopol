@@ -73,6 +73,9 @@ describe('DailyPage', () => {
     renderWithProviders(<DailyPage />);
 
     expect(screen.getByText('Wyzwanie na 9 czerwca 2026')).toBeInTheDocument();
+    expect(
+      screen.getByText('Jedno słowo na dobę dla wszystkich graczy. Masz 6 prób, by je odgadnąć.'),
+    ).toBeInTheDocument();
     expect(screen.getByRole('grid', { name: 'Plansza gry' })).toBeInTheDocument();
     expect(screen.getByText('Próba 1 / 6')).toBeInTheDocument();
     expect(screen.getByText('Odgadnij słowo na 5 liter (6 prób)')).toBeInTheDocument();

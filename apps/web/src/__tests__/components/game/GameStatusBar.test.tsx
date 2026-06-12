@@ -9,16 +9,20 @@ afterEach(() => {
 });
 
 describe('GamePageHeader', () => {
-  it('renders title, subtitle, and badge', () => {
+  it('renders icon, title, description, subtitle, and badge', () => {
     render(
       <GamePageHeader
+        icon={<span data-testid="page-icon">icon</span>}
         title="Wyzwanie dnia"
+        description="Jedno słowo na dobę dla wszystkich graczy."
         subtitle="Wyzwanie na 9 czerwca 2026"
         badge={{ label: 'Słowo 3 z 300' }}
       />,
     );
 
+    expect(screen.getByTestId('page-icon')).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 1, name: 'Wyzwanie dnia' })).toBeInTheDocument();
+    expect(screen.getByText('Jedno słowo na dobę dla wszystkich graczy.')).toBeInTheDocument();
     expect(screen.getByText('Wyzwanie na 9 czerwca 2026')).toBeInTheDocument();
     expect(screen.getByText('Słowo 3 z 300')).toBeInTheDocument();
   });

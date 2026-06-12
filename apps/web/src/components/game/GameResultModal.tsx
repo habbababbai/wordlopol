@@ -66,7 +66,7 @@ export function GameResultModal({
           ) : null}
         </DialogHeader>
 
-        <div className="flex justify-center gap-1 sm:gap-1.5">
+        <div className="mt-6 flex justify-center gap-1 sm:mt-8 sm:gap-1.5">
           {letters.map((letter, index) => (
             <GameTile
               key={`${letter}-${index}`}

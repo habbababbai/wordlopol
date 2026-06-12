@@ -37,16 +37,18 @@ function DialogContent({
   return (
     <DialogPortal>
       <DialogOverlay />
-      <DialogPrimitive.Content
-        data-slot="dialog-content"
-        className={cn(
-          'fixed top-1/2 left-1/2 z-100 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-lg outline-none',
-          className,
-        )}
-        {...props}
-      >
-        {children}
-      </DialogPrimitive.Content>
+      <div className="pointer-events-none fixed inset-0 z-100 flex items-center justify-center p-4">
+        <DialogPrimitive.Content
+          data-slot="dialog-content"
+          className={cn(
+            'pointer-events-auto w-full max-w-sm rounded-xl border border-border bg-card p-6 text-card-foreground shadow-lg outline-none',
+            className,
+          )}
+          {...props}
+        >
+          {children}
+        </DialogPrimitive.Content>
+      </div>
     </DialogPortal>
   );
 }

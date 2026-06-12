@@ -2,9 +2,11 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DailyGamePlay } from '@/components/game/DailyGamePlay';
+import { DailyGameIcon } from '@/components/game/game-page-icons';
 import { GamePageHeader } from '@/components/game/GamePageHeader';
 import { ErrorCard, GameBoardSkeleton, Spinner } from '@/components/ui/loader';
 import { useDailyTodayQuery } from '@/hooks/queries/use-daily-today-query';
+import { usePageMetadata } from '@/hooks/usePageMetadata';
 import { formatCalendarDate } from '@/lib/format-calendar-date';
 
 function DailyPageShell({ children }: { children: ReactNode }) {
@@ -15,14 +17,30 @@ function DailyPageShell({ children }: { children: ReactNode }) {
   );
 }
 
+function DailyPageHeader() {
+  const { t } = useTranslation();
+
+  return (
+    <GamePageHeader
+      icon={<DailyGameIcon />}
+      title={t('pages.daily.title')}
+      description={t('pages.daily.description')}
+    />
+  );
+}
+
 export function DailyPage() {
   const { t } = useTranslation();
   const { data: challenge, isPending, isError, refetch } = useDailyTodayQuery();
+  const pageTitle = t('pages.daily.title');
+  const pageDescription = t('pages.daily.description');
+
+  usePageMetadata({ title: pageTitle, description: pageDescription });
 
   if (isPending) {
     return (
       <DailyPageShell>
-        <GamePageHeader title={t('pages.daily.title')} />
+        <DailyPageHeader />
         <Spinner size="lg" />
         <p className="text-sm text-muted-foreground">{t('pages.daily.loading')}</p>
         <GameBoardSkeleton />
@@ -33,7 +51,7 @@ export function DailyPage() {
   if (isError || !challenge) {
     return (
       <DailyPageShell>
-        <GamePageHeader title={t('pages.daily.title')} />
+        <DailyPageHeader />
         <ErrorCard
           title={t('pages.daily.errorTitle')}
           message={t('pages.daily.errorMessage')}
@@ -49,7 +67,9 @@ export function DailyPage() {
   return (
     <DailyPageShell>
       <GamePageHeader
-        title={t('pages.daily.title')}
+        icon={<DailyGameIcon />}
+        title={pageTitle}
+        description={pageDescription}
         subtitle={t('pages.daily.dateLabel', { date: localizedDate })}
       />
       <DailyGamePlay key={challenge.date} challenge={challenge} />
