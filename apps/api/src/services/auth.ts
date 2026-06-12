@@ -4,8 +4,8 @@ import {
   sendEmailChangeEmail,
   sendPasswordResetEmail,
   sendVerificationEmail,
-} from '../lib/email.js';
-import { prisma } from '../lib/prisma.js';
+} from '@/lib/email.js';
+import { prisma } from '@/lib/prisma.js';
 import {
   createRefreshToken,
   hashToken,
@@ -15,13 +15,13 @@ import {
   signAccessToken,
   signEmailChangeToken,
   verifyEmailChangeToken,
-} from '../lib/tokens.js';
-import { withDevToken } from '../lib/dev-auth-tokens.js';
-import { HttpError } from '../lib/http-error.js';
-import { logger } from '../lib/logger.js';
-import { normalizeEmail } from '../lib/normalize-email.js';
-import { isUniqueConstraintError } from '../lib/prisma-errors.js';
-import { toUserProfile } from '../lib/user-profile.js';
+} from '@/lib/tokens.js';
+import { withDevToken } from '@/lib/dev-auth-tokens.js';
+import { HttpError } from '@/lib/http-error.js';
+import { logger } from '@/lib/logger.js';
+import { normalizeEmail } from '@/lib/normalize-email.js';
+import { isUniqueConstraintError } from '@/lib/prisma-errors.js';
+import { toUserProfile } from '@/lib/user-profile.js';
 import type {
   ChangeDisplayNameResponseDto,
   DevMessageResponseDto,

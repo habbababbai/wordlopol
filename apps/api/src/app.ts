@@ -4,12 +4,12 @@ import cors from 'cors';
 import express, { type Express } from 'express';
 import helmet from 'helmet';
 
-import { env } from './config/env.js';
-import { infraHealthHandler } from './lib/health-handler.js';
-import { errorHandler } from './middleware/error-handler.js';
-import { notFoundHandler } from './middleware/not-found.js';
-import { requestId } from './middleware/request-id.js';
-import { v1Router } from './routes/v1/index.js';
+import { env } from '@/config/env.js';
+import { infraHealthHandler } from '@/lib/health-handler.js';
+import { errorHandler } from '@/middleware/error-handler.js';
+import { notFoundHandler } from '@/middleware/not-found.js';
+import { requestId } from '@/middleware/request-id.js';
+import { v1Router } from '@/routes/v1/index.js';
 
 export function createApp(): Express {
   const app = express();

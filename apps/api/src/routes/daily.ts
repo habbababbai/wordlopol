@@ -3,13 +3,13 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { type DailyGuessRequestDto } from '@wordlopol/shared';
 
-import { asyncHandler } from '../lib/async-handler.js';
-import { ensureGuestDailySession, GUEST_DAILY_SESSION_COOKIE } from '../lib/guest-daily-session.js';
-import { validateBody } from '../lib/validate-body.js';
-import { dailyGuessRateLimit, dailyTodayRateLimit } from '../middleware/auth-rate-limit.js';
-import { csrfProtection } from '../middleware/csrf.js';
-import { optionalAuth } from '../middleware/optional-auth.js';
-import { getTodayChallenge, submitDailyGuess } from '../services/daily.js';
+import { asyncHandler } from '@/lib/async-handler.js';
+import { ensureGuestDailySession, GUEST_DAILY_SESSION_COOKIE } from '@/lib/guest-daily-session.js';
+import { validateBody } from '@/lib/validate-body.js';
+import { dailyGuessRateLimit, dailyTodayRateLimit } from '@/middleware/auth-rate-limit.js';
+import { csrfProtection } from '@/middleware/csrf.js';
+import { optionalAuth } from '@/middleware/optional-auth.js';
+import { getTodayChallenge, submitDailyGuess } from '@/services/daily.js';
 
 const guessSchema = z.object({
   guess: z.string().trim().min(1),

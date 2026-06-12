@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
-import { verifyAccessToken } from '../lib/tokens.js';
-import { apiPath, resetDatabase } from '../test/helpers.js';
+import { verifyAccessToken } from '@/lib/tokens.js';
+import { apiPath, resetDatabase } from '@/test/helpers.js';
 import { baseUrl } from './server.js';
 
 const verificationToken = vi.hoisted(() => ({ value: '' }));
 
-vi.mock('../lib/email.js', () => ({
+vi.mock('@/lib/email.js', () => ({
   sendVerificationEmail: vi.fn(async (_to: string, token: string) => {
     verificationToken.value = token;
   }),

@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
-import { env } from '../config/env.js';
-import { sendApiError } from '../lib/send-api-error.js';
+import { env } from '@/config/env.js';
+import { sendApiError } from '@/lib/send-api-error.js';
 
 function shouldSkipRateLimit(): boolean {
   if (env.NODE_ENV === 'test') {

@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { prisma } from '../lib/prisma.js';
-import { sendApiError } from '../lib/send-api-error.js';
+import { prisma } from '@/lib/prisma.js';
+import { sendApiError } from '@/lib/send-api-error.js';
 
 export async function requireVerified(
   req: Request,

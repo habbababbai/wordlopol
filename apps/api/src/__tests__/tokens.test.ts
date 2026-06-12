@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Response } from 'express';
-import { prisma } from '../lib/prisma.js';
-import { HttpError } from '../lib/http-error.js';
+import { prisma } from '@/lib/prisma.js';
+import { HttpError } from '@/lib/http-error.js';
 import {
   createRefreshToken,
   hashToken,
@@ -10,8 +10,8 @@ import {
   rotateRefreshToken,
   signAccessToken,
   verifyAccessToken,
-} from '../lib/tokens.js';
-import { createTestUser, resetDatabase } from '../test/helpers.js';
+} from '@/lib/tokens.js';
+import { createTestUser, resetDatabase } from '@/test/helpers.js';
 
 describe('tokens', () => {
   beforeEach(async () => {
@@ -103,7 +103,7 @@ describe('tokens', () => {
 
   it('sets refresh cookie on both dev paths when NODE_ENV is development', async () => {
     vi.resetModules();
-    vi.doMock('../config/env.js', () => ({
+    vi.doMock('@/config/env.js', () => ({
       env: {
         NODE_ENV: 'development',
         REFRESH_COOKIE_PATH: '/api/v1/auth',
@@ -113,7 +113,7 @@ describe('tokens', () => {
       },
     }));
 
-    const { setRefreshCookie: setDevRefreshCookie } = await import('../lib/tokens.js');
+    const { setRefreshCookie: setDevRefreshCookie } = await import('@/lib/tokens.js');
     const cookies: Array<{ name: string; path: string }> = [];
     const res = {
       cookie(name: string, _value: string, options: { path?: string }) {
@@ -128,13 +128,13 @@ describe('tokens', () => {
       { name: 'refresh_token', path: '/v1/auth' },
     ]);
 
-    vi.doUnmock('../config/env.js');
+    vi.doUnmock('@/config/env.js');
     vi.resetModules();
   });
 
   it('clears refresh cookie on both dev paths when NODE_ENV is development', async () => {
     vi.resetModules();
-    vi.doMock('../config/env.js', () => ({
+    vi.doMock('@/config/env.js', () => ({
       env: {
         NODE_ENV: 'development',
         REFRESH_COOKIE_PATH: '/api/v1/auth',
@@ -144,7 +144,7 @@ describe('tokens', () => {
       },
     }));
 
-    const { clearRefreshCookie: clearDevRefreshCookie } = await import('../lib/tokens.js');
+    const { clearRefreshCookie: clearDevRefreshCookie } = await import('@/lib/tokens.js');
     const cleared: string[] = [];
     const res = {
       clearCookie(name: string, options: { path?: string }) {
@@ -156,7 +156,7 @@ describe('tokens', () => {
 
     expect(cleared).toEqual(['/api/v1/auth', '/v1/auth']);
 
-    vi.doUnmock('../config/env.js');
+    vi.doUnmock('@/config/env.js');
     vi.resetModules();
   });
 });

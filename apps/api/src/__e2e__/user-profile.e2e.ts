@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
-import { signAccessToken } from '../lib/tokens.js';
-import { apiPath, createVerifiedUserWithPassword, resetDatabase } from '../test/helpers.js';
+import { signAccessToken } from '@/lib/tokens.js';
+import { apiPath, createVerifiedUserWithPassword, resetDatabase } from '@/test/helpers.js';
 import { baseUrl } from './server.js';
 
 describe('e2e: GET /user/profile', () => {

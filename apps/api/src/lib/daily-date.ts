@@ -1,4 +1,4 @@
-import { env } from '../config/env.js';
+import { env } from '@/config/env.js';
 
 export function getCalendarDateKey(date: Date = new Date(), timeZone: string = env.TZ): string {
   return new Intl.DateTimeFormat('en-CA', {

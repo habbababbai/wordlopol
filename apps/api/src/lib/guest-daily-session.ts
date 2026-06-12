@@ -1,7 +1,7 @@
 import type { CookieOptions, Request, Response } from 'express';
 import { MAX_GUESSES } from '@wordlopol/shared';
 
-import { env } from '../config/env.js';
+import { env } from '@/config/env.js';
 import { dateKeyToUtcDate, getCalendarDateKey } from './daily-date.js';
 import { HttpError } from './http-error.js';
 import { prisma } from './prisma.js';

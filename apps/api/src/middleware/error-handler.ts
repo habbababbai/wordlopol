@@ -2,8 +2,8 @@ import type { NextFunction, Request, Response } from 'express';
 import { formatApiErrorResponse } from '@wordlopol/shared';
 import { z } from 'zod';
 
-import { HttpError } from '../lib/http-error.js';
-import { logger } from '../lib/logger.js';
+import { HttpError } from '@/lib/http-error.js';
+import { logger } from '@/lib/logger.js';
 import { isInvalidCsrfTokenError } from './csrf.js';
 
 export function errorHandler(

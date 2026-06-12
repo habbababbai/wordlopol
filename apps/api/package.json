@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc && tsc-alias -p tsconfig.json",
     "start": "node dist/index.js",
     "lint": "eslint src/ scripts/",
     "format": "prettier --write src scripts docs postman \"*.{json,ts,js,md}\"",
@@ -57,6 +57,7 @@
     "eslint": "^9.22.0",
     "prisma": "^7.0.0",
     "supertest": "^7.2.2",
+    "tsc-alias": "^1.8.16",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2",
     "vitest": "^4.1.8"

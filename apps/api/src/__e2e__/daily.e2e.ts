@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
-import { getCalendarDateKey } from '../lib/daily-date.js';
-import { apiPath, resetDatabase, seedDictionaryWords } from '../test/helpers.js';
+import { getCalendarDateKey } from '@/lib/daily-date.js';
+import { apiPath, resetDatabase, seedDictionaryWords } from '@/test/helpers.js';
 import { baseUrl } from './server.js';
 
 describe('e2e: GET /daily/today', () => {

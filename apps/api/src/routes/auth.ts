@@ -2,13 +2,13 @@ import { Router } from 'express';
 import cookieParser from 'cookie-parser';
 import { z } from 'zod';
 
-import { asyncHandler } from '../lib/async-handler.js';
-import { displayNameSchema, normalizedEmailSchema } from '../lib/auth-schemas.js';
-import { HttpError } from '../lib/http-error.js';
-import { validateBody } from '../lib/validate-body.js';
-import { REFRESH_COOKIE_NAME, setRefreshCookie } from '../lib/tokens.js';
-import { clearAuthSessionResponse, revokeAndClearAuthSession } from '../lib/auth-session.js';
-import { authenticate } from '../middleware/authenticate.js';
+import { asyncHandler } from '@/lib/async-handler.js';
+import { displayNameSchema, normalizedEmailSchema } from '@/lib/auth-schemas.js';
+import { HttpError } from '@/lib/http-error.js';
+import { validateBody } from '@/lib/validate-body.js';
+import { REFRESH_COOKIE_NAME, setRefreshCookie } from '@/lib/tokens.js';
+import { clearAuthSessionResponse, revokeAndClearAuthSession } from '@/lib/auth-session.js';
+import { authenticate } from '@/middleware/authenticate.js';
 import {
   authenticatedRateLimit,
   authRouterRateLimit,
@@ -21,8 +21,8 @@ import {
   resetPasswordRateLimit,
   resendVerificationRateLimit,
   verifyEmailRateLimit,
-} from '../middleware/auth-rate-limit.js';
-import { csrfProtection, generateCsrfToken } from '../middleware/csrf.js';
+} from '@/middleware/auth-rate-limit.js';
+import { csrfProtection, generateCsrfToken } from '@/middleware/csrf.js';
 import {
   changeDisplayName,
   changePassword,
@@ -35,7 +35,7 @@ import {
   resendVerification,
   resetPassword,
   verifyEmail,
-} from '../services/auth.js';
+} from '@/services/auth.js';
 
 const registerSchema = z.object({
   email: normalizedEmailSchema,

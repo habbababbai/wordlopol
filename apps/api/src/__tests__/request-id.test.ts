@@ -1,7 +1,7 @@
 import express from 'express';
 import { describe, expect, it } from 'vitest';
 import request from 'supertest';
-import { requestId } from '../middleware/request-id.js';
+import { requestId } from '@/middleware/request-id.js';
 
 describe('requestId middleware', () => {
   it('sets x-request-id on the response', async () => {

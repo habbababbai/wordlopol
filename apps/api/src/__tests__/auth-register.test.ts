@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { verifyAccessToken } from '../lib/tokens.js';
+import { verifyAccessToken } from '@/lib/tokens.js';
 import { expectApiError } from './helpers/expect-api-error.js';
-import { apiPath, createTestAgent, resetDatabase } from '../test/helpers.js';
+import { apiPath, createTestAgent, resetDatabase } from '@/test/helpers.js';
 
 const verificationToken = vi.hoisted(() => ({ value: '' }));
 
-vi.mock('../lib/email.js', () => ({
+vi.mock('@/lib/email.js', () => ({
   sendVerificationEmail: vi.fn(async (_to: string, token: string) => {
     verificationToken.value = token;
   }),

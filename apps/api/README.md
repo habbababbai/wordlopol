@@ -16,7 +16,7 @@ Run from repo root with `pnpm --filter @wordlopol/api <script>` or from this dir
 | Script            | Description                                              |
 | ----------------- | -------------------------------------------------------- |
 | `dev`             | Start dev server (port 3001)                             |
-| `build`           | Compile TypeScript                                       |
+| `build`           | Compile TypeScript and rewrite `@/` path aliases         |
 | `db:migrate`      | Run Prisma migrations                                    |
 | `db:import-words` | Import `data/words.txt` into PostgreSQL                  |
 | `test`            | Integration tests (Vitest + Supertest, in-process)       |
@@ -75,6 +75,20 @@ User-facing API changes are recorded in [CHANGELOG.md](./CHANGELOG.md).
 - **Do not edit** this file in feature PRs — run **Changelog — API** from Actions, then merge the Release PR.
 - Version bumps follow PR title: `fix(api):` patch · `feat(api):` minor · `feat(api)!:` major
 - See [docs/CONTRIBUTING.md](../../docs/CONTRIBUTING.md#releases-and-changelogs)
+
+## Path aliases
+
+Imports use `@/` for `src/` (same pattern as `apps/web`):
+
+```ts
+import { prisma } from '@/lib/prisma.js';
+import { authenticate } from '@/middleware/authenticate.js';
+```
+
+- **TypeScript** — `tsconfig.json` `paths`
+- **Vitest** — `resolve.alias` in `vitest.config.ts` / `vitest.e2e.config.ts`
+- **Dev** — `tsx` resolves aliases from `tsconfig.json`
+- **Production** — `tsc` then `tsc-alias` rewrites `@/` to relative paths in `dist/`
 
 ## Conventions
 

@@ -15,8 +15,8 @@ vi.mock('resend', () => ({
   },
 }));
 
-import { env } from '../config/env.js';
-import * as email from '../lib/email.js';
+import { env } from '@/config/env.js';
+import * as email from '@/lib/email.js';
 
 describe('email', () => {
   afterEach(() => {
@@ -65,7 +65,7 @@ describe('email', () => {
       vi.resetModules();
       sendMock.mockClear();
 
-      const { sendVerificationEmail } = await import('../lib/email.js');
+      const { sendVerificationEmail } = await import('@/lib/email.js');
 
       await sendVerificationEmail('user@example.com', 'test-token');
 
@@ -84,7 +84,7 @@ describe('email', () => {
       sendMock.mockClear();
       resendConstructor.mockClear();
 
-      const { sendVerificationEmail, sendPasswordResetEmail } = await import('../lib/email.js');
+      const { sendVerificationEmail, sendPasswordResetEmail } = await import('@/lib/email.js');
 
       await sendVerificationEmail('user@example.com', 'verify-token');
       await sendPasswordResetEmail('user@example.com', 'reset-token');
@@ -99,8 +99,8 @@ describe('email', () => {
       vi.resetModules();
       sendMock.mockClear();
 
-      const { sendVerificationEmail } = await import('../lib/email.js');
-      const { logger } = await import('../lib/logger.js');
+      const { sendVerificationEmail } = await import('@/lib/email.js');
+      const { logger } = await import('@/lib/logger.js');
       const info = vi.spyOn(logger, 'info').mockImplementation(() => {});
 
       await sendVerificationEmail('user@example.com', 'test-token');

@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { API_PATH_PREFIX } from '@wordlopol/shared';
 import type { CookieOptions, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { env } from '../config/env.js';
+import { env } from '@/config/env.js';
 import { HttpError } from './http-error.js';
 import { prisma } from './prisma.js';
 

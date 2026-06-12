@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { WORD_LENGTH } from '@wordlopol/shared';
-import { prisma } from '../lib/prisma.js';
-import { dateKeyToUtcDate, getCalendarDateKey } from '../lib/daily-date.js';
-import { getOrCreateDailyChallenge } from '../services/daily.js';
+import { prisma } from '@/lib/prisma.js';
+import { dateKeyToUtcDate, getCalendarDateKey } from '@/lib/daily-date.js';
+import { getOrCreateDailyChallenge } from '@/services/daily.js';
 import { expectApiError } from './helpers/expect-api-error.js';
-import { apiPath, createTestAgent, resetDatabase, seedDictionaryWords } from '../test/helpers.js';
+import { apiPath, createTestAgent, resetDatabase, seedDictionaryWords } from '@/test/helpers.js';
 
 describe('GET /daily/today', () => {
   beforeEach(async () => {

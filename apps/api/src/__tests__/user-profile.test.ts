@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { signAccessToken } from '../lib/tokens.js';
-import { prisma } from '../lib/prisma.js';
+import { signAccessToken } from '@/lib/tokens.js';
+import { prisma } from '@/lib/prisma.js';
 import { expectApiError } from './helpers/expect-api-error.js';
 import {
   apiPath,
   createTestAgent,
   createVerifiedUserWithPassword,
   resetDatabase,
-} from '../test/helpers.js';
+} from '@/test/helpers.js';
 
 describe('GET /user/profile', () => {
   beforeEach(async () => {
