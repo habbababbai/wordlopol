@@ -52,7 +52,7 @@ describe('auth middleware', () => {
 
     it('attaches userId for valid token', async () => {
       const user = await createTestUser();
-      const token = signAccessToken(user.id);
+      const token = signAccessToken(user.id, false);
 
       const res = await request(buildMiddlewareApp())
         .get('/strict')
@@ -71,7 +71,7 @@ describe('auth middleware', () => {
 
     it('attaches userId when token is valid', async () => {
       const user = await createTestUser();
-      const token = signAccessToken(user.id);
+      const token = signAccessToken(user.id, false);
 
       const res = await request(buildMiddlewareApp())
         .get('/optional')
@@ -94,7 +94,7 @@ describe('auth middleware', () => {
   describe('requireVerified', () => {
     it('returns 403 when email is not verified', async () => {
       const user = await createTestUser({ emailVerified: false });
-      const token = signAccessToken(user.id);
+      const token = signAccessToken(user.id, false);
 
       const res = await request(buildMiddlewareApp())
         .get('/verified')
@@ -106,7 +106,19 @@ describe('auth middleware', () => {
 
     it('allows verified users', async () => {
       const user = await createTestUser({ emailVerified: true });
-      const token = signAccessToken(user.id);
+      const token = signAccessToken(user.id, true);
+
+      const res = await request(buildMiddlewareApp())
+        .get('/verified')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      expect(res.body).toEqual({ userId: user.id });
+    });
+
+    it('checks JWT emailVerified claim instead of the database', async () => {
+      const user = await createTestUser({ emailVerified: false });
+      const token = signAccessToken(user.id, true);
 
       const res = await request(buildMiddlewareApp())
         .get('/verified')

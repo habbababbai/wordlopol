@@ -30,7 +30,7 @@ describe('GET /infinite/next', () => {
 
   it('returns 403 for unverified users', async () => {
     const user = await createTestUser({ emailVerified: false });
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, false);
 
     const agent = await createTestAgent();
     const res = await agent
@@ -44,7 +44,7 @@ describe('GET /infinite/next', () => {
   it('returns infinite metadata without the answer', async () => {
     await seedDictionaryWords(TEST_POOL_WORDS);
     const { user } = await createVerifiedUserWithPassword();
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, true);
 
     const agent = await createTestAgent();
     const res = await agent
@@ -65,7 +65,7 @@ describe('GET /infinite/next', () => {
   it('returns the same in-progress word on repeated requests', async () => {
     await seedDictionaryWords(TEST_POOL_WORDS);
     const { user } = await createVerifiedUserWithPassword();
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, true);
 
     const agent = await createTestAgent();
     const first = await agent
@@ -92,7 +92,7 @@ describe('GET /infinite/next', () => {
 
   it('returns 503 when the dictionary is empty', async () => {
     const { user } = await createVerifiedUserWithPassword();
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, true);
 
     const agent = await createTestAgent();
     const res = await agent

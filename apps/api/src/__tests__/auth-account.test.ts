@@ -68,7 +68,7 @@ describe('auth account endpoints', () => {
 
     await agent
       .patch(apiPath('/auth/change-password'))
-      .set('Authorization', `Bearer ${signAccessToken(user.id)}`)
+      .set('Authorization', `Bearer ${signAccessToken(user.id, true)}`)
       .send({ currentPassword: 'old-password', newPassword: 'new-password-2' })
       .expect(200)
       .expect({ message: 'Password changed' });
@@ -83,7 +83,7 @@ describe('auth account endpoints', () => {
 
     await agent
       .patch(apiPath('/auth/change-email'))
-      .set('Authorization', `Bearer ${signAccessToken(user.id)}`)
+      .set('Authorization', `Bearer ${signAccessToken(user.id, true)}`)
       .send({ newEmail })
       .expect(200)
       .expect({ message: 'Verification email sent' });
@@ -108,7 +108,7 @@ describe('auth account endpoints', () => {
 
     await agent
       .delete(apiPath('/auth/account'))
-      .set('Authorization', `Bearer ${signAccessToken(user.id)}`)
+      .set('Authorization', `Bearer ${signAccessToken(user.id, true)}`)
       .send({ password })
       .expect(200)
       .expect({ message: 'Account deleted' });
@@ -124,7 +124,7 @@ describe('auth account endpoints', () => {
       await createTestAgent()
     )
       .patch(apiPath('/auth/change-display-name'))
-      .set('Authorization', `Bearer ${signAccessToken(user.id)}`)
+      .set('Authorization', `Bearer ${signAccessToken(user.id, true)}`)
       .send({ displayName: 'New Name' })
       .expect(200);
 
@@ -146,7 +146,7 @@ describe('auth account endpoints', () => {
       await createTestAgent()
     )
       .patch(apiPath('/auth/change-display-name'))
-      .set('Authorization', `Bearer ${signAccessToken(user.id)}`)
+      .set('Authorization', `Bearer ${signAccessToken(user.id, true)}`)
       .send({ displayName: 'Test Player' });
 
     expect(res.status).toBe(400);
@@ -160,7 +160,7 @@ describe('auth account endpoints', () => {
       await createTestAgent()
     )
       .patch(apiPath('/auth/change-display-name'))
-      .set('Authorization', `Bearer ${signAccessToken(user.id)}`)
+      .set('Authorization', `Bearer ${signAccessToken(user.id, true)}`)
       .send({ displayName: '   ' });
 
     expect(res.status).toBe(400);

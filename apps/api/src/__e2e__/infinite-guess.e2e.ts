@@ -36,7 +36,7 @@ describe('e2e: POST /infinite/guess', () => {
   it('evaluates a guess and advances to the next word over real http', async () => {
     await seedDictionaryWords(TEST_POOL_WORDS);
     const { user } = await createVerifiedUserWithPassword();
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, true);
 
     await request(baseUrl)
       .get(apiPath('/infinite/next'))
