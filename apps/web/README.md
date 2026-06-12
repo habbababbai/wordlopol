@@ -65,9 +65,9 @@ Tests mock the API; no database required. Helpers: `src/test/render.tsx`, `src/t
 
 Optional `VITE_API_URL` — defaults to `/api` (Vite proxy in dev). Set for a non-proxied API base in other deployments.
 
-## v1 status
+## Release
 
-See [docs/V1.md](../../docs/V1.md).
+See [docs/V1.md](../../docs/V1.md) for 1.0 scope. Changelog: [CHANGELOG.md](./CHANGELOG.md).
 
 ## Conventions
 

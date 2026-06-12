@@ -36,7 +36,7 @@ All application endpoints are under **`/v1`** on the Express server (`/v1/auth`,
 | Express (direct) | `GET /v1/daily/today`             |
 | Infra probe      | `GET /health` (unversioned alias) |
 
-`/api` is the gateway prefix in front of the web app only — not an API version. Package semver (`apps/api` `0.x`) tracks releases, not the HTTP contract.
+`/api` is the gateway prefix in front of the web app only — not an API version. Package semver (`apps/api` / `apps/web` **1.0.0** at first release) tracks deployable app versions, not the HTTP contract (always `/v1`).
 
 ## Data model (core)
 

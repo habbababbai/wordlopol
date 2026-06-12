@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.0] — 2026-06-12
+
+First playable web app for Wordlopol.
+
+### Features
+
+- **Home** — hero, feature cards, how-to-play; auth-aware CTAs
+- **Daily** — full game UI; guest and registered play
+- **Infinite** — sequential words for verified users
+- **Auth** — login, register, verify email, forgot/reset password; silent session refresh
+- **Account** — profile with stats; settings (display name, password/email, logout-all, delete account)
+- **Game UX** — result modal on finish; optional typing/reveal sounds; page headers and status bar
+- **Polish UI** — `pl.json`; light/dark theme
+- **A11y** — responsive board, focus states, skip link, `prefers-reduced-motion`
+- **Stack** — React 19, Vite, Tailwind 4, TanStack Query, Zustand; Vitest + Testing Library
+
 ## [0.6.0](https://github.com/habbababbai/wordlopol/compare/web-v0.5.0...web-v0.6.0) (2026-06-07)
 
 ### Features
