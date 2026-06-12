@@ -54,6 +54,12 @@
       "guessProgress": "Próba {{current}} / {{max}}",
       "completedWon": "Wygrana! Słowo: {{answer}}",
       "completedLost": "Koniec gry. Słowo: {{answer}}"
+    },
+    "result": {
+      "wonTitle": "Wygrana w {{guessNumber}}. próbie!",
+      "lostTitle": "Koniec gry",
+      "answerLabel": "Słowo: {{answer}}",
+      "goHome": "Strona główna"
     }
   },
   "nav": {
