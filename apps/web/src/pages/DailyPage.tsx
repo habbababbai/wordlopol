@@ -1,54 +1,78 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DailyGamePlay } from '@/components/game/DailyGamePlay';
+import { DailyGameIcon } from '@/components/game/game-page-icons';
+import { GamePageHeader } from '@/components/game/GamePageHeader';
 import { ErrorCard, GameBoardSkeleton, Spinner } from '@/components/ui/loader';
 import { useDailyTodayQuery } from '@/hooks/queries/use-daily-today-query';
+import { usePageMetadata } from '@/hooks/usePageMetadata';
 import { formatCalendarDate } from '@/lib/format-calendar-date';
+
+function DailyPageShell({ children }: { children: ReactNode }) {
+  return (
+    <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-6 px-4 py-8 sm:gap-8 sm:py-12">
+      {children}
+    </div>
+  );
+}
+
+function DailyPageHeader() {
+  const { t } = useTranslation();
+
+  return (
+    <GamePageHeader
+      icon={<DailyGameIcon />}
+      title={t('pages.daily.title')}
+      description={t('pages.daily.description')}
+    />
+  );
+}
 
 export function DailyPage() {
   const { t } = useTranslation();
   const { data: challenge, isPending, isError, refetch } = useDailyTodayQuery();
+  const pageTitle = t('pages.daily.title');
+  const pageDescription = t('pages.daily.description');
+
+  usePageMetadata({ title: pageTitle, description: pageDescription });
 
   if (isPending) {
     return (
-      <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-6 px-4 py-8 sm:py-12">
-        <header className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-2xl font-bold text-foreground">{t('pages.daily.title')}</h1>
-        </header>
+      <DailyPageShell>
+        <DailyPageHeader />
         <Spinner size="lg" />
         <p className="text-sm text-muted-foreground">{t('pages.daily.loading')}</p>
         <GameBoardSkeleton />
-      </div>
+      </DailyPageShell>
     );
   }
 
   if (isError || !challenge) {
     return (
-      <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-6 px-4 py-8 sm:py-12">
-        <header className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-2xl font-bold text-foreground">{t('pages.daily.title')}</h1>
-        </header>
+      <DailyPageShell>
+        <DailyPageHeader />
         <ErrorCard
           title={t('pages.daily.errorTitle')}
           message={t('pages.daily.errorMessage')}
           onRetry={() => void refetch()}
           retryLabel={t('pages.daily.retry')}
         />
-      </div>
+      </DailyPageShell>
     );
   }
 
   const localizedDate = formatCalendarDate(challenge.date);
 
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-8 px-4 py-8 sm:py-12">
-      <header className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold text-foreground">{t('pages.daily.title')}</h1>
-        <p className="text-sm text-muted-foreground">
-          {t('pages.daily.dateLabel', { date: localizedDate })}
-        </p>
-      </header>
+    <DailyPageShell>
+      <GamePageHeader
+        icon={<DailyGameIcon />}
+        title={pageTitle}
+        description={pageDescription}
+        subtitle={t('pages.daily.dateLabel', { date: localizedDate })}
+      />
       <DailyGamePlay key={challenge.date} challenge={challenge} />
-    </div>
+    </DailyPageShell>
   );
 }

@@ -38,6 +38,10 @@
       "WORD_ALREADY_COMPLETED": "To słowo zostało już ukończone"
     }
   },
+  "meta": {
+    "pageTitle": "{{title}} | {{appName}}",
+    "defaultDescription": "Polski Wordle — zgadnij słowo na 5 liter. Graj w trybie dziennym lub nieskończonym."
+  },
   "game": {
     "board": {
       "label": "Plansza gry",
@@ -49,6 +53,17 @@
         "present": "Litera {{letter}}, w słowie",
         "absent": "Litera {{letter}}, nie w słowie"
       }
+    },
+    "status": {
+      "guessProgress": "Próba {{current}} / {{max}}",
+      "completedWon": "Wygrana! Słowo: {{answer}}",
+      "completedLost": "Koniec gry. Słowo: {{answer}}"
+    },
+    "result": {
+      "wonTitle": "Wygrana w {{guessNumber}}. próbie!",
+      "lostTitle": "Koniec gry",
+      "answerLabel": "Słowo: {{answer}}",
+      "goHome": "Strona główna"
     }
   },
   "nav": {
@@ -178,6 +193,7 @@
   "pages": {
     "daily": {
       "title": "Wyzwanie dnia",
+      "description": "Jedno słowo na dobę dla wszystkich graczy. Masz 6 prób, by je odgadnąć.",
       "loading": "Ładowanie wyzwania…",
       "errorTitle": "Nie udało się wczytać wyzwania",
       "errorMessage": "Sprawdź połączenie i spróbuj ponownie.",

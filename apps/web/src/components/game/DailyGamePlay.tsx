@@ -1,15 +1,17 @@
 import type { DailyChallengeDto } from '@wordlopol/shared';
 import { useQueryClient } from '@tanstack/react-query';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { ApiError } from '@/api/errors';
 import { authKeys } from '@/api/query-keys';
 import { useDailyGuessMutation } from '@/hooks/mutations/use-daily-guess-mutation';
 import { useAuth } from '@/hooks/useAuth';
 import { useGameKeyboard } from '@/hooks/useGameKeyboard';
+import { useGameSounds } from '@/hooks/useGameSounds';
 import { useToast } from '@/hooks/useToast';
+import { getRowRevealDurationMs } from '@/lib/game-animation';
 import { buildKeyStates, createEmptyRows } from '@/lib/game-board';
 import { getApiErrorMessage } from '@/lib/api-error-message';
 import {
@@ -19,6 +21,8 @@ import {
 } from '@/stores/daily-finished-store';
 
 import { GameBoard, type GameBoardRow } from './GameBoard';
+import { GameResultModal } from './GameResultModal';
+import { GameStatusBar } from './GameStatusBar';
 import { PolishKeyboard } from './PolishKeyboard';
 
 type PlayMode = 'playing' | 'completed' | 'alreadyPlayed';
@@ -60,10 +64,12 @@ function getInitialWon(date: string): boolean | null {
 
 export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const guessMutation = useDailyGuessMutation();
+  const { playType, playRevealSequence } = useGameSounds();
 
   const [mode, setMode] = useState<PlayMode>(() => getInitialMode(challenge.date));
   const [rows, setRows] = useState<GameBoardRow[]>(() => getInitialRows(challenge.date));
@@ -72,8 +78,25 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
   );
   const [answer, setAnswer] = useState<string | null>(() => getInitialAnswer(challenge.date));
   const [won, setWon] = useState<boolean | null>(() => getInitialWon(challenge.date));
+  const [finalGuessNumber, setFinalGuessNumber] = useState<number | null>(null);
+  const [awaitingResultModal, setAwaitingResultModal] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false);
   const [shakingRowIndex, setShakingRowIndex] = useState<number | null>(null);
   const shakeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const modalTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (shakeTimeoutRef.current !== null) {
+        clearTimeout(shakeTimeoutRef.current);
+        shakeTimeoutRef.current = null;
+      }
+      if (modalTimeoutRef.current !== null) {
+        clearTimeout(modalTimeoutRef.current);
+        modalTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   const locked = mode !== 'playing' || guessMutation.isPending;
   const keyStates = useMemo(() => buildKeyStates(rows), [rows]);
@@ -106,6 +129,7 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
       const nextRows = [...rows];
       nextRows[activeRowIndex] = { letters: currentGuess, results: result.results };
       setRows(nextRows);
+      playRevealSequence(result.results);
 
       if (result.won) {
         setActiveRowIndex(challenge.maxGuesses);
@@ -118,7 +142,9 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
       if (result.finished && result.answer) {
         setAnswer(result.answer);
         setWon(result.won);
+        setFinalGuessNumber(result.guessNumber);
         setMode('completed');
+        setAwaitingResultModal(true);
         saveDailyFinished({
           date: challenge.date,
           status: 'completed',
@@ -129,6 +155,15 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
         if (isAuthenticated) {
           void queryClient.invalidateQueries({ queryKey: authKeys.profile() });
         }
+
+        if (modalTimeoutRef.current !== null) {
+          clearTimeout(modalTimeoutRef.current);
+        }
+        modalTimeoutRef.current = setTimeout(() => {
+          modalTimeoutRef.current = null;
+          setAwaitingResultModal(false);
+          setShowResultModal(true);
+        }, getRowRevealDurationMs(challenge.wordLength));
       }
     } catch (error) {
       if (error instanceof ApiError && error.code === 'ALREADY_PLAYED_TODAY') {
@@ -158,6 +193,7 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
     queryClient,
     rows,
     shakeActiveRow,
+    playRevealSequence,
     t,
     toast,
   ]);
@@ -185,45 +221,66 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
         return;
       }
 
+      const current = rows[activeRowIndex];
+      if (!current || current.results || current.letters.length >= challenge.wordLength) {
+        return;
+      }
+
       setRows((previous) => {
         const next = [...previous];
-        const current = next[activeRowIndex];
-        if (!current || current.results || current.letters.length >= challenge.wordLength) {
+        const row = next[activeRowIndex];
+        if (!row || row.results || row.letters.length >= challenge.wordLength) {
           return previous;
         }
 
         next[activeRowIndex] = {
-          letters: current.letters + key.toLowerCase(),
+          letters: row.letters + key.toLowerCase(),
         };
         return next;
       });
+      playType();
     },
-    [activeRowIndex, challenge.wordLength, locked, submitGuess],
+    [activeRowIndex, challenge.wordLength, locked, playType, rows, submitGuess],
   );
 
   useGameKeyboard(handleInput, { enabled: !locked });
 
-  const statusMessage = (() => {
+  const statusBar = (() => {
+    if (awaitingResultModal || showResultModal) {
+      return null;
+    }
     if (guessMutation.isPending) {
-      return t('pages.daily.play.submitting');
+      return (
+        <GameStatusBar
+          variant="submitting"
+          currentGuess={activeRowIndex + 1}
+          maxGuesses={challenge.maxGuesses}
+          hintKey="pages.daily.play.submitting"
+        />
+      );
     }
     if (mode === 'alreadyPlayed') {
-      return t('pages.daily.play.alreadyPlayed');
+      return (
+        <GameStatusBar variant="alreadyPlayed" message={t('pages.daily.play.alreadyPlayed')} />
+      );
     }
-    if (mode === 'completed' && answer) {
-      return won ? t('pages.daily.play.won', { answer }) : t('pages.daily.play.lost', { answer });
+    if (mode === 'completed' && answer && won !== null) {
+      return <GameStatusBar variant="completed" won={won} answer={answer} />;
     }
-    return t('pages.daily.play.hint', {
-      wordLength: challenge.wordLength,
-      maxGuesses: challenge.maxGuesses,
-    });
+    return (
+      <GameStatusBar
+        variant="playing"
+        currentGuess={activeRowIndex + 1}
+        maxGuesses={challenge.maxGuesses}
+        wordLength={challenge.wordLength}
+        hintKey="pages.daily.play.hint"
+      />
+    );
   })();
 
   return (
     <div className="flex flex-col items-center gap-6">
-      <p role="status" aria-live="polite" className="text-center text-sm text-muted-foreground">
-        {statusMessage}
-      </p>
+      {statusBar}
       {mode !== 'alreadyPlayed' && (
         <GameBoard rows={rows} activeRowIndex={activeRowIndex} shakingRowIndex={shakingRowIndex} />
       )}
@@ -232,6 +289,18 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
         <Link to="/profile" className="text-sm font-medium text-primary hover:underline">
           {t('pages.daily.play.viewProfile')}
         </Link>
+      )}
+      {showResultModal && answer && won !== null && finalGuessNumber !== null && (
+        <GameResultModal
+          open
+          mode="daily"
+          won={won}
+          guessNumber={finalGuessNumber}
+          answer={answer}
+          onGoHome={() => {
+            void navigate('/');
+          }}
+        />
       )}
     </div>
   );
