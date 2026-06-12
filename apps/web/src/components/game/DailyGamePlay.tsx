@@ -87,8 +87,13 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
 
   useEffect(() => {
     return () => {
+      if (shakeTimeoutRef.current !== null) {
+        clearTimeout(shakeTimeoutRef.current);
+        shakeTimeoutRef.current = null;
+      }
       if (modalTimeoutRef.current !== null) {
         clearTimeout(modalTimeoutRef.current);
+        modalTimeoutRef.current = null;
       }
     };
   }, []);
