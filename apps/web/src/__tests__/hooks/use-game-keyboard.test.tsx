@@ -86,6 +86,15 @@ describe('useGameKeyboard', () => {
     expect(onInput).toHaveBeenNthCalledWith(2, 'Ś');
   });
 
+  it('ignores alt-modified action keys', () => {
+    ({ unmount } = renderHook(() => useGameKeyboard(onInput)));
+
+    dispatchKeyDown('Enter', document.body, { altKey: true });
+    dispatchKeyDown('Backspace', document.body, { altKey: true });
+
+    expect(onInput).not.toHaveBeenCalled();
+  });
+
   it('ignores keydown when focus is in an input', () => {
     ({ unmount } = renderHook(() => useGameKeyboard(onInput)));
 

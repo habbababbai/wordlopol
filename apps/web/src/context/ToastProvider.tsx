@@ -31,21 +31,28 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       timersRef.current.delete(id);
     }
 
-    let shouldRemove = false;
     setToasts((current) => {
       const toast = current.find((t) => t.id === id);
       if (!toast || toast.exiting) {
         return current;
       }
-      shouldRemove = true;
       return current.map((t) => (t.id === id ? { ...t, exiting: true } : t));
     });
 
-    if (!shouldRemove) return;
+    const fadeKey = `${id}:fade`;
+    if (timersRef.current.has(fadeKey)) {
+      return;
+    }
 
-    setTimeout(() => {
-      setToasts((current) => current.filter((t) => t.id !== id));
+    const fadeTimer = setTimeout(() => {
+      timersRef.current.delete(fadeKey);
+      setToasts((current) =>
+        current.some((t) => t.id === id && t.exiting)
+          ? current.filter((t) => t.id !== id)
+          : current,
+      );
     }, TOAST_FADE_MS);
+    timersRef.current.set(fadeKey, fadeTimer);
   }, []);
 
   const toast = useCallback(

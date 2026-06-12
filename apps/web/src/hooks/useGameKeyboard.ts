@@ -40,7 +40,8 @@ export function useGameKeyboard(
       if (!mapped) return;
 
       const isAltGraph = event.getModifierState?.('AltGraph') ?? false;
-      if (event.metaKey || (event.ctrlKey && !isAltGraph)) {
+      const isAltModifiedAction = event.altKey && !isAltGraph && event.key.length !== 1;
+      if (event.metaKey || (event.ctrlKey && !isAltGraph) || isAltModifiedAction) {
         return;
       }
 
