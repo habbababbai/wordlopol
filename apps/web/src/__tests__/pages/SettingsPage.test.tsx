@@ -284,14 +284,16 @@ describe('SettingsPage', () => {
   it('shows API error on display name change failure', async () => {
     const user = userEvent.setup();
     mockProfileLoaded();
-    changeDisplayNameMock.mockRejectedValueOnce(new ApiError(400, 'Display name unchanged'));
+    changeDisplayNameMock.mockRejectedValueOnce(
+      new ApiError(400, 'Display name unchanged', 'DISPLAY_NAME_UNCHANGED'),
+    );
 
     renderWithProviders(<SettingsPage />, { route: '/settings' });
 
     await user.click(screen.getByRole('button', { name: 'Zapisz nazwę' }));
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Display name unchanged');
+      expect(screen.getByRole('alert')).toHaveTextContent('Nazwa wyświetlana jest taka sama');
     });
   });
 });

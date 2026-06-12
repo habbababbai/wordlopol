@@ -132,7 +132,7 @@ authRouter.post(
     const refreshToken = req.cookies[REFRESH_COOKIE_NAME] as string | undefined;
 
     if (!refreshToken) {
-      throw new HttpError(401, 'Missing refresh token');
+      throw new HttpError(401, 'MISSING_REFRESH_TOKEN');
     }
 
     const session = await refreshSession(refreshToken);

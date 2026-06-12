@@ -62,7 +62,7 @@ export async function getOrCreateDailyPool(dateKey: string) {
 
   const words = await loadFiveLetterWords();
   if (words.length === 0) {
-    throw new HttpError(503, 'Dictionary not loaded');
+    throw new HttpError(503, 'DICTIONARY_NOT_LOADED');
   }
 
   const poolSize = Math.min(INFINITE_POOL_SIZE, words.length);
@@ -89,7 +89,7 @@ export async function getOrCreateDailyPool(dateKey: string) {
     }
 
     if (wordId === undefined) {
-      throw new HttpError(503, 'Dictionary not loaded');
+      throw new HttpError(503, 'DICTIONARY_NOT_LOADED');
     }
 
     selectedWordIds.add(wordId);
@@ -152,12 +152,12 @@ async function pickNextPoolEntry(
   }
 
   if (nextOrder === null) {
-    throw new HttpError(503, 'Dictionary not loaded');
+    throw new HttpError(503, 'DICTIONARY_NOT_LOADED');
   }
 
   const entry = pool.find((poolEntry) => poolEntry.order === nextOrder);
   if (!entry) {
-    throw new HttpError(503, 'Dictionary not loaded');
+    throw new HttpError(503, 'DICTIONARY_NOT_LOADED');
   }
 
   return { entry, cycleNumber: activeCycle };
@@ -250,7 +250,7 @@ export async function completeInfiniteWord(
       });
     } catch (error) {
       if (isUniqueConstraintError(error)) {
-        throw new HttpError(409, 'Word already completed');
+        throw new HttpError(409, 'WORD_ALREADY_COMPLETED');
       }
       throw error;
     }
@@ -315,7 +315,7 @@ async function claimInfiniteGuessSlot(
   });
 
   if (updated.count !== 1) {
-    throw new HttpError(409, 'Concurrent guess conflict');
+    throw new HttpError(409, 'CONCURRENT_GUESS_CONFLICT');
   }
 }
 
@@ -334,11 +334,11 @@ export async function submitInfiniteGuess(
   });
 
   if (!playerDay?.currentWordId || !playerDay.word) {
-    throw new HttpError(400, 'No word in progress');
+    throw new HttpError(400, 'NO_WORD_IN_PROGRESS');
   }
 
   if (playerDay.guessCount >= MAX_GUESSES) {
-    throw new HttpError(400, 'Game already finished');
+    throw new HttpError(400, 'GAME_ALREADY_FINISHED');
   }
 
   const answer = playerDay.word.text;

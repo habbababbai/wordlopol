@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
 import { errorHandler } from '../middleware/error-handler.js';
 import { requestId } from '../middleware/request-id.js';
+import { expectApiError } from './helpers/expect-api-error.js';
 
 vi.mock('../lib/logger.js', () => ({
   logger: {
@@ -24,7 +25,7 @@ describe('errorHandler', () => {
 
     const res = await request(app).get('/boom').expect(500);
 
-    expect(res.body).toEqual({ error: 'Internal server error' });
+    expect(res.body).toEqual(expectApiError('INTERNAL_ERROR'));
     expect(logger.error).toHaveBeenCalledWith(
       { err: expect.any(Error), requestId: expect.any(String) },
       'Unhandled API error',

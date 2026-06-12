@@ -77,7 +77,9 @@ describe('RegisterPage', () => {
 
   it('shows API error message', async () => {
     const user = userEvent.setup();
-    mutateAsyncMock.mockRejectedValueOnce(new ApiError(409, 'Email already registered'));
+    mutateAsyncMock.mockRejectedValueOnce(
+      new ApiError(409, 'Email already registered', 'EMAIL_ALREADY_REGISTERED'),
+    );
 
     renderWithProviders(<RegisterPage />, { route: '/register' });
 
@@ -88,7 +90,9 @@ describe('RegisterPage', () => {
     await user.click(screen.getByRole('button', { name: 'Zarejestruj się' }));
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Email already registered');
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Ten adres e-mail jest już zarejestrowany',
+      );
     });
   });
 });

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Response } from 'express';
 import { prisma } from '../lib/prisma.js';
+import { HttpError } from '../lib/http-error.js';
 import {
   createRefreshToken,
   hashToken,
@@ -26,6 +27,16 @@ describe('tokens', () => {
     const token = signAccessToken(userId);
 
     expect(verifyAccessToken(token)).toEqual({ userId });
+  });
+
+  it('throws INVALID_ACCESS_TOKEN for invalid access tokens', () => {
+    expect(() => verifyAccessToken('not-a-valid-token')).toThrow(HttpError);
+
+    try {
+      verifyAccessToken('not-a-valid-token');
+    } catch (error) {
+      expect(error).toMatchObject({ statusCode: 401, code: 'INVALID_ACCESS_TOKEN' });
+    }
   });
 
   it('stores refresh token hash, not plaintext', async () => {

@@ -131,17 +131,13 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
         }
       }
     } catch (error) {
-      if (error instanceof ApiError && error.status === 409) {
+      if (error instanceof ApiError && error.code === 'ALREADY_PLAYED_TODAY') {
         setMode('alreadyPlayed');
         saveDailyAlreadyPlayed(challenge.date);
         return;
       }
 
-      if (
-        error instanceof ApiError &&
-        error.status === 400 &&
-        error.message === 'Not in dictionary'
-      ) {
+      if (error instanceof ApiError && error.code === 'NOT_IN_DICTIONARY') {
         toast({ message: t('pages.daily.play.invalidWord'), variant: 'warning' });
         return;
       }

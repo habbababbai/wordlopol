@@ -1,4 +1,5 @@
 export * from './api-version.js';
+export * from './api-error.js';
 export * from './types.js';
 export * from './auth.js';
 export * from './health.js';

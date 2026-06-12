@@ -30,7 +30,7 @@ export async function getOrCreateDailyChallenge(dateKey: string) {
     where: { length: WORD_LENGTH },
   });
   if (wordCount === 0) {
-    throw new HttpError(503, 'Dictionary not loaded');
+    throw new HttpError(503, 'DICTIONARY_NOT_LOADED');
   }
 
   const index = pickWordIndexForDate(dateKey, wordCount);
@@ -41,7 +41,7 @@ export async function getOrCreateDailyChallenge(dateKey: string) {
   });
 
   if (!word) {
-    throw new HttpError(503, 'Dictionary not loaded');
+    throw new HttpError(503, 'DICTIONARY_NOT_LOADED');
   }
 
   try {
@@ -95,7 +95,7 @@ async function recordDailyCompletionInTx(
     });
   } catch (error) {
     if (isUniqueConstraintError(error)) {
-      throw new HttpError(409, 'Already played today');
+      throw new HttpError(409, 'ALREADY_PLAYED_TODAY');
     }
     throw error;
   }
@@ -131,7 +131,7 @@ export async function submitDailyGuess(
 
   if (!userId) {
     if (!options.guestSessionId) {
-      throw new HttpError(401, 'Guest session required');
+      throw new HttpError(401, 'GUEST_SESSION_REQUIRED');
     }
 
     const guessNumber = await incrementGuestDailyGuess(options.guestSessionId, dateKey);
@@ -155,7 +155,7 @@ export async function submitDailyGuess(
       },
     });
     if (existingResult) {
-      throw new HttpError(409, 'Already played today');
+      throw new HttpError(409, 'ALREADY_PLAYED_TODAY');
     }
 
     const playerDay = await tx.dailyPlayerDay.upsert({
@@ -165,7 +165,7 @@ export async function submitDailyGuess(
     });
 
     if (playerDay.guessCount >= MAX_GUESSES) {
-      throw new HttpError(400, 'Game already finished');
+      throw new HttpError(400, 'GAME_ALREADY_FINISHED');
     }
 
     const guessNumber = playerDay.guessCount + 1;
@@ -176,7 +176,7 @@ export async function submitDailyGuess(
       data: { guessCount: guessNumber },
     });
     if (claimed.count !== 1) {
-      throw new HttpError(409, 'Concurrent guess conflict');
+      throw new HttpError(409, 'CONCURRENT_GUESS_CONFLICT');
     }
 
     if (finished) {

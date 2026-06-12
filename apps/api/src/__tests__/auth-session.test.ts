@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { signAccessToken } from '../lib/tokens.js';
+import { expectApiError } from './helpers/expect-api-error.js';
 import {
   apiPath,
   createTestAgent,
@@ -45,7 +46,7 @@ describe('auth session endpoints', () => {
 
     const refreshRes = await agent.post(apiPath('/auth/refresh'));
     expect(refreshRes.status).toBe(401);
-    expect(refreshRes.body).toEqual({ error: 'Missing refresh token' });
+    expect(refreshRes.body).toEqual(expectApiError('MISSING_REFRESH_TOKEN'));
   });
 
   it('logout-all revokes every refresh session for the user', async () => {

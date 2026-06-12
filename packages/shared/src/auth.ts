@@ -4,10 +4,6 @@ export interface MessageResponseDto {
   message: string;
 }
 
-export interface ApiErrorResponseDto {
-  error: string;
-}
-
 export interface DevTokenResponseDto {
   devToken?: string;
   devAccessToken?: string;

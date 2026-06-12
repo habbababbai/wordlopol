@@ -5,6 +5,37 @@
     "cancel": "Anuluj",
     "errors": {
       "generic": "Coś poszło nie tak. Spróbuj ponownie."
+    },
+    "apiErrors": {
+      "ALREADY_PLAYED_TODAY": "Dzisiejszą grę już ukończyłeś",
+      "CONCURRENT_GUESS_CONFLICT": "Wystąpił konflikt — spróbuj ponownie",
+      "DICTIONARY_NOT_LOADED": "Słownik nie jest dostępny",
+      "DISPLAY_NAME_UNCHANGED": "Nazwa wyświetlana jest taka sama",
+      "EMAIL_ALREADY_REGISTERED": "Ten adres e-mail jest już zarejestrowany",
+      "EMAIL_DELIVERY_FAILED": "Nie udało się wysłać wiadomości e-mail",
+      "EMAIL_NOT_VERIFIED": "Potwierdź adres e-mail przed logowaniem",
+      "EMAIL_UNCHANGED": "Nowy adres e-mail jest taki sam",
+      "GAME_ALREADY_FINISHED": "Gra została już zakończona",
+      "GUEST_SESSION_REQUIRED": "Wymagana sesja gościa",
+      "GUESS_WRONG_LENGTH": "Słowo musi mieć 5 liter",
+      "INTERNAL_ERROR": "Coś poszło nie tak. Spróbuj ponownie.",
+      "INVALID_ACCESS_TOKEN": "Nieprawidłowy token dostępu",
+      "INVALID_CSRF_TOKEN": "Nieprawidłowy token CSRF",
+      "INVALID_EMAIL_CHANGE_TOKEN": "Link do zmiany e-mail wygasł lub jest nieprawidłowy",
+      "INVALID_EMAIL_OR_PASSWORD": "Nieprawidłowy e-mail lub hasło",
+      "INVALID_PASSWORD": "Nieprawidłowe hasło",
+      "INVALID_REFRESH_TOKEN": "Sesja wygasła — zaloguj się ponownie",
+      "INVALID_RESET_TOKEN": "Link do resetu hasła wygasł lub jest nieprawidłowy",
+      "INVALID_VERIFICATION_TOKEN": "Link weryfikacyjny wygasł lub jest nieprawidłowy",
+      "MISSING_REFRESH_TOKEN": "Brak tokenu odświeżania",
+      "NOT_FOUND": "Nie znaleziono",
+      "NOT_IN_DICTIONARY": "Słowo nie występuje w słowniku",
+      "NO_WORD_IN_PROGRESS": "Brak słowa w trakcie gry",
+      "TOO_MANY_REQUESTS": "Zbyt wiele żądań — spróbuj ponownie później",
+      "UNAUTHORIZED": "Wymagane logowanie",
+      "USER_NOT_FOUND": "Nie znaleziono użytkownika",
+      "VALIDATION_ERROR": "Nieprawidłowe dane",
+      "WORD_ALREADY_COMPLETED": "To słowo zostało już ukończone"
     }
   },
   "game": {

@@ -5,6 +5,7 @@ import { prisma } from '../lib/prisma.js';
 import { GUEST_DAILY_SESSION_COOKIE } from '../lib/guest-daily-session.js';
 import { dateKeyToUtcDate, getCalendarDateKey } from '../lib/daily-date.js';
 import { getOrCreateDailyChallenge } from '../services/daily.js';
+import { expectApiError } from './helpers/expect-api-error.js';
 import {
   apiPath,
   createTestAgent,
@@ -69,7 +70,7 @@ describe('POST /daily/guess', () => {
     const agent = await createTestAgent();
     const res = await agent.post(apiPath('/daily/guess')).send({ guess: 'mleko' }).expect(401);
 
-    expect(res.body).toEqual({ error: 'Guest session required' });
+    expect(res.body).toEqual(expectApiError('GUEST_SESSION_REQUIRED'));
   });
 
   it('tracks guest guess count server-side across requests', async () => {
@@ -96,7 +97,7 @@ describe('POST /daily/guess', () => {
 
     const res = await agent.post(apiPath('/daily/guess')).send({ guess: 'zzzzz' }).expect(400);
 
-    expect(res.body).toEqual({ error: 'Not in dictionary' });
+    expect(res.body).toEqual(expectApiError('NOT_IN_DICTIONARY'));
   });
 
   it('rejects guesses with the wrong length', async () => {
@@ -107,7 +108,7 @@ describe('POST /daily/guess', () => {
 
     const res = await agent.post(apiPath('/daily/guess')).send({ guess: 'ab' }).expect(400);
 
-    expect(res.body).toEqual({ error: 'Guess must be 5 letters' });
+    expect(res.body).toEqual(expectApiError('GUESS_WRONG_LENGTH'));
   });
 
   it('tracks guess count server-side for authenticated users', async () => {
@@ -197,7 +198,7 @@ describe('POST /daily/guess', () => {
       .send({ guess: answer })
       .expect(409);
 
-    expect(res.body).toEqual({ error: 'Already played today' });
+    expect(res.body).toEqual(expectApiError('ALREADY_PLAYED_TODAY'));
   });
 
   it('records a loss after the sixth guess for registered users', async () => {

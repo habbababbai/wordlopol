@@ -3,6 +3,7 @@ import { MAX_GUESSES } from '@wordlopol/shared';
 import { signAccessToken } from '../lib/tokens.js';
 import { prisma } from '../lib/prisma.js';
 import { dateKeyToUtcDate, getCalendarDateKey } from '../lib/daily-date.js';
+import { expectApiError } from './helpers/expect-api-error.js';
 import {
   apiPath,
   createTestAgent,
@@ -38,7 +39,7 @@ describe('POST /infinite/guess', () => {
     const agent = await createTestAgent();
     const res = await agent.post(apiPath('/infinite/guess')).send({ guess: 'mleko' }).expect(401);
 
-    expect(res.body).toEqual({ error: 'Unauthorized' });
+    expect(res.body).toEqual(expectApiError('UNAUTHORIZED'));
   });
 
   it('returns 403 for unverified users', async () => {
@@ -52,7 +53,7 @@ describe('POST /infinite/guess', () => {
       .send({ guess: 'mleko' })
       .expect(403);
 
-    expect(res.body).toEqual({ error: 'Email not verified' });
+    expect(res.body).toEqual(expectApiError('EMAIL_NOT_VERIFIED'));
   });
 
   it('returns 400 when no word is in progress', async () => {
@@ -67,7 +68,7 @@ describe('POST /infinite/guess', () => {
       .send({ guess: 'mleko' })
       .expect(400);
 
-    expect(res.body).toEqual({ error: 'No word in progress' });
+    expect(res.body).toEqual(expectApiError('NO_WORD_IN_PROGRESS'));
   });
 
   it('evaluates a guess without revealing the answer mid-game', async () => {
@@ -213,6 +214,6 @@ describe('POST /infinite/guess', () => {
       .send({ guess: 'zzzzz' })
       .expect(400);
 
-    expect(res.body).toEqual({ error: 'Not in dictionary' });
+    expect(res.body).toEqual(expectApiError('NOT_IN_DICTIONARY'));
   });
 });

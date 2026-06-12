@@ -55,7 +55,7 @@ export async function register(data: RegisterRequestDto): Promise<DevMessageResp
     });
   } catch (error) {
     if (isUniqueConstraintError(error)) {
-      throw new HttpError(409, 'Email already registered');
+      throw new HttpError(409, 'EMAIL_ALREADY_REGISTERED');
     }
 
     throw error;
@@ -75,7 +75,7 @@ export async function register(data: RegisterRequestDto): Promise<DevMessageResp
     await sendVerificationEmail(user.email, token);
   } catch {
     await prisma.user.delete({ where: { id: user.id } });
-    throw new HttpError(503, 'Email delivery failed');
+    throw new HttpError(503, 'EMAIL_DELIVERY_FAILED');
   }
 
   return withDevToken({ message: 'Verification email sent' }, token, () =>
@@ -106,7 +106,7 @@ export async function verifyEmail(token: string): Promise<MessageResponseDto> {
   try {
     emailChange = verifyEmailChangeToken(token);
   } catch {
-    throw new HttpError(400, 'Invalid or expired verification token');
+    throw new HttpError(400, 'INVALID_VERIFICATION_TOKEN');
   }
 
   const { userId, newEmail } = emailChange;
@@ -114,7 +114,7 @@ export async function verifyEmail(token: string): Promise<MessageResponseDto> {
   const taken = await prisma.user.findUnique({ where: { email: normalizedNewEmail } });
 
   if (taken) {
-    throw new HttpError(409, 'Email already registered');
+    throw new HttpError(409, 'EMAIL_ALREADY_REGISTERED');
   }
 
   try {
@@ -124,7 +124,7 @@ export async function verifyEmail(token: string): Promise<MessageResponseDto> {
     });
   } catch (error) {
     if (isUniqueConstraintError(error)) {
-      throw new HttpError(409, 'Email already registered');
+      throw new HttpError(409, 'EMAIL_ALREADY_REGISTERED');
     }
 
     throw error;
@@ -139,11 +139,11 @@ export async function login(data: LoginRequestDto): Promise<LoginResult> {
   const user = await prisma.user.findUnique({ where: { email: normalizeEmail(data.email) } });
 
   if (!user || !(await bcrypt.compare(data.password, user.passwordHash))) {
-    throw new HttpError(401, 'Invalid email or password');
+    throw new HttpError(401, 'INVALID_EMAIL_OR_PASSWORD');
   }
 
   if (!user.emailVerifiedAt) {
-    throw new HttpError(403, 'Email not verified');
+    throw new HttpError(403, 'EMAIL_NOT_VERIFIED');
   }
 
   const accessToken = signAccessToken(user.id);
@@ -156,7 +156,7 @@ export async function refreshSession(refreshToken: string): Promise<RefreshResul
   const result = await rotateRefreshToken(refreshToken);
 
   if (!result) {
-    throw new HttpError(401, 'Invalid or expired refresh token');
+    throw new HttpError(401, 'INVALID_REFRESH_TOKEN');
   }
 
   return {
@@ -245,7 +245,7 @@ export async function resetPassword(
   });
 
   if (!record || record.expiresAt <= new Date()) {
-    throw new HttpError(400, 'Invalid or expired reset token');
+    throw new HttpError(400, 'INVALID_RESET_TOKEN');
   }
 
   const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
@@ -268,7 +268,7 @@ export async function changePassword(
   const user = await prisma.user.findUnique({ where: { id: userId } });
 
   if (!user || !(await bcrypt.compare(currentPassword, user.passwordHash))) {
-    throw new HttpError(401, 'Invalid password');
+    throw new HttpError(401, 'INVALID_PASSWORD');
   }
 
   const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
@@ -289,17 +289,17 @@ export async function requestEmailChange(
   const user = await prisma.user.findUnique({ where: { id: userId } });
 
   if (!user) {
-    throw new HttpError(404, 'User not found');
+    throw new HttpError(404, 'USER_NOT_FOUND');
   }
 
   if (user.email === normalizedNewEmail) {
-    throw new HttpError(400, 'Email unchanged');
+    throw new HttpError(400, 'EMAIL_UNCHANGED');
   }
 
   const taken = await prisma.user.findUnique({ where: { email: normalizedNewEmail } });
 
   if (taken) {
-    throw new HttpError(409, 'Email already registered');
+    throw new HttpError(409, 'EMAIL_ALREADY_REGISTERED');
   }
 
   const token = signEmailChangeToken(userId, normalizedNewEmail);
@@ -315,11 +315,11 @@ export async function changeDisplayName(
   const user = await prisma.user.findUnique({ where: { id: userId } });
 
   if (!user) {
-    throw new HttpError(404, 'User not found');
+    throw new HttpError(404, 'USER_NOT_FOUND');
   }
 
   if (user.displayName === displayName) {
-    throw new HttpError(400, 'Display name unchanged');
+    throw new HttpError(400, 'DISPLAY_NAME_UNCHANGED');
   }
 
   const updated = await prisma.user.update({
@@ -334,7 +334,7 @@ export async function deleteAccount(userId: string, password: string): Promise<M
   const user = await prisma.user.findUnique({ where: { id: userId } });
 
   if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-    throw new HttpError(401, 'Invalid password');
+    throw new HttpError(401, 'INVALID_PASSWORD');
   }
 
   await prisma.user.delete({ where: { id: userId } });

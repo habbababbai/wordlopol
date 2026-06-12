@@ -11,7 +11,7 @@ export async function getUserProfile(userId: string): Promise<UserProfileRespons
   });
 
   if (!user) {
-    throw new HttpError(404, 'User not found');
+    throw new HttpError(404, 'USER_NOT_FOUND');
   }
 
   return {

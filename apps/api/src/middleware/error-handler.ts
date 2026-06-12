@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
+import { formatApiErrorResponse } from '@wordlopol/shared';
 import { z } from 'zod';
 
 import { HttpError } from '../lib/http-error.js';
@@ -17,21 +18,21 @@ export function errorHandler(
   }
 
   if (isInvalidCsrfTokenError(error)) {
-    res.status(403).json({ error: 'Invalid CSRF token' });
+    res.status(403).json(formatApiErrorResponse('INVALID_CSRF_TOKEN'));
     return;
   }
 
   if (error instanceof z.ZodError) {
-    res.status(400).json({ error: 'Invalid request' });
+    res.status(400).json(formatApiErrorResponse('VALIDATION_ERROR'));
     return;
   }
 
   if (error instanceof HttpError) {
-    res.status(error.statusCode).json({ error: error.message });
+    res.status(error.statusCode).json(formatApiErrorResponse(error.code, error.message));
     return;
   }
 
   logger.error({ err: error, requestId: req.requestId }, 'Unhandled API error');
 
-  res.status(500).json({ error: 'Internal server error' });
+  res.status(500).json(formatApiErrorResponse('INTERNAL_ERROR'));
 }

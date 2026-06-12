@@ -128,7 +128,9 @@ describe('InfiniteGamePlay', () => {
 
   it('shows invalid-word toast on dictionary miss', async () => {
     const user = userEvent.setup();
-    mutateAsyncMock.mockRejectedValueOnce(new ApiError(400, 'Not in dictionary'));
+    mutateAsyncMock.mockRejectedValueOnce(
+      new ApiError(400, 'Not in dictionary', 'NOT_IN_DICTIONARY'),
+    );
 
     const { container } = renderWithProviders(
       <InfiniteGamePlay word={word} onNextWord={onNextWordMock} />,

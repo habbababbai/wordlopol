@@ -13,7 +13,20 @@ All **application** routes live under `/v1` on the server (`/v1/auth`, `/v1/dail
 
 Cookie paths (refresh, CSRF): in **development**, refresh cookies are set on both `/api/v1/auth` and `/v1/auth` so Postman against `:3001/v1` and the browser via `:5173/api/v1` both work without env overrides. In **production** and **test**, a single path applies (`/api/v1/auth` or `/v1/auth` respectively).
 
-All JSON request/response bodies unless noted. Errors: `{ "error": "<message>" }`.
+All JSON request/response bodies unless noted.
+
+**Errors** use a stable machine-readable `code` plus an English `message` (for logs and dev tools). Clients should map `code` to localized copy; the API does not translate strings.
+
+```json
+{
+  "error": {
+    "code": "EMAIL_NOT_VERIFIED",
+    "message": "Email not verified"
+  }
+}
+```
+
+Canonical codes and default messages live in [`packages/shared/src/api-error.ts`](../../../packages/shared/src/api-error.ts).
 
 ---
 
@@ -276,10 +289,13 @@ On completion, authenticated users get a `GameResult` row and `UserStats` update
 **503** — dictionary empty (no words imported)
 
 ```json
-{ "error": "Dictionary not loaded" }
+{
+  "error": {
+    "code": "DICTIONARY_NOT_LOADED",
+    "message": "Dictionary not loaded"
+  }
+}
 ```
-
-Responses never include the answer until the game is finished.
 
 ---
 
@@ -323,34 +339,86 @@ Same shape as daily guess (`results`, `won`, `finished`, `guessNumber`, optional
 **401** — missing or invalid Bearer token
 
 ```json
-{ "error": "Unauthorized" }
+{
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Unauthorized"
+  }
+}
 ```
 
 **403** — email not verified
 
 ```json
-{ "error": "Email not verified" }
+{
+  "error": {
+    "code": "EMAIL_NOT_VERIFIED",
+    "message": "Email not verified"
+  }
+}
 ```
 
 **503** — dictionary empty (no words imported)
 
 ```json
-{ "error": "Dictionary not loaded" }
+{
+  "error": {
+    "code": "DICTIONARY_NOT_LOADED",
+    "message": "Dictionary not loaded"
+  }
+}
 ```
 
 ---
 
-## Common error codes
+## Error codes
 
-| Status | When                                                    |
-| ------ | ------------------------------------------------------- |
-| 400    | Invalid body / expired or invalid token                 |
-| 401    | Missing or invalid Bearer / refresh token / password    |
-| 403    | Email not verified (login, infinite routes)             |
-| 404    | User not found                                          |
-| 409    | Email already registered / already played today's daily |
-| 429    | Rate limit exceeded on auth endpoints                   |
-| 503    | DB down, email delivery failed, or empty dictionary     |
+All error responses use `{ "error": { "code", "message" } }`. Use `code` for client-side i18n; treat `message` as an English fallback.
+
+| Code                         | Typical status | Default message                       | When                                        |
+| ---------------------------- | -------------- | ------------------------------------- | ------------------------------------------- |
+| `VALIDATION_ERROR`           | 400            | Invalid request                       | Request body failed Zod validation          |
+| `GUESS_WRONG_LENGTH`         | 400            | Guess must be 5 letters               | Guess length ≠ word length                  |
+| `NOT_IN_DICTIONARY`          | 400            | Not in dictionary                     | Guess not in dictionary                     |
+| `GAME_ALREADY_FINISHED`      | 400            | Game already finished                 | Guess after max attempts or completion      |
+| `NO_WORD_IN_PROGRESS`        | 400            | No word in progress                   | Infinite guess before `GET /infinite/next`  |
+| `INVALID_VERIFICATION_TOKEN` | 400            | Invalid or expired verification token | Email verify token invalid/expired          |
+| `INVALID_RESET_TOKEN`        | 400            | Invalid or expired reset token        | Password reset token invalid/expired        |
+| `EMAIL_UNCHANGED`            | 400            | Email unchanged                       | Change-email with same address              |
+| `DISPLAY_NAME_UNCHANGED`     | 400            | Display name unchanged                | Change display name to current value        |
+| `UNAUTHORIZED`               | 401            | Unauthorized                          | Missing or invalid Bearer token             |
+| `GUEST_SESSION_REQUIRED`     | 401            | Guest session required                | Guest daily guess without session cookie    |
+| `INVALID_EMAIL_OR_PASSWORD`  | 401            | Invalid email or password             | Login credentials wrong                     |
+| `INVALID_PASSWORD`           | 401            | Invalid password                      | Password confirmation wrong (change/delete) |
+| `INVALID_REFRESH_TOKEN`      | 401            | Invalid or expired refresh token      | Refresh cookie invalid/expired              |
+| `MISSING_REFRESH_TOKEN`      | 401            | Missing refresh token                 | Refresh without cookie                      |
+| `INVALID_ACCESS_TOKEN`       | 401            | Invalid access token                  | Malformed access JWT                        |
+| `INVALID_EMAIL_CHANGE_TOKEN` | 401            | Invalid email change token            | Email-change verify token invalid           |
+| `EMAIL_NOT_VERIFIED`         | 403            | Email not verified                    | Login or infinite routes before verify      |
+| `INVALID_CSRF_TOKEN`         | 403            | Invalid CSRF token                    | CSRF header/cookie mismatch                 |
+| `NOT_FOUND`                  | 404            | Not found                             | Unknown route                               |
+| `USER_NOT_FOUND`             | 404            | User not found                        | Profile/account target missing              |
+| `ALREADY_PLAYED_TODAY`       | 409            | Already played today                  | Second daily attempt (authenticated)        |
+| `EMAIL_ALREADY_REGISTERED`   | 409            | Email already registered              | Register/verify with taken email            |
+| `CONCURRENT_GUESS_CONFLICT`  | 409            | Concurrent guess conflict             | Parallel guess race                         |
+| `WORD_ALREADY_COMPLETED`     | 409            | Word already completed                | Infinite guess on completed word            |
+| `TOO_MANY_REQUESTS`          | 429            | Too many requests                     | Rate limit exceeded                         |
+| `INTERNAL_ERROR`             | 500            | Internal server error                 | Unhandled server error                      |
+| `DICTIONARY_NOT_LOADED`      | 503            | Dictionary not loaded                 | No words in database                        |
+| `EMAIL_DELIVERY_FAILED`      | 503            | Email delivery failed                 | Outbound email send failed                  |
+
+### Status summary
+
+| Status | When                                                           |
+| ------ | -------------------------------------------------------------- |
+| 400    | Invalid body, guess validation, expired token, unchanged field |
+| 401    | Missing/invalid auth, refresh, password, or guest session      |
+| 403    | Email not verified, invalid CSRF                               |
+| 404    | Unknown route or user not found                                |
+| 409    | Conflict (email taken, already played, concurrent guess)       |
+| 429    | Rate limit exceeded                                            |
+| 500    | Unhandled error                                                |
+| 503    | Dictionary empty or email delivery failed                      |
 
 ---
 

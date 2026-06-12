@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { signAccessToken } from '../lib/tokens.js';
 import { prisma } from '../lib/prisma.js';
+import { expectApiError } from './helpers/expect-api-error.js';
 import {
   apiPath,
   createTestAgent,
@@ -17,7 +18,7 @@ describe('GET /user/profile', () => {
     const agent = await createTestAgent();
     const res = await agent.get(apiPath('/user/profile')).expect(401);
 
-    expect(res.body).toEqual({ error: 'Unauthorized' });
+    expect(res.body).toEqual(expectApiError('UNAUTHORIZED'));
   });
 
   it('returns profile with zero stats for a user who has not played', async () => {

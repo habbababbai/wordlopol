@@ -6,7 +6,7 @@ export function normalizeGuessLength(rawGuess: string): string {
   const guess = rawGuess.trim().toLowerCase();
 
   if (guess.length !== WORD_LENGTH) {
-    throw new HttpError(400, `Guess must be ${WORD_LENGTH} letters`);
+    throw new HttpError(400, 'GUESS_WRONG_LENGTH', `Guess must be ${WORD_LENGTH} letters`);
   }
 
   return guess;
@@ -17,7 +17,7 @@ export async function assertGuessInDictionary(
   isInDictionary: (word: string) => Promise<boolean>,
 ): Promise<void> {
   if (!(await isInDictionary(guess))) {
-    throw new HttpError(400, 'Not in dictionary');
+    throw new HttpError(400, 'NOT_IN_DICTIONARY');
   }
 }
 
