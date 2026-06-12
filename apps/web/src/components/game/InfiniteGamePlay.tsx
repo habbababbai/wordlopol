@@ -13,6 +13,7 @@ import { getApiErrorMessage } from '@/lib/api-error-message';
 import { buildKeyStates, createEmptyRows } from '@/lib/game-board';
 
 import { GameBoard, type GameBoardRow } from './GameBoard';
+import { GameStatusBar } from './GameStatusBar';
 import { PolishKeyboard } from './PolishKeyboard';
 
 type PlayMode = 'playing' | 'wordCompleted';
@@ -158,26 +159,34 @@ export function InfiniteGamePlay({ word, onNextWord }: InfiniteGamePlayProps) {
 
   useGameKeyboard(handleInput, { enabled: !locked });
 
-  const statusMessage = (() => {
+  const statusBar = (() => {
     if (guessMutation.isPending) {
-      return t('pages.infinite.play.submitting');
+      return (
+        <GameStatusBar
+          variant="submitting"
+          currentGuess={activeRowIndex + 1}
+          maxGuesses={word.maxGuesses}
+          hintKey="pages.infinite.play.submitting"
+        />
+      );
     }
-    if (mode === 'wordCompleted' && answer) {
-      return won
-        ? t('pages.infinite.play.won', { answer })
-        : t('pages.infinite.play.lost', { answer });
+    if (mode === 'wordCompleted' && answer && won !== null) {
+      return <GameStatusBar variant="completed" won={won} answer={answer} />;
     }
-    return t('pages.infinite.play.hint', {
-      wordLength: word.wordLength,
-      maxGuesses: word.maxGuesses,
-    });
+    return (
+      <GameStatusBar
+        variant="playing"
+        currentGuess={activeRowIndex + 1}
+        maxGuesses={word.maxGuesses}
+        wordLength={word.wordLength}
+        hintKey="pages.infinite.play.hint"
+      />
+    );
   })();
 
   return (
     <div className="flex flex-col items-center gap-6">
-      <p role="status" aria-live="polite" className="text-center text-sm text-muted-foreground">
-        {statusMessage}
-      </p>
+      {statusBar}
       <GameBoard rows={rows} activeRowIndex={activeRowIndex} shakingRowIndex={shakingRowIndex} />
       <PolishKeyboard onInput={handleInput} keyStates={keyStates} disabled={locked} />
       {mode === 'wordCompleted' && (

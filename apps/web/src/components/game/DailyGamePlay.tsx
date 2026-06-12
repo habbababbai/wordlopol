@@ -19,6 +19,7 @@ import {
 } from '@/stores/daily-finished-store';
 
 import { GameBoard, type GameBoardRow } from './GameBoard';
+import { GameStatusBar } from './GameStatusBar';
 import { PolishKeyboard } from './PolishKeyboard';
 
 type PlayMode = 'playing' | 'completed' | 'alreadyPlayed';
@@ -203,27 +204,39 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
 
   useGameKeyboard(handleInput, { enabled: !locked });
 
-  const statusMessage = (() => {
+  const statusBar = (() => {
     if (guessMutation.isPending) {
-      return t('pages.daily.play.submitting');
+      return (
+        <GameStatusBar
+          variant="submitting"
+          currentGuess={activeRowIndex + 1}
+          maxGuesses={challenge.maxGuesses}
+          hintKey="pages.daily.play.submitting"
+        />
+      );
     }
     if (mode === 'alreadyPlayed') {
-      return t('pages.daily.play.alreadyPlayed');
+      return (
+        <GameStatusBar variant="alreadyPlayed" message={t('pages.daily.play.alreadyPlayed')} />
+      );
     }
-    if (mode === 'completed' && answer) {
-      return won ? t('pages.daily.play.won', { answer }) : t('pages.daily.play.lost', { answer });
+    if (mode === 'completed' && answer && won !== null) {
+      return <GameStatusBar variant="completed" won={won} answer={answer} />;
     }
-    return t('pages.daily.play.hint', {
-      wordLength: challenge.wordLength,
-      maxGuesses: challenge.maxGuesses,
-    });
+    return (
+      <GameStatusBar
+        variant="playing"
+        currentGuess={activeRowIndex + 1}
+        maxGuesses={challenge.maxGuesses}
+        wordLength={challenge.wordLength}
+        hintKey="pages.daily.play.hint"
+      />
+    );
   })();
 
   return (
     <div className="flex flex-col items-center gap-6">
-      <p role="status" aria-live="polite" className="text-center text-sm text-muted-foreground">
-        {statusMessage}
-      </p>
+      {statusBar}
       {mode !== 'alreadyPlayed' && (
         <GameBoard rows={rows} activeRowIndex={activeRowIndex} shakingRowIndex={shakingRowIndex} />
       )}

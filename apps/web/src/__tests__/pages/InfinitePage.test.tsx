@@ -79,6 +79,7 @@ describe('InfinitePage', () => {
     expect(screen.getByText('9 czerwca 2026')).toBeInTheDocument();
     expect(screen.getByText('Słowo 3 z 300')).toBeInTheDocument();
     expect(screen.getByRole('grid', { name: 'Plansza gry' })).toBeInTheDocument();
+    expect(screen.getByText('Próba 1 / 6')).toBeInTheDocument();
     expect(screen.getByText('Odgadnij słowo na 5 liter (6 prób)')).toBeInTheDocument();
   });
 });

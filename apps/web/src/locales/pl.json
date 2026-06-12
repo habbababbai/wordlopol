@@ -49,6 +49,11 @@
         "present": "Litera {{letter}}, w słowie",
         "absent": "Litera {{letter}}, nie w słowie"
       }
+    },
+    "status": {
+      "guessProgress": "Próba {{current}} / {{max}}",
+      "completedWon": "Wygrana! Słowo: {{answer}}",
+      "completedLost": "Koniec gry. Słowo: {{answer}}"
     }
   },
   "nav": {
