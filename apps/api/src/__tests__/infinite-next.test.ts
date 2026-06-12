@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WORD_LENGTH } from '@wordlopol/shared';
 import { signAccessToken } from '@/lib/tokens.js';
 import { prisma } from '@/lib/prisma.js';
@@ -14,7 +14,33 @@ import {
   seedDictionaryWords,
 } from '@/test/helpers.js';
 
+/** Stable date where the 5-word test pool builds reliably (see infinite-pool.test.ts). */
+const TEST_DATE_KEY = '2026-06-07';
+
+/** Fixed user id — cycle 0/1 shuffles differ for this id on TEST_DATE_KEY. */
+const PROGRESSION_USER_ID = '00000000-0000-4000-8000-000000000001';
+
+vi.mock('@/lib/daily-date.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/daily-date.js')>();
+  return {
+    ...actual,
+    getCalendarDateKey: () => TEST_DATE_KEY,
+  };
+});
+
 const TEST_POOL_WORDS = ['wążka', 'mleko', 'aabaa', 'aacaa', 'aadaa'];
+
+async function createProgressionTestUser() {
+  return prisma.user.create({
+    data: {
+      id: PROGRESSION_USER_ID,
+      email: 'infinite-progression@test.example',
+      passwordHash: 'test-password-hash',
+      displayName: 'Test Player',
+      emailVerifiedAt: new Date(),
+    },
+  });
+}
 
 describe('GET /infinite/next', () => {
   beforeEach(async () => {
@@ -30,7 +56,7 @@ describe('GET /infinite/next', () => {
 
   it('returns 403 for unverified users', async () => {
     const user = await createTestUser({ emailVerified: false });
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, false);
 
     const agent = await createTestAgent();
     const res = await agent
@@ -44,7 +70,7 @@ describe('GET /infinite/next', () => {
   it('returns infinite metadata without the answer', async () => {
     await seedDictionaryWords(TEST_POOL_WORDS);
     const { user } = await createVerifiedUserWithPassword();
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, true);
 
     const agent = await createTestAgent();
     const res = await agent
@@ -65,7 +91,7 @@ describe('GET /infinite/next', () => {
   it('returns the same in-progress word on repeated requests', async () => {
     await seedDictionaryWords(TEST_POOL_WORDS);
     const { user } = await createVerifiedUserWithPassword();
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, true);
 
     const agent = await createTestAgent();
     const first = await agent
@@ -92,7 +118,7 @@ describe('GET /infinite/next', () => {
 
   it('returns 503 when the dictionary is empty', async () => {
     const { user } = await createVerifiedUserWithPassword();
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, true);
 
     const agent = await createTestAgent();
     const res = await agent
@@ -160,7 +186,7 @@ describe('infinite word progression', () => {
 
   it('serves words in a different order on the next cycle', async () => {
     await seedDictionaryWords(TEST_POOL_WORDS);
-    const { user } = await createVerifiedUserWithPassword();
+    const user = await createProgressionTestUser();
 
     const cycle0: number[] = [];
     for (let index = 0; index < 5; index++) {

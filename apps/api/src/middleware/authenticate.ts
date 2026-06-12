@@ -12,8 +12,9 @@ export function authenticate(req: Request, res: Response, next: NextFunction): v
   }
 
   try {
-    const { userId } = verifyAccessToken(header.slice(7));
+    const { userId, emailVerified } = verifyAccessToken(header.slice(7));
     req.userId = userId;
+    req.emailVerified = emailVerified;
     next();
   } catch {
     sendApiError(res, 401, 'UNAUTHORIZED');

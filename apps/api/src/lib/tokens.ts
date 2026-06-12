@@ -12,6 +12,7 @@ export const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 export interface AccessTokenPayload {
   userId: string;
+  emailVerified: boolean;
 }
 
 export interface RefreshTokenResult {
@@ -33,8 +34,8 @@ function generateSecureToken(): string {
   return randomBytes(32).toString('hex');
 }
 
-export function signAccessToken(userId: string): string {
-  return jwt.sign({}, env.JWT_ACCESS_SECRET, {
+export function signAccessToken(userId: string, emailVerified: boolean): string {
+  return jwt.sign({ emailVerified }, env.JWT_ACCESS_SECRET, {
     subject: userId,
     expiresIn: ACCESS_TOKEN_TTL_SEC,
   });
@@ -84,7 +85,10 @@ export function verifyAccessToken(token: string): AccessTokenPayload {
     throw new HttpError(401, 'INVALID_ACCESS_TOKEN');
   }
 
-  return { userId: payload.sub };
+  return {
+    userId: payload.sub,
+    emailVerified: payload.emailVerified === true,
+  };
 }
 
 function getRefreshCookiePaths(): string[] {
@@ -161,11 +165,16 @@ export async function rotateRefreshToken(oldToken: string): Promise<RotateRefres
     return null;
   }
 
+  const user = await prisma.user.findUnique({
+    where: { id: existing.userId },
+    select: { emailVerifiedAt: true },
+  });
+
   const { token: refreshToken } = await createRefreshToken(existing.userId);
 
   return {
     userId: existing.userId,
-    accessToken: signAccessToken(existing.userId),
+    accessToken: signAccessToken(existing.userId, user?.emailVerifiedAt != null),
     refreshToken,
   };
 }

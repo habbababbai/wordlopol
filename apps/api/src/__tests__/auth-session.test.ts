@@ -57,7 +57,7 @@ describe('auth session endpoints', () => {
     await deviceA.post(apiPath('/auth/login')).send({ email: user.email, password });
     await deviceB.post(apiPath('/auth/login')).send({ email: user.email, password });
 
-    const accessToken = signAccessToken(user.id);
+    const accessToken = signAccessToken(user.id, true);
 
     await deviceA
       .post(apiPath('/auth/logout-all'))

@@ -23,7 +23,7 @@ describe('GET /user/profile', () => {
 
   it('returns profile with zero stats for a user who has not played', async () => {
     const { user } = await createVerifiedUserWithPassword();
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, true);
 
     const agent = await createTestAgent();
     const res = await agent
@@ -50,7 +50,7 @@ describe('GET /user/profile', () => {
 
   it('returns persisted stats for a user who has played', async () => {
     const { user } = await createVerifiedUserWithPassword();
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, true);
 
     await prisma.userStats.create({
       data: {

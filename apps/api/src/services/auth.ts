@@ -79,7 +79,7 @@ export async function register(data: RegisterRequestDto): Promise<DevMessageResp
   }
 
   return withDevToken({ message: 'Verification email sent' }, token, () =>
-    signAccessToken(user.id),
+    signAccessToken(user.id, false),
   );
 }
 
@@ -146,7 +146,7 @@ export async function login(data: LoginRequestDto): Promise<LoginResult> {
     throw new HttpError(403, 'EMAIL_NOT_VERIFIED');
   }
 
-  const accessToken = signAccessToken(user.id);
+  const accessToken = signAccessToken(user.id, true);
   const { token: refreshToken } = await createRefreshToken(user.id);
 
   return { accessToken, refreshToken, user: toUserProfile(user) };

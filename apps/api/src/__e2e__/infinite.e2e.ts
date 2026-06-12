@@ -19,7 +19,7 @@ describe('e2e: GET /infinite/next', () => {
   it('returns infinite metadata over real http for a verified user', async () => {
     await seedDictionaryWords(['wążka', 'mleko', 'aabaa', 'aacaa', 'aadaa']);
     const { user } = await createVerifiedUserWithPassword();
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, true);
 
     const res = await request(baseUrl)
       .get(apiPath('/infinite/next'))

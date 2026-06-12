@@ -44,7 +44,7 @@ describe('POST /infinite/guess', () => {
 
   it('returns 403 for unverified users', async () => {
     const user = await createTestUser({ emailVerified: false });
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, false);
 
     const agent = await createTestAgent();
     const res = await agent
@@ -59,7 +59,7 @@ describe('POST /infinite/guess', () => {
   it('returns 400 when no word is in progress', async () => {
     await seedDictionaryWords(TEST_POOL_WORDS);
     const { user } = await createVerifiedUserWithPassword();
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, true);
 
     const agent = await createTestAgent();
     const res = await agent
@@ -74,7 +74,7 @@ describe('POST /infinite/guess', () => {
   it('evaluates a guess without revealing the answer mid-game', async () => {
     await seedDictionaryWords(TEST_POOL_WORDS);
     const { user } = await createVerifiedUserWithPassword();
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, true);
     const answer = await (async () => {
       const agent = await createTestAgent();
       await agent
@@ -102,7 +102,7 @@ describe('POST /infinite/guess', () => {
   it('completes the word on a win and records stats', async () => {
     await seedDictionaryWords(TEST_POOL_WORDS);
     const { user } = await createVerifiedUserWithPassword();
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, true);
 
     const agent = await createTestAgent();
     await agent.get(apiPath('/infinite/next')).set('Authorization', `Bearer ${token}`).expect(200);
@@ -147,7 +147,7 @@ describe('POST /infinite/guess', () => {
   it('allows fetching the next word after a win', async () => {
     await seedDictionaryWords(TEST_POOL_WORDS);
     const { user } = await createVerifiedUserWithPassword();
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, true);
 
     const agent = await createTestAgent();
     await agent.get(apiPath('/infinite/next')).set('Authorization', `Bearer ${token}`).expect(200);
@@ -170,7 +170,7 @@ describe('POST /infinite/guess', () => {
   it('records a loss after the sixth guess', async () => {
     await seedDictionaryWords(TEST_POOL_WORDS);
     const { user } = await createVerifiedUserWithPassword();
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, true);
 
     const agent = await createTestAgent();
     await agent.get(apiPath('/infinite/next')).set('Authorization', `Bearer ${token}`).expect(200);
@@ -203,7 +203,7 @@ describe('POST /infinite/guess', () => {
   it('rejects guesses that are not in the dictionary', async () => {
     await seedDictionaryWords(TEST_POOL_WORDS);
     const { user } = await createVerifiedUserWithPassword();
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, true);
 
     const agent = await createTestAgent();
     await agent.get(apiPath('/infinite/next')).set('Authorization', `Bearer ${token}`).expect(200);

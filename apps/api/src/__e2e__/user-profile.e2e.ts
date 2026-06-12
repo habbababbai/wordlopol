@@ -11,7 +11,7 @@ describe('e2e: GET /user/profile', () => {
 
   it('returns profile and zero stats over real http', async () => {
     const { user } = await createVerifiedUserWithPassword();
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, true);
 
     const res = await request(baseUrl)
       .get(apiPath('/user/profile'))

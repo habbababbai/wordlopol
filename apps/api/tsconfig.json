@@ -5,9 +5,9 @@
     "paths": {
       "@/*": ["src/*"]
     },
-    "outDir": "dist",
-    "rootDir": "src"
+    "noEmit": true,
+    "rootDir": "src",
+    "outDir": "dist"
   },
-  "include": ["src"],
-  "exclude": ["src/**/*.test.ts", "src/**/*.e2e.ts", "src/test/**", "src/__e2e__/**"]
+  "include": ["src"]
 }

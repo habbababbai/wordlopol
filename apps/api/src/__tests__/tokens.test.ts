@@ -1,8 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Response } from 'express';
+import jwt from 'jsonwebtoken';
+import { env } from '@/config/env.js';
 import { prisma } from '@/lib/prisma.js';
 import { HttpError } from '@/lib/http-error.js';
 import {
+  ACCESS_TOKEN_TTL_SEC,
   createRefreshToken,
   hashToken,
   revokeAllRefreshTokens,
@@ -24,9 +27,25 @@ describe('tokens', () => {
 
   it('signs and verifies access tokens', () => {
     const userId = 'user-123';
-    const token = signAccessToken(userId);
+    const token = signAccessToken(userId, true);
 
-    expect(verifyAccessToken(token)).toEqual({ userId });
+    expect(verifyAccessToken(token)).toEqual({ userId, emailVerified: true });
+  });
+
+  it('round-trips emailVerified false in access tokens', () => {
+    const token = signAccessToken('user-123', false);
+
+    expect(verifyAccessToken(token)).toEqual({ userId: 'user-123', emailVerified: false });
+  });
+
+  it('treats legacy access tokens without emailVerified as unverified', () => {
+    const userId = 'user-123';
+    const token = jwt.sign({}, env.JWT_ACCESS_SECRET, {
+      subject: userId,
+      expiresIn: ACCESS_TOKEN_TTL_SEC,
+    });
+
+    expect(verifyAccessToken(token)).toEqual({ userId, emailVerified: false });
   });
 
   it('throws INVALID_ACCESS_TOKEN for invalid access tokens', () => {
@@ -62,7 +81,10 @@ describe('tokens', () => {
       refreshToken: expect.any(String),
       accessToken: expect.any(String),
     });
-    expect(verifyAccessToken(result!.accessToken)).toEqual({ userId: user.id });
+    expect(verifyAccessToken(result!.accessToken)).toEqual({
+      userId: user.id,
+      emailVerified: false,
+    });
     expect(result!.refreshToken).not.toBe(oldToken);
 
     const oldHash = hashToken(oldToken);
@@ -73,6 +95,18 @@ describe('tokens', () => {
       where: { tokenHash: hashToken(result!.refreshToken) },
     });
     expect(newRecord?.userId).toBe(user.id);
+  });
+
+  it('embeds emailVerified in access tokens issued during refresh', async () => {
+    const user = await createTestUser({ emailVerified: true });
+    const { token: oldToken } = await createRefreshToken(user.id);
+
+    const result = await rotateRefreshToken(oldToken);
+
+    expect(verifyAccessToken(result!.accessToken)).toEqual({
+      userId: user.id,
+      emailVerified: true,
+    });
   });
 
   it('returns null when rotating an invalid refresh token', async () => {

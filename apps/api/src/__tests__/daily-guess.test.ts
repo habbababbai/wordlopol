@@ -116,7 +116,7 @@ describe('POST /daily/guess', () => {
     const answer = await getTodayAnswer();
     const wrongGuess = pickWrongWord(TEST_WORDS, answer);
     const { user } = await createVerifiedUserWithPassword();
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, true);
 
     const agent = await createTestAgent();
 
@@ -145,7 +145,7 @@ describe('POST /daily/guess', () => {
     await seedDictionaryWords(TEST_WORDS);
     const answer = await getTodayAnswer();
     const { user } = await createVerifiedUserWithPassword();
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, true);
     const dateKey = getCalendarDateKey();
 
     const agent = await createTestAgent();
@@ -183,7 +183,7 @@ describe('POST /daily/guess', () => {
     await seedDictionaryWords(TEST_WORDS);
     const answer = await getTodayAnswer();
     const { user } = await createVerifiedUserWithPassword();
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, true);
 
     const agent = await createTestAgent();
     await agent
@@ -207,7 +207,7 @@ describe('POST /daily/guess', () => {
     const wrongGuesses = TEST_WORDS.filter((word) => word !== answer).slice(0, MAX_GUESSES);
     expect(wrongGuesses.length).toBe(MAX_GUESSES);
     const { user } = await createVerifiedUserWithPassword();
-    const token = signAccessToken(user.id);
+    const token = signAccessToken(user.id, true);
 
     const agent = await createTestAgent();
 
