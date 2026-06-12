@@ -42,6 +42,8 @@
 
   --font-weight-medium: 500;
   --font-weight-normal: 400;
+
+  --app-header-height: 3.5rem;
 }
 
 .dark {

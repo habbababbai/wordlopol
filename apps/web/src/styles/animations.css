@@ -107,6 +107,28 @@
   }
 }
 
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .animate-tile-flip {
     animation: tile-flip 0.5s ease-in-out both;
@@ -138,5 +160,13 @@
 
   .amb-orb-3 {
     animation: amb-drift-3 45s ease-in-out infinite;
+  }
+
+  .animate-toast-in {
+    animation: toast-in 0.2s ease-out both;
+  }
+
+  .animate-toast-out {
+    animation: toast-out 0.2s ease-in both;
   }
 }

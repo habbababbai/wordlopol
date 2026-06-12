@@ -4,6 +4,7 @@ import type { ToastItem, ToastOptions } from '../components/ui/toast-types';
 import { ToastContext } from './toast-context';
 
 const DEFAULT_DURATION_MS = 4000;
+export const TOAST_FADE_MS = 200;
 
 function createToastId(): string {
   return crypto.randomUUID();
@@ -29,7 +30,29 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       clearTimeout(timer);
       timersRef.current.delete(id);
     }
-    setToasts((current) => current.filter((t) => t.id !== id));
+
+    setToasts((current) => {
+      const toast = current.find((t) => t.id === id);
+      if (!toast || toast.exiting) {
+        return current;
+      }
+      return current.map((t) => (t.id === id ? { ...t, exiting: true } : t));
+    });
+
+    const fadeKey = `${id}:fade`;
+    if (timersRef.current.has(fadeKey)) {
+      return;
+    }
+
+    const fadeTimer = setTimeout(() => {
+      timersRef.current.delete(fadeKey);
+      setToasts((current) =>
+        current.some((t) => t.id === id && t.exiting)
+          ? current.filter((t) => t.id !== id)
+          : current,
+      );
+    }, TOAST_FADE_MS);
+    timersRef.current.set(fadeKey, fadeTimer);
   }, []);
 
   const toast = useCallback(

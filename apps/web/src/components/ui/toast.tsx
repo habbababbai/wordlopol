@@ -3,22 +3,23 @@ import type { ToastVariant } from './toast-types';
 
 const variantStyles: Record<ToastVariant, { container: string; icon: string; glyph: string }> = {
   success: {
-    container: 'border-[var(--tile-correct)]/25 bg-[var(--tile-correct)]/10 text-foreground',
+    container: 'border-[var(--tile-correct)]/40 bg-card text-foreground shadow-md',
     icon: 'text-[var(--tile-correct)]',
     glyph: '✓',
   },
   warning: {
-    container: 'border-[var(--tile-present)]/25 bg-[var(--tile-present)]/10 text-foreground',
-    icon: 'text-[var(--tile-present)]',
+    container:
+      'border-[var(--tile-present)] bg-[var(--tile-present)] text-[var(--tile-present-fg)] shadow-md',
+    icon: 'text-[var(--tile-present-fg)]',
     glyph: '!',
   },
   error: {
-    container: 'border-destructive/25 bg-destructive/10 text-foreground',
+    container: 'border-destructive/40 bg-card text-foreground shadow-md',
     icon: 'text-destructive',
     glyph: '×',
   },
   info: {
-    container: 'border-primary/20 bg-accent text-foreground',
+    container: 'border-primary/30 bg-card text-foreground shadow-md',
     icon: 'text-primary',
     glyph: 'i',
   },

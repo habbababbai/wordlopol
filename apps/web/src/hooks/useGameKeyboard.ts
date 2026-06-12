@@ -36,13 +36,14 @@ export function useGameKeyboard(
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isEditableTarget(event.target)) return;
 
-      const isAltGraph = event.getModifierState?.('AltGraph') ?? false;
-      if (event.metaKey || (event.ctrlKey && !isAltGraph) || (event.altKey && !isAltGraph)) {
-        return;
-      }
-
       const mapped = mapKeyboardEventKey(event.key);
       if (!mapped) return;
+
+      const isAltGraph = event.getModifierState?.('AltGraph') ?? false;
+      const isAltModifiedAction = event.altKey && !isAltGraph && event.key.length !== 1;
+      if (event.metaKey || (event.ctrlKey && !isAltGraph) || isAltModifiedAction) {
+        return;
+      }
 
       event.preventDefault();
       onInput(mapped);
