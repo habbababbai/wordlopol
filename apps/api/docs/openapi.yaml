@@ -1,0 +1,936 @@
+openapi: 3.0.3
+info:
+  title: Wordlopol API
+  version: 1.0.0
+  description: |
+    HTTP API for Wordlopol (v1). Human-readable reference: [API.md](./API.md).
+
+    - Application routes are under `/v1` on the Express server.
+    - Errors use `{ error: { code, message } }` — see `ApiErrorResponse`.
+    - `POST /v1/daily/guess` requires `x-csrf-token` (double-submit cookie). Obtain via `GET /v1/auth/csrf` or login/refresh responses.
+
+servers:
+  - url: http://localhost:3001
+    description: Local Express (Postman, curl, integration tests)
+  - url: http://localhost:5173/api
+    description: Web dev proxy (`/api` → server `/v1`)
+
+tags:
+  - name: health
+  - name: auth
+  - name: user
+  - name: daily
+  - name: infinite
+
+paths:
+  /health:
+    get:
+      tags: [health]
+      summary: Infra health probe
+      responses:
+        '200':
+          description: Database connected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfraHealthOk'
+        '503':
+          description: Database unreachable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfraHealthDegraded'
+
+  /v1/health:
+    get:
+      tags: [health]
+      summary: Application health
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthOk'
+        '503':
+          description: Degraded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthDegraded'
+
+  /v1/auth/csrf:
+    get:
+      tags: [auth]
+      summary: Issue CSRF token
+      responses:
+        '200':
+          description: CSRF token (also sets cookie)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsrfResponse'
+
+  /v1/auth/register:
+    post:
+      tags: [auth]
+      summary: Register account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Verification email sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DevMessageResponse'
+        '409':
+          $ref: '#/components/responses/EmailAlreadyRegistered'
+        '503':
+          $ref: '#/components/responses/EmailDeliveryFailed'
+
+  /v1/auth/verify-email:
+    post:
+      tags: [auth]
+      summary: Verify email or confirm email change
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyEmailRequest'
+      responses:
+        '200':
+          description: Verified or email changed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          $ref: '#/components/responses/InvalidVerificationToken'
+        '409':
+          $ref: '#/components/responses/EmailAlreadyRegistered'
+
+  /v1/auth/login:
+    post:
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Access token, user, CSRF token; refresh cookie set
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/InvalidEmailOrPassword'
+        '403':
+          $ref: '#/components/responses/EmailNotVerified'
+
+  /v1/auth/resend-verification:
+    post:
+      tags: [auth]
+      summary: Resend verification email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailOnlyRequest'
+      responses:
+        '200':
+          description: Generic success message (may include devToken in development)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DevMessageResponse'
+
+  /v1/auth/forgot-password:
+    post:
+      tags: [auth]
+      summary: Request password reset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailOnlyRequest'
+      responses:
+        '200':
+          description: Generic success message (may include devToken in development)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DevMessageResponse'
+
+  /v1/auth/reset-password:
+    post:
+      tags: [auth]
+      summary: Reset password with token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: Password reset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          $ref: '#/components/responses/InvalidResetToken'
+
+  /v1/auth/refresh:
+    post:
+      tags: [auth]
+      summary: Rotate refresh session
+      description: Requires `refresh_token` httpOnly cookie.
+      security:
+        - refreshCookieAuth: []
+      responses:
+        '200':
+          description: New access token and CSRF token; refresh cookie rotated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+        '401':
+          $ref: '#/components/responses/MissingRefreshToken'
+
+  /v1/auth/logout:
+    post:
+      tags: [auth]
+      summary: Logout current device
+      description: Requires `refresh_token` cookie.
+      security:
+        - refreshCookieAuth: []
+      responses:
+        '200':
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /v1/auth/logout-all:
+    post:
+      tags: [auth]
+      summary: Logout all devices
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logged out from all devices
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/auth/change-display-name:
+    patch:
+      tags: [auth]
+      summary: Change display name
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeDisplayNameRequest'
+      responses:
+        '200':
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeDisplayNameResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/auth/change-password:
+    patch:
+      tags: [auth]
+      summary: Change password
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          description: Missing or invalid access token (`UNAUTHORIZED`) or wrong password (`INVALID_PASSWORD`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  /v1/auth/change-email:
+    patch:
+      tags: [auth]
+      summary: Request email change
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeEmailRequest'
+      responses:
+        '200':
+          description: Email change confirmation sent (may include devToken in development)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DevMessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/EmailAlreadyRegistered'
+
+  /v1/auth/account:
+    delete:
+      tags: [auth]
+      summary: Delete account
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteAccountRequest'
+      responses:
+        '200':
+          description: Account deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          description: Missing or invalid access token (`UNAUTHORIZED`) or wrong password (`INVALID_PASSWORD`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  /v1/user/profile:
+    get:
+      tags: [user]
+      summary: Current user profile and stats
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile and stats
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/UserNotFound'
+
+  /v1/daily/today:
+    get:
+      tags: [daily]
+      summary: Today's daily challenge metadata
+      description: Sets `daily_guest_session` cookie for guests.
+      responses:
+        '200':
+          description: Challenge metadata (no answer)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyChallenge'
+        '503':
+          $ref: '#/components/responses/DictionaryNotLoaded'
+
+  /v1/daily/guess:
+    post:
+      tags: [daily]
+      summary: Submit a daily guess
+      description: Optional Bearer auth. Guests need `daily_guest_session` cookie. Requires CSRF header.
+      security:
+        - bearerAuth: []
+        - guestDailySessionCookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuessRequest'
+      responses:
+        '200':
+          description: Guess scored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuessResult'
+        '400':
+          description: Invalid guess or game finished
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/GuestSessionRequired'
+        '409':
+          $ref: '#/components/responses/AlreadyPlayedToday'
+
+  /v1/infinite/next:
+    get:
+      tags: [infinite]
+      summary: Next infinite word metadata
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Next word metadata (no answer)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfiniteWord'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/EmailNotVerified'
+        '503':
+          $ref: '#/components/responses/DictionaryNotLoaded'
+
+  /v1/infinite/guess:
+    post:
+      tags: [infinite]
+      summary: Submit an infinite-mode guess
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuessRequest'
+      responses:
+        '200':
+          description: Guess scored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuessResult'
+        '400':
+          description: Invalid guess, no word in progress, or game finished
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/EmailNotVerified'
+        '409':
+          $ref: '#/components/responses/ConcurrentGuessConflict'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    refreshCookieAuth:
+      type: apiKey
+      in: cookie
+      name: refresh_token
+    guestDailySessionCookieAuth:
+      type: apiKey
+      in: cookie
+      name: daily_guest_session
+
+  parameters:
+    CsrfHeader:
+      name: x-csrf-token
+      in: header
+      required: true
+      schema:
+        type: string
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid access token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+          example:
+            error:
+              code: UNAUTHORIZED
+              message: Unauthorized
+    EmailNotVerified:
+      description: Email not verified
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    EmailAlreadyRegistered:
+      description: Email already registered
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    EmailDeliveryFailed:
+      description: Email delivery failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    InvalidEmailOrPassword:
+      description: Invalid credentials
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    InvalidVerificationToken:
+      description: Invalid verification token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    InvalidResetToken:
+      description: Invalid reset token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    MissingRefreshToken:
+      description: Missing refresh cookie
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    InvalidPassword:
+      description: Wrong password
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    UserNotFound:
+      description: User not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    DictionaryNotLoaded:
+      description: Dictionary empty
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    GuestSessionRequired:
+      description: Guest session cookie required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    AlreadyPlayedToday:
+      description: Daily already completed (authenticated)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+    ConcurrentGuessConflict:
+      description: Optimistic concurrency conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+
+  schemas:
+    LetterResult:
+      type: string
+      enum: [correct, present, absent]
+
+    ApiErrorCode:
+      type: string
+      description: Canonical codes in packages/shared/src/api-error.ts
+      enum:
+        - ALREADY_PLAYED_TODAY
+        - CONCURRENT_GUESS_CONFLICT
+        - DICTIONARY_NOT_LOADED
+        - DISPLAY_NAME_UNCHANGED
+        - EMAIL_ALREADY_REGISTERED
+        - EMAIL_DELIVERY_FAILED
+        - EMAIL_NOT_VERIFIED
+        - EMAIL_UNCHANGED
+        - GAME_ALREADY_FINISHED
+        - GUEST_SESSION_REQUIRED
+        - GUESS_WRONG_LENGTH
+        - INTERNAL_ERROR
+        - INVALID_ACCESS_TOKEN
+        - INVALID_CSRF_TOKEN
+        - INVALID_EMAIL_CHANGE_TOKEN
+        - INVALID_EMAIL_OR_PASSWORD
+        - INVALID_PASSWORD
+        - INVALID_REFRESH_TOKEN
+        - INVALID_RESET_TOKEN
+        - INVALID_VERIFICATION_TOKEN
+        - MISSING_REFRESH_TOKEN
+        - NOT_FOUND
+        - NOT_IN_DICTIONARY
+        - NO_WORD_IN_PROGRESS
+        - TOO_MANY_REQUESTS
+        - UNAUTHORIZED
+        - USER_NOT_FOUND
+        - VALIDATION_ERROR
+        - WORD_ALREADY_COMPLETED
+
+    ApiErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              $ref: '#/components/schemas/ApiErrorCode'
+            message:
+              type: string
+
+    MessageResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+
+    DevMessageResponse:
+      allOf:
+        - $ref: '#/components/schemas/MessageResponse'
+        - type: object
+          properties:
+            devToken:
+              type: string
+              description: Development only
+            devAccessToken:
+              type: string
+              description: Development only (register)
+
+    CsrfResponse:
+      type: object
+      required: [csrfToken]
+      properties:
+        csrfToken:
+          type: string
+
+    RegisterRequest:
+      type: object
+      required: [email, password, displayName]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 50
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    VerifyEmailRequest:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+
+    EmailOnlyRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+
+    ResetPasswordRequest:
+      type: object
+      required: [token, password]
+      properties:
+        token:
+          type: string
+        password:
+          type: string
+          minLength: 8
+
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+          minLength: 8
+
+    ChangeEmailRequest:
+      type: object
+      required: [newEmail]
+      properties:
+        newEmail:
+          type: string
+          format: email
+
+    ChangeDisplayNameRequest:
+      type: object
+      required: [displayName]
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 50
+
+    DeleteAccountRequest:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+
+    UserProfile:
+      type: object
+      required: [id, email, displayName, emailVerified]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        displayName:
+          type: string
+        emailVerified:
+          type: boolean
+
+    UserStats:
+      type: object
+      required:
+        - dailyPlayed
+        - dailyWon
+        - infinitePlayed
+        - infiniteWon
+        - bestTimedWords
+        - bestTimedMs
+        - bestTimedWord
+      properties:
+        dailyPlayed:
+          type: integer
+        dailyWon:
+          type: integer
+        infinitePlayed:
+          type: integer
+        infiniteWon:
+          type: integer
+        bestTimedWords:
+          type: integer
+          nullable: true
+        bestTimedMs:
+          type: integer
+          nullable: true
+        bestTimedWord:
+          type: string
+          nullable: true
+
+    UserProfileResponse:
+      allOf:
+        - $ref: '#/components/schemas/UserProfile'
+        - type: object
+          required: [stats]
+          properties:
+            stats:
+              $ref: '#/components/schemas/UserStats'
+
+    LoginResponse:
+      type: object
+      required: [accessToken, user, csrfToken]
+      properties:
+        accessToken:
+          type: string
+        user:
+          $ref: '#/components/schemas/UserProfile'
+        csrfToken:
+          type: string
+
+    RefreshResponse:
+      type: object
+      required: [accessToken, csrfToken]
+      properties:
+        accessToken:
+          type: string
+        csrfToken:
+          type: string
+
+    ChangeDisplayNameResponse:
+      type: object
+      required: [user]
+      properties:
+        user:
+          $ref: '#/components/schemas/UserProfile'
+
+    DailyChallenge:
+      type: object
+      required: [date, maxGuesses, wordLength]
+      properties:
+        date:
+          type: string
+          format: date
+          example: '2026-06-06'
+        maxGuesses:
+          type: integer
+          example: 6
+        wordLength:
+          type: integer
+          example: 5
+
+    InfiniteWord:
+      type: object
+      required: [date, wordNumber, poolSize, maxGuesses, wordLength]
+      properties:
+        date:
+          type: string
+          format: date
+        wordNumber:
+          type: integer
+        poolSize:
+          type: integer
+        maxGuesses:
+          type: integer
+        wordLength:
+          type: integer
+
+    GuessRequest:
+      type: object
+      required: [guess]
+      properties:
+        guess:
+          type: string
+          minLength: 5
+          maxLength: 5
+
+    GuessResult:
+      type: object
+      required: [results, won, finished, guessNumber]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/LetterResult'
+        won:
+          type: boolean
+        finished:
+          type: boolean
+        guessNumber:
+          type: integer
+        answer:
+          type: string
+          description: Present when finished is true
+
+    InfraHealthOk:
+      type: object
+      required: [status, database]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        database:
+          type: string
+          enum: [connected]
+
+    InfraHealthDegraded:
+      type: object
+      required: [status, database]
+      properties:
+        status:
+          type: string
+          enum: [degraded]
+        database:
+          type: string
+          enum: [disconnected]
+
+    HealthOk:
+      type: object
+      required: [status, database, wordCount, apiVersion]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        database:
+          type: string
+          enum: [connected]
+        wordCount:
+          type: integer
+        apiVersion:
+          type: string
+          example: v1
+
+    HealthDegraded:
+      type: object
+      required: [status, database, apiVersion]
+      properties:
+        status:
+          type: string
+          enum: [degraded]
+        database:
+          type: string
+          enum: [disconnected]
+        apiVersion:
+          type: string
+          example: v1

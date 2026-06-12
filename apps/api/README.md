@@ -65,6 +65,7 @@ Requires Postgres via `docker compose up -d` (port **5433**).
 Copy root `.env.example` to `.env`. Key variables:
 
 - `DATABASE_URL` — PostgreSQL connection string
+- `TZ` — game calendar timezone (default `Europe/Warsaw`; see [docs/API.md](./docs/API.md#calendar-dates--timezone))
 - `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`
 - `RESEND_API_KEY`, `EMAIL_FROM` — auth emails
 

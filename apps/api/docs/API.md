@@ -28,6 +28,10 @@ All JSON request/response bodies unless noted.
 
 Canonical codes and default messages live in [`packages/shared/src/api-error.ts`](../../../packages/shared/src/api-error.ts).
 
+### OpenAPI
+
+Machine-readable contract: [`openapi.yaml`](./openapi.yaml). Import into Postman (**Import → File**) or any OpenAPI 3 client. This document remains the detailed reference (auth flows, cookies, rate limits, testing).
+
 ---
 
 ## Auth flow overview
@@ -231,7 +235,7 @@ If the user has never played, numeric stats are `0` and timed fields are `null`.
 | GET    | `/v1/daily/today` | —        | Today's challenge metadata (no answer)             |
 | POST   | `/v1/daily/guess` | optional | Validate a guess; persist stats when authenticated |
 
-Calendar day uses `Europe/Warsaw` (`TZ` env). The word is chosen deterministically from the dictionary and persisted lazily on first request for that date.
+Calendar day and game boundaries use `env.TZ` (default `Europe/Warsaw`). See [Calendar dates & timezone](#calendar-dates--timezone) below. The word is chosen deterministically from the dictionary and persisted lazily on first request for that date.
 
 **GET `/v1/daily/today` — 200**
 
@@ -296,6 +300,47 @@ On completion, authenticated users get a `GameResult` row and `UserStats` update
   }
 }
 ```
+
+#### Game state: client vs server
+
+The API validates each guess and tracks **how many** guesses were used. It does **not** store guess text, letter results, or an in-progress board.
+
+| State                             | Server (API / DB)                                                                   | Web client                                                                                              |
+| --------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| In-progress daily (partial board) | `DailyPlayerDay.guessCount` (auth) or `GuestDailySession.guessCount` (guest cookie) | React component state only — **lost on page refresh**                                                   |
+| Finished daily (auth)             | `GameResult` + `UserStats`; `409` on further guesses                                | `localStorage` key `wordlopol-daily-finished` (board rows, answer, win/loss) via `daily-finished-store` |
+| Finished daily (guest)            | No completion row                                                                   | Same `localStorage` cache after the final guess response                                                |
+| Already played (auth)             | Existing `GameResult` → `409 ALREADY_PLAYED_TODAY`                                  | `localStorage` `alreadyPlayed` entry when the client receives `409`                                     |
+
+**Implications for clients**
+
+- Do not expect the API to restore a partial board after refresh. The server still enforces `guessCount` / `maxGuesses`, so a refreshed client may show an empty board while later guesses continue from the server’s count.
+- After a completed game, the reference web app rehydrates the board from `localStorage`, not from the API.
+- Infinite mode is different: `GET /v1/infinite/next` is refresh-safe for the current word (see [Infinite mode](#infinite-mode)).
+
+Server-side guess history for daily mode is a possible future change (schema + endpoints); v1 intentionally keeps board UI state on the client.
+
+#### Calendar dates & timezone
+
+All “today” logic for daily and infinite modes uses the same calendar date key:
+
+1. `getCalendarDateKey()` formats the current instant with `Intl.DateTimeFormat` and **`env.TZ`** (default `Europe/Warsaw`) → `YYYY-MM-DD`.
+2. That key is stored in Postgres as a `DATE` via `dateKeyToUtcDate` (`YYYY-MM-DDT00:00:00.000Z`).
+
+**Configure `TZ`**
+
+- Set `TZ=Europe/Warsaw` in the repo root `.env` (see `.env.example`). The API reads it through `apps/api/src/config/env.ts`; game date does not depend on the host’s implicit timezone alone.
+- `docker compose up` is the recommended local setup so API and Postgres match the project’s env.
+- Running `tsx` / `node` without `TZ` in `.env` still defaults to `Europe/Warsaw` via Zod, but production and CI should set it explicitly.
+
+**What `TZ` does not control**
+
+- Prisma `now()` / `createdAt` / token expiry use normal UTC timestamps — not the Warsaw calendar boundary.
+- The web app displays dates using the API’s `date` field; it does not compute the game day independently.
+
+**Midnight boundary**
+
+A new daily word and infinite pool apply when the Warsaw calendar date changes (local midnight in `env.TZ`). Integration tests that depend on a fixed date should mock `getCalendarDateKey` (see `infinite-next.test.ts`).
 
 ---
 
