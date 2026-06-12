@@ -1,8 +1,8 @@
 import type { DailyChallengeDto } from '@wordlopol/shared';
 import { useQueryClient } from '@tanstack/react-query';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { ApiError } from '@/api/errors';
 import { authKeys } from '@/api/query-keys';
@@ -10,6 +10,7 @@ import { useDailyGuessMutation } from '@/hooks/mutations/use-daily-guess-mutatio
 import { useAuth } from '@/hooks/useAuth';
 import { useGameKeyboard } from '@/hooks/useGameKeyboard';
 import { useToast } from '@/hooks/useToast';
+import { getRowRevealDurationMs } from '@/lib/game-animation';
 import { buildKeyStates, createEmptyRows } from '@/lib/game-board';
 import { getApiErrorMessage } from '@/lib/api-error-message';
 import {
@@ -19,6 +20,7 @@ import {
 } from '@/stores/daily-finished-store';
 
 import { GameBoard, type GameBoardRow } from './GameBoard';
+import { GameResultModal } from './GameResultModal';
 import { GameStatusBar } from './GameStatusBar';
 import { PolishKeyboard } from './PolishKeyboard';
 
@@ -61,6 +63,7 @@ function getInitialWon(date: string): boolean | null {
 
 export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
@@ -73,8 +76,20 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
   );
   const [answer, setAnswer] = useState<string | null>(() => getInitialAnswer(challenge.date));
   const [won, setWon] = useState<boolean | null>(() => getInitialWon(challenge.date));
+  const [finalGuessNumber, setFinalGuessNumber] = useState<number | null>(null);
+  const [awaitingResultModal, setAwaitingResultModal] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false);
   const [shakingRowIndex, setShakingRowIndex] = useState<number | null>(null);
   const shakeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const modalTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (modalTimeoutRef.current !== null) {
+        clearTimeout(modalTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const locked = mode !== 'playing' || guessMutation.isPending;
   const keyStates = useMemo(() => buildKeyStates(rows), [rows]);
@@ -119,7 +134,9 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
       if (result.finished && result.answer) {
         setAnswer(result.answer);
         setWon(result.won);
+        setFinalGuessNumber(result.guessNumber);
         setMode('completed');
+        setAwaitingResultModal(true);
         saveDailyFinished({
           date: challenge.date,
           status: 'completed',
@@ -130,6 +147,15 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
         if (isAuthenticated) {
           void queryClient.invalidateQueries({ queryKey: authKeys.profile() });
         }
+
+        if (modalTimeoutRef.current !== null) {
+          clearTimeout(modalTimeoutRef.current);
+        }
+        modalTimeoutRef.current = setTimeout(() => {
+          modalTimeoutRef.current = null;
+          setAwaitingResultModal(false);
+          setShowResultModal(true);
+        }, getRowRevealDurationMs(challenge.wordLength));
       }
     } catch (error) {
       if (error instanceof ApiError && error.code === 'ALREADY_PLAYED_TODAY') {
@@ -205,6 +231,9 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
   useGameKeyboard(handleInput, { enabled: !locked });
 
   const statusBar = (() => {
+    if (awaitingResultModal || showResultModal) {
+      return null;
+    }
     if (guessMutation.isPending) {
       return (
         <GameStatusBar
@@ -245,6 +274,18 @@ export function DailyGamePlay({ challenge }: DailyGamePlayProps) {
         <Link to="/profile" className="text-sm font-medium text-primary hover:underline">
           {t('pages.daily.play.viewProfile')}
         </Link>
+      )}
+      {showResultModal && answer && won !== null && finalGuessNumber !== null && (
+        <GameResultModal
+          open
+          mode="daily"
+          won={won}
+          guessNumber={finalGuessNumber}
+          answer={answer}
+          onGoHome={() => {
+            void navigate('/');
+          }}
+        />
       )}
     </div>
   );

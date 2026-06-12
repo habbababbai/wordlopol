@@ -2,17 +2,19 @@ import type { GuessResultDto, InfiniteWordDto } from '@wordlopol/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 import { ApiError } from '@/api/errors';
 import { authKeys } from '@/api/query-keys';
-import { Button } from '@/components/ui/button';
 import { useInfiniteGuessMutation } from '@/hooks/mutations/use-infinite-guess-mutation';
 import { useGameKeyboard } from '@/hooks/useGameKeyboard';
 import { useToast } from '@/hooks/useToast';
+import { getRowRevealDurationMs } from '@/lib/game-animation';
 import { getApiErrorMessage } from '@/lib/api-error-message';
 import { buildKeyStates, createEmptyRows } from '@/lib/game-board';
 
 import { GameBoard, type GameBoardRow } from './GameBoard';
+import { GameResultModal } from './GameResultModal';
 import { GameStatusBar } from './GameStatusBar';
 import { PolishKeyboard } from './PolishKeyboard';
 
@@ -25,6 +27,7 @@ type InfiniteGamePlayProps = {
 
 export function InfiniteGamePlay({ word, onNextWord }: InfiniteGamePlayProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const guessMutation = useInfiniteGuessMutation();
@@ -34,8 +37,12 @@ export function InfiniteGamePlay({ word, onNextWord }: InfiniteGamePlayProps) {
   const [activeRowIndex, setActiveRowIndex] = useState(0);
   const [answer, setAnswer] = useState<string | null>(null);
   const [won, setWon] = useState<boolean | null>(null);
+  const [finalGuessNumber, setFinalGuessNumber] = useState<number | null>(null);
+  const [awaitingResultModal, setAwaitingResultModal] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false);
   const [shakingRowIndex, setShakingRowIndex] = useState<number | null>(null);
   const shakeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const modalTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const locked = mode !== 'playing' || guessMutation.isPending;
   const keyStates = useMemo(() => buildKeyStates(rows), [rows]);
@@ -56,6 +63,9 @@ export function InfiniteGamePlay({ word, onNextWord }: InfiniteGamePlayProps) {
       if (shakeTimeoutRef.current !== null) {
         clearTimeout(shakeTimeoutRef.current);
         shakeTimeoutRef.current = null;
+      }
+      if (modalTimeoutRef.current !== null) {
+        clearTimeout(modalTimeoutRef.current);
       }
       setShakingRowIndex(null);
     };
@@ -90,8 +100,19 @@ export function InfiniteGamePlay({ word, onNextWord }: InfiniteGamePlayProps) {
         if (finishedAnswer !== undefined) {
           setAnswer(finishedAnswer);
           setWon(result.won);
+          setFinalGuessNumber(result.guessNumber);
           setMode('wordCompleted');
+          setAwaitingResultModal(true);
           void queryClient.invalidateQueries({ queryKey: authKeys.profile() });
+
+          if (modalTimeoutRef.current !== null) {
+            clearTimeout(modalTimeoutRef.current);
+          }
+          modalTimeoutRef.current = setTimeout(() => {
+            modalTimeoutRef.current = null;
+            setAwaitingResultModal(false);
+            setShowResultModal(true);
+          }, getRowRevealDurationMs(word.wordLength));
         }
       }
     } catch (error) {
@@ -160,6 +181,9 @@ export function InfiniteGamePlay({ word, onNextWord }: InfiniteGamePlayProps) {
   useGameKeyboard(handleInput, { enabled: !locked });
 
   const statusBar = (() => {
+    if (awaitingResultModal || showResultModal) {
+      return null;
+    }
     if (guessMutation.isPending) {
       return (
         <GameStatusBar
@@ -189,10 +213,21 @@ export function InfiniteGamePlay({ word, onNextWord }: InfiniteGamePlayProps) {
       {statusBar}
       <GameBoard rows={rows} activeRowIndex={activeRowIndex} shakingRowIndex={shakingRowIndex} />
       <PolishKeyboard onInput={handleInput} keyStates={keyStates} disabled={locked} />
-      {mode === 'wordCompleted' && (
-        <Button type="button" onClick={onNextWord}>
-          {t('pages.infinite.play.nextWord')}
-        </Button>
+      {showResultModal && answer && won !== null && finalGuessNumber !== null && (
+        <GameResultModal
+          open
+          mode="infinite"
+          won={won}
+          guessNumber={finalGuessNumber}
+          answer={answer}
+          onGoHome={() => {
+            void navigate('/');
+          }}
+          onNextWord={() => {
+            setShowResultModal(false);
+            onNextWord();
+          }}
+        />
       )}
     </div>
   );

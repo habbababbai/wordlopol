@@ -1,4 +1,4 @@
-import { cleanup, waitFor, within } from '@testing-library/react';
+import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -110,6 +110,34 @@ describe('DailyGamePlay', () => {
 
     expect(within(container).getByRole('button', { name: 'Wpisz literę A' })).toBeDisabled();
     expect(within(container).getByText(/Wygrana! Słowo: maksa/)).toBeInTheDocument();
+    expect(within(container).queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('shows result modal after live win, not on cached restore', async () => {
+    const user = userEvent.setup();
+    mutateAsyncMock.mockResolvedValueOnce({
+      results: ['correct', 'correct', 'correct', 'correct', 'correct'],
+      won: true,
+      finished: true,
+      guessNumber: 2,
+      answer: 'maksa',
+    });
+
+    const { container } = renderWithProviders(<DailyGamePlay challenge={challenge} />);
+
+    await typeWord(user, container, 'maksa');
+    await user.click(within(container).getByRole('button', { name: 'Zatwierdź' }));
+
+    await waitFor(
+      () => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+        expect(screen.getByText('Wygrana w 2. próbie!')).toBeInTheDocument();
+      },
+      { timeout: 2000 },
+    );
+
+    expect(within(container).queryByText(/Wygrana! Słowo: maksa/)).not.toBeInTheDocument();
   });
 
   it('shows already-played screen when loaded from cache', () => {

@@ -1,4 +1,4 @@
-import { cleanup, waitFor, within } from '@testing-library/react';
+import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -75,7 +75,7 @@ describe('InfiniteGamePlay', () => {
     expect(within(container).getByRole('grid')).toBeInTheDocument();
   });
 
-  it('shows win message and disables keyboard on finish', async () => {
+  it('shows result modal and disables keyboard on finish', async () => {
     const user = userEvent.setup();
     mutateAsyncMock.mockResolvedValueOnce({
       results: ['correct', 'correct', 'correct', 'correct', 'correct'],
@@ -92,15 +92,22 @@ describe('InfiniteGamePlay', () => {
     await typeWord(user, container, 'maksa');
     await user.click(within(container).getByRole('button', { name: 'Zatwierdź' }));
 
-    await waitFor(() => {
-      expect(within(container).getByText(/Wygrana! Słowo: maksa/)).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+        expect(screen.getByText('Wygrana w 1. próbie!')).toBeInTheDocument();
+      },
+      { timeout: 2000 },
+    );
 
-    expect(within(container).getByRole('button', { name: 'Wpisz literę A' })).toBeDisabled();
+    expect(within(container).queryByText(/Wygrana! Słowo: maksa/)).not.toBeInTheDocument();
+    expect(
+      within(container).getByRole('button', { name: 'Wpisz literę A', hidden: true }),
+    ).toBeDisabled();
     expect(onNextWordMock).not.toHaveBeenCalled();
   });
 
-  it('calls onNextWord when next-word button is clicked', async () => {
+  it('calls onNextWord from result modal', async () => {
     const user = userEvent.setup();
     mutateAsyncMock.mockResolvedValueOnce({
       results: ['correct', 'correct', 'correct', 'correct', 'correct'],
@@ -117,11 +124,14 @@ describe('InfiniteGamePlay', () => {
     await typeWord(user, container, 'maksa');
     await user.click(within(container).getByRole('button', { name: 'Zatwierdź' }));
 
-    await waitFor(() => {
-      expect(within(container).getByRole('button', { name: 'Następne słowo' })).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      },
+      { timeout: 2000 },
+    );
 
-    await user.click(within(container).getByRole('button', { name: 'Następne słowo' }));
+    await user.click(screen.getByRole('button', { name: 'Następne słowo' }));
 
     expect(onNextWordMock).toHaveBeenCalledTimes(1);
   });
