@@ -28,6 +28,10 @@ All JSON request/response bodies unless noted.
 
 Canonical codes and default messages live in [`packages/shared/src/api-error.ts`](../../../packages/shared/src/api-error.ts).
 
+### OpenAPI
+
+Machine-readable contract: [`openapi.yaml`](./openapi.yaml). Import into Postman (**Import → File**) or any OpenAPI 3 client. This document remains the detailed reference (auth flows, cookies, rate limits, testing).
+
 ---
 
 ## Auth flow overview

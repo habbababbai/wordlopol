@@ -1,5 +1,7 @@
 # Postman — Wordlopol API
 
+OpenAPI 3 spec: [`../docs/openapi.yaml`](../docs/openapi.yaml) (same routes; collections below are maintained manually to match).
+
 ## Files
 
 | File                                                  | Purpose                                                      |
